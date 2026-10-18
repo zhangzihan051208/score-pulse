@@ -19,6 +19,16 @@ export type Athlete = {
   shortName: string;
   country: Localized;
   team?: string;
+  photoUrl?: string;
+  jerseyNumber?: string;
+};
+
+export type UserProfile = {
+  id: string;
+  displayName: string;
+  avatarUrl: string | null;
+  bio: string | null;
+  updatedAt: string | null;
 };
 
 export type Performance = {

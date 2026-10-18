@@ -1,7 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { Overall, ScoreRows } from "@/components/score-rows";
+import { PlayerAvatar } from "@/components/player-avatar";
+import { DimensionChips } from "@/components/rating-guide-panel";
+import { Overall } from "@/components/score-rows";
 import { StatusPill } from "@/components/status-pill";
 import { useCommunity } from "@/hooks/use-community";
 import { useI18n } from "@/i18n/use-i18n";
@@ -46,15 +48,16 @@ export function EventThread({ event }: { event: MatchEvent }) {
             <article key={p.athleteId} className="rounded-xl border bg-card p-4">
               <div className="flex items-start justify-between gap-3">
                 <div className="flex items-center gap-3">
-                  <span className="flex size-11 items-center justify-center rounded-full bg-[#141414] text-sm font-semibold text-white">
-                    {athlete.shortName}
-                  </span>
+                  <PlayerAvatar athlete={athlete} size="default" />
                   <div>
-                    <h2 className="font-semibold">{athlete.name}</h2>
+                    <h2 className="font-semibold leading-tight">{athlete.name}</h2>
                     <p className="text-xs text-muted-foreground">
                       {athlete.team ? `${athlete.team} · ` : ""}
                       {tx(p.role, locale)}
-                      {p.result ? ` · ${tx(p.result, locale)}` : ""}
+                      {athlete.jerseyNumber ? ` · #${athlete.jerseyNumber}` : ""}
+                      {p.result && !athlete.jerseyNumber
+                        ? ` · ${tx(p.result, locale)}`
+                        : ""}
                     </p>
                   </div>
                 </div>
@@ -74,8 +77,8 @@ export function EventThread({ event }: { event: MatchEvent }) {
                   </div>
                 ))}
               </dl>
-              <div className="mt-4">
-                <ScoreRows positionKey={p.positionKey} scores={merged.avg} compact />
+              <div className="mt-3">
+                <DimensionChips positionKey={p.positionKey} scores={merged.avg} />
               </div>
               <Link
                 href={`/events/${event.slug}/${athlete.id}`}

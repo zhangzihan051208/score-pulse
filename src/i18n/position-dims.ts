@@ -323,3 +323,10 @@ export function dimLabel(
 ): string {
   return positionDimLabels[locale][positionKey]?.[dimId] ?? dimId;
 }
+
+export function positionRoleLabel(
+  locale: Locale,
+  positionKey: PositionKey,
+): string {
+  return positionRoleLabels[locale][positionKey] ?? positionKey;
+}

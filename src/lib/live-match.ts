@@ -59,18 +59,23 @@ export function playersToPerformances(
     const positionKey = inferPositionKey(sport, p.strPosition);
     const roleLabel = p.strPosition?.trim() || (sport === "nba" ? "Player" : "Player");
     const team = p.strTeam?.slice(0, 3).toUpperCase();
+    const photoUrl =
+      p.strCutout?.trim() || p.strThumb?.trim() || undefined;
+    const jerseyNumber = p.intSquadNumber?.trim() || undefined;
     roster[p.idPlayer] = {
       id: p.idPlayer,
       name: p.strPlayer,
       shortName: shortName(p.strPlayer),
       country: S("—"),
       team,
+      photoUrl,
+      jerseyNumber,
     };
     const sub =
       p.strSubstitute === "Yes"
         ? S("Substitute")
-        : p.intSquadNumber
-          ? S(`#${p.intSquadNumber}`)
+        : jerseyNumber
+          ? S(`#${jerseyNumber}`)
           : undefined;
     performances.push({
       athleteId: p.idPlayer,

@@ -8,6 +8,21 @@ type Dict = {
     boards: string;
     feed: string;
     guide: string;
+    profile: string;
+  };
+  profile: {
+    title: string;
+    lead: string;
+    displayName: string;
+    displayNameHint: string;
+    avatarUrl: string;
+    avatarHint: string;
+    bio: string;
+    bioHint: string;
+    save: string;
+    saved: string;
+    signInRequired: string;
+    notConfigured: string;
   };
   auth: {
     signIn: string;
@@ -90,6 +105,9 @@ type Dict = {
     noCommentsInFilter: string;
     overallWeighted: string;
     scoreOnly: string;
+    ratingGuide: string;
+    ratingGuideLead: string;
+    yourScores: string;
   };
   feed: {
     title: string;
@@ -113,7 +131,27 @@ export const messages: Record<Locale, Dict> = {
   en: {
     brand: "Sideline",
     tagline: "Rate the night, not the reputation",
-    nav: { home: "Home", boards: "Boards", feed: "Feed", guide: "Guide" },
+    nav: {
+      home: "Home",
+      boards: "Boards",
+      feed: "Feed",
+      guide: "Guide",
+      profile: "Profile",
+    },
+    profile: {
+      title: "Your profile",
+      lead: "Nickname, avatar, and signature show on ratings and comments.",
+      displayName: "Nickname",
+      displayNameHint: "2–32 characters",
+      avatarUrl: "Avatar URL",
+      avatarHint: "HTTPS link to a square image",
+      bio: "Signature",
+      bioHint: "Up to 160 characters — optional",
+      save: "Save profile",
+      saved: "Profile saved",
+      signInRequired: "Sign in to edit your profile.",
+      notConfigured: "Cloud profiles need Supabase in .env.",
+    },
     auth: {
       signIn: "Sign in",
       signOut: "Sign out",
@@ -207,8 +245,12 @@ export const messages: Record<Locale, Dict> = {
       allRatings: "Every rating",
       noCommunityYet: "No cloud ratings yet. Sign in and post the first card.",
       noCommentsInFilter: "No comments in this filter.",
-      overallWeighted: "Overall uses role weights (shown top-right).",
+      overallWeighted: "Overall uses role weights (see scoring guide below).",
       scoreOnly: "Score only — no written take.",
+      ratingGuide: "Scoring guide",
+      ratingGuideLead:
+        "Five axes for {role} — weighted into the overall score:",
+      yourScores: "Your five axes",
     },
     feed: {
       title: "Feed",
@@ -299,7 +341,27 @@ export const messages: Record<Locale, Dict> = {
   zh: {
     brand: "Sideline",
     tagline: "评这场，而不是评名气",
-    nav: { home: "首页", boards: "分区", feed: "动态", guide: "手册" },
+    nav: {
+      home: "首页",
+      boards: "分区",
+      feed: "动态",
+      guide: "手册",
+      profile: "我的",
+    },
+    profile: {
+      title: "个人主页",
+      lead: "昵称、头像和签名会显示在评分与评论中。",
+      displayName: "昵称",
+      displayNameHint: "2–32 个字符",
+      avatarUrl: "头像链接",
+      avatarHint: "HTTPS 图片地址",
+      bio: "个人签名",
+      bioHint: "最多 160 字，可选",
+      save: "保存资料",
+      saved: "已保存",
+      signInRequired: "登录后可编辑个人主页。",
+      notConfigured: "需在 .env 中配置 Supabase。",
+    },
     auth: {
       signIn: "登录",
       signOut: "退出",
@@ -389,7 +451,10 @@ export const messages: Record<Locale, Dict> = {
       allRatings: "全部评分卡",
       noCommunityYet: "还没有云端评分，登录后发布第一条。",
       noCommentsInFilter: "该筛选下暂无评论。",
-      overallWeighted: "总分为该位置加权（见右上角）。",
+      overallWeighted: "总分为该位置加权（见下方评分须知）。",
+      ratingGuide: "评分须知",
+      ratingGuideLead: "本场按「{role}」五个维度打分，权重合成总分：",
+      yourScores: "你的五维打分",
       scoreOnly: "仅评分，未写短评。",
     },
     feed: {
@@ -481,7 +546,27 @@ export const messages: Record<Locale, Dict> = {
   es: {
     brand: "Sideline",
     tagline: "Nota la noche, no la fama",
-    nav: { home: "Inicio", boards: "Tablones", feed: "Feed", guide: "Guía" },
+    nav: {
+      home: "Inicio",
+      boards: "Tablones",
+      feed: "Feed",
+      guide: "Guía",
+      profile: "Perfil",
+    },
+    profile: {
+      title: "Tu perfil",
+      lead: "Nick, avatar y firma aparecen en tus notas.",
+      displayName: "Nick",
+      displayNameHint: "2–32 caracteres",
+      avatarUrl: "URL del avatar",
+      avatarHint: "Enlace HTTPS a una imagen",
+      bio: "Firma",
+      bioHint: "Hasta 160 caracteres, opcional",
+      save: "Guardar perfil",
+      saved: "Perfil guardado",
+      signInRequired: "Inicia sesión para editar tu perfil.",
+      notConfigured: "Configura Supabase en .env.",
+    },
     auth: {
       signIn: "Entrar",
       signOut: "Salir",
@@ -572,7 +657,10 @@ export const messages: Record<Locale, Dict> = {
       allRatings: "Cada nota",
       noCommunityYet: "Aún no hay notas en la nube.",
       noCommentsInFilter: "Sin comentarios en este filtro.",
-      overallWeighted: "La nota global usa pesos del rol.",
+      overallWeighted: "La nota global usa pesos del rol (ver guía abajo).",
+      ratingGuide: "Guía de notas",
+      ratingGuideLead: "Cinco ejes para {role}, ponderados en la nota global:",
+      yourScores: "Tus cinco ejes",
       scoreOnly: "Solo nota numérica, sin texto.",
     },
     feed: {
@@ -664,7 +752,27 @@ export const messages: Record<Locale, Dict> = {
   ja: {
     brand: "Sideline",
     tagline: "名声ではなく、この一戦を採点する",
-    nav: { home: "ホーム", boards: "板", feed: "フィード", guide: "ガイド" },
+    nav: {
+      home: "ホーム",
+      boards: "板",
+      feed: "フィード",
+      guide: "ガイド",
+      profile: "プロフィール",
+    },
+    profile: {
+      title: "プロフィール",
+      lead: "ニックネーム・アバター・署名が採点に表示されます。",
+      displayName: "ニックネーム",
+      displayNameHint: "2〜32文字",
+      avatarUrl: "アバター URL",
+      avatarHint: "HTTPS の画像リンク",
+      bio: "署名",
+      bioHint: "160文字まで（任意）",
+      save: "保存",
+      saved: "保存しました",
+      signInRequired: "編集するにはログインしてください。",
+      notConfigured: ".env に Supabase を設定してください。",
+    },
     auth: {
       signIn: "ログイン",
       signOut: "ログアウト",
@@ -755,7 +863,10 @@ export const messages: Record<Locale, Dict> = {
       allRatings: "すべての採点",
       noCommunityYet: "クラウド採点はまだありません。",
       noCommentsInFilter: "このフィルターにコメントはありません。",
-      overallWeighted: "総合点はポジション加重（右上）。",
+      overallWeighted: "総合点はポジション加重（下の採点ガイド参照）。",
+      ratingGuide: "採点ガイド",
+      ratingGuideLead: "「{role}」の五軸を重み付けして総合点にします：",
+      yourScores: "あなたの五軸",
       scoreOnly: "採点のみ（コメントなし）。",
     },
     feed: {

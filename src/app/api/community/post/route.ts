@@ -42,15 +42,28 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Scores are required." }, { status: 400 });
   }
 
-  if (displayName?.trim()) {
-    await supabase
-      .from("profiles")
-      .upsert({
-        id: user.id,
-        display_name: displayName.trim().slice(0, 32),
-        updated_at: new Date().toISOString(),
-      });
+  let authorName: string | undefined = displayName?.trim().slice(0, 32);
+  const { data: existingProfile } = await supabase
+    .from("profiles")
+    .select("display_name")
+    .eq("id", user.id)
+    .maybeSingle();
+
+  if (authorName) {
+    await supabase.from("profiles").upsert({
+      id: user.id,
+      display_name: authorName,
+      updated_at: new Date().toISOString(),
+    });
+  } else if (existingProfile?.display_name?.trim()) {
+    authorName = existingProfile.display_name.trim();
+  } else {
+    authorName =
+      (user.user_metadata?.display_name as string | undefined)?.trim() ||
+      user.email?.split("@")[0] ||
+      "Fan";
   }
+  const author = authorName ?? "Fan";
 
   const { error: ratingError } = await supabase.from("ratings").upsert(
     {
@@ -67,12 +80,6 @@ export async function POST(request: Request) {
   if (ratingError) {
     return NextResponse.json({ error: ratingError.message }, { status: 500 });
   }
-
-  const author =
-    displayName?.trim() ||
-    user.user_metadata?.display_name ||
-    user.email?.split("@")[0] ||
-    "Fan";
 
   const { error: deleteError } = await supabase
     .from("comments")

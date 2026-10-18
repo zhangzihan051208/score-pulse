@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/hooks/use-auth";
+import { useProfile } from "@/hooks/use-profile";
 import { useI18n } from "@/i18n/use-i18n";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -10,6 +11,7 @@ import { Button } from "@/components/ui/button";
 export function AuthMenu() {
   const { t } = useI18n();
   const { user, loading, enabled } = useAuth();
+  const { profile } = useProfile();
   const router = useRouter();
 
   if (!enabled) return null;
@@ -32,15 +34,19 @@ export function AuthMenu() {
   }
 
   const label =
+    profile?.displayName ||
     (user.user_metadata?.display_name as string | undefined) ||
     user.email?.split("@")[0] ||
     t.auth.signedIn;
 
   return (
     <div className="flex items-center gap-2">
-      <span className="hidden max-w-[8rem] truncate text-xs text-white/70 sm:inline">
+      <Link
+        href="/profile"
+        className="hidden max-w-[8rem] truncate text-xs text-white/70 hover:text-white hover:underline sm:inline"
+      >
         {label}
-      </span>
+      </Link>
       <Button
         type="button"
         variant="ghost"

@@ -6,6 +6,7 @@ import { useLiveEvents } from "@/hooks/use-live-events";
 import { useI18n } from "@/i18n/use-i18n";
 import { tx } from "@/lib/copy";
 import { events, formatWhen, overallScore } from "@/lib/data";
+import { PlayerAvatar } from "@/components/player-avatar";
 import { resolveAthlete } from "@/lib/event-resolve";
 import { SPORT_CHIP } from "@/lib/sports";
 import { SPORTS, type MatchEvent, type Sport } from "@/lib/types";

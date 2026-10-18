@@ -8,16 +8,22 @@ import {
 } from "@/components/community-ratings-panel";
 import { mergeTakes } from "@/lib/community-takes";
 import { GradeSlider } from "@/components/grade-slider";
+import { PlayerAvatar } from "@/components/player-avatar";
+import {
+  DimensionChips,
+  RatingGuidePanel,
+} from "@/components/rating-guide-panel";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Overall } from "@/components/score-rows";
 import { useAuth } from "@/hooks/use-auth";
+import { useProfile } from "@/hooks/use-profile";
 import { useCommunity } from "@/hooks/use-community";
 import { useI18n } from "@/i18n/use-i18n";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 import { tx } from "@/lib/copy";
 import { overallScore } from "@/lib/data";
-import { dimLabel } from "@/i18n/position-dims";
+import { dimLabel, positionRoleLabel } from "@/i18n/position-dims";
 import {
   commentsFor,
   emptyScores,
@@ -45,6 +51,7 @@ export function RateCard({
 }) {
   const { locale, t } = useI18n();
   const { user, enabled: authEnabled } = useAuth();
+  const { profile } = useProfile();
   const { state, postTake } = useCommunity();
   const [draft, setDraft] = useState<ScoreMap | null>(null);
   const [body, setBody] = useState("");
@@ -160,7 +167,10 @@ export function RateCard({
     ...(mine?.scores ?? {}),
   };
   const scores = draft ?? baseScores;
-  const name = nameDraft ?? state.nickname;
+  const name =
+    nameDraft ??
+    (profile?.displayName && user ? profile.displayName : state.nickname);
+  const hideNicknameField = Boolean(user && profile?.displayName);
 
   function patchScore(id: string, next: number) {
     setDraft((prev) => {
@@ -179,47 +189,54 @@ export function RateCard({
         ← {t.rate.back}
       </Link>
 
-      <div className="mt-3 flex items-start justify-between gap-3">
-        <div>
+      <div className="mt-4 flex gap-4">
+        <PlayerAvatar athlete={athlete} size="lg" />
+        <div className="min-w-0 flex-1">
           <p className="text-xs text-muted-foreground">
             {t.sports[event.sport]} · {tx(event.title, locale)}
           </p>
-          <h1 className="text-2xl font-bold">{athlete.name}</h1>
-          <p className="text-sm text-muted-foreground">
-            {tx(performance.role, locale)}
-            {performance.result ? ` · ${tx(performance.result, locale)}` : ""}
-          </p>
-        </div>
-        {displayMerged && (
-          <div className="text-right">
-            <p className="text-[11px] text-muted-foreground">{t.rate.community}</p>
-            <Overall value={overallScore(displayMerged.avg, positionKey)} />
+          <div className="flex flex-wrap items-start justify-between gap-2">
+            <div>
+              <h1 className="text-2xl font-bold leading-tight">{athlete.name}</h1>
+              <p className="text-sm text-muted-foreground">
+                {athlete.team ? `${athlete.team} · ` : ""}
+                {tx(performance.role, locale)}
+                {athlete.jerseyNumber ? ` · #${athlete.jerseyNumber}` : ""}
+                {performance.result && !athlete.jerseyNumber
+                  ? ` · ${tx(performance.result, locale)}`
+                  : ""}
+              </p>
+              <p className="mt-0.5 text-xs text-muted-foreground">
+                {positionRoleLabel(locale, positionKey)}
+              </p>
+            </div>
+            {displayMerged && (
+              <div className="text-right">
+                <p className="text-[11px] text-muted-foreground">{t.rate.community}</p>
+                <Overall value={overallScore(displayMerged.avg, positionKey)} />
+              </div>
+            )}
           </div>
-        )}
+        </div>
       </div>
 
-      <p className="mt-3 text-sm leading-6">{tx(performance.highlight, locale)}</p>
+      <p className="mt-3 text-sm leading-6 text-muted-foreground">
+        {tx(performance.highlight, locale)}
+      </p>
+
+      <div className="mt-4">
+        <RatingGuidePanel positionKey={positionKey} />
+      </div>
 
       {displayMerged && (
-        <div className="mt-4 rounded-lg bg-muted/60 p-3">
-          <p className="mb-2 text-[11px] font-medium tracking-wide text-muted-foreground uppercase">
+        <div className="mt-3 rounded-lg bg-muted/50 px-3 py-2">
+          <p className="mb-1.5 text-[11px] font-medium text-muted-foreground">
             {t.rate.community}
             {authEnabled && remoteTakes.length > 0 ? (
-              <span className="ml-1 font-normal normal-case text-muted-foreground">
-                ({remoteTakes.length})
-              </span>
+              <span className="ml-1 font-normal">({remoteTakes.length})</span>
             ) : null}
           </p>
-          <div className="flex flex-wrap gap-1.5">
-            {dims.map((id) => (
-              <span key={id} className="rounded-md bg-background px-2 py-1 text-xs">
-                {dimLabel(locale, positionKey, id)}{" "}
-                <span className="font-semibold tabular-nums">
-                  {(displayMerged.avg[id] ?? 0).toFixed(1)}
-                </span>
-              </span>
-            ))}
-          </div>
+          <DimensionChips positionKey={positionKey} scores={displayMerged.avg} />
         </div>
       )}
 
@@ -272,12 +289,11 @@ export function RateCard({
       >
         <div>
           <div className="mb-3 flex items-baseline justify-between">
-            <h2 className="text-sm font-semibold">{t.rate.yourTake}</h2>
+            <h2 className="text-sm font-semibold">{t.rate.yourScores}</h2>
             <span className="text-lg font-bold tabular-nums text-primary">
               {overallFromScores(scores, positionKey).toFixed(1)}
             </span>
           </div>
-          <p className="mb-2 text-[11px] text-muted-foreground">{t.rate.overallWeighted}</p>
           <div className="space-y-3">
             {dims.map((id) => (
               <GradeSlider
@@ -302,20 +318,29 @@ export function RateCard({
           />
         </div>
 
-        <div className="flex items-end gap-2">
-          <div className="flex-1 space-y-1">
-            <label className="text-xs text-muted-foreground" htmlFor="handle">
-              {t.rate.nickname}
-            </label>
-            <input
-              id="handle"
-              value={name}
-              maxLength={16}
-              onChange={(e) => setNameDraft(e.target.value)}
-              className="h-8 w-full rounded-lg border border-input bg-transparent px-2.5 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
-            />
+        {!hideNicknameField ? (
+          <div className="flex items-end gap-2">
+            <div className="flex-1 space-y-1">
+              <label className="text-xs text-muted-foreground" htmlFor="handle">
+                {t.rate.nickname}
+              </label>
+              <input
+                id="handle"
+                value={name}
+                maxLength={16}
+                onChange={(e) => setNameDraft(e.target.value)}
+                className="h-8 w-full rounded-lg border border-input bg-transparent px-2.5 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+              />
+            </div>
           </div>
-        </div>
+        ) : (
+          <p className="text-xs text-muted-foreground">
+            {t.rate.nickname}: {name}{" "}
+            <Link href="/profile" className="text-primary hover:underline">
+              {t.nav.profile}
+            </Link>
+          </p>
+        )}
 
         {mustSignIn && (
           <p className="text-sm text-muted-foreground">
