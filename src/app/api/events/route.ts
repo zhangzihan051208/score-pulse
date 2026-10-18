@@ -1,0 +1,32 @@
+import {
+  listLiveMatchEvents,
+  syncSportsDbFixtures,
+} from "@/lib/fixtures-sync";
+import { NextResponse } from "next/server";
+
+export async function GET(request: Request) {
+  const { searchParams } = new URL(request.url);
+  const sport = searchParams.get("sport");
+  const refresh = searchParams.get("refresh") === "1";
+
+  if (refresh || searchParams.get("sync") === "1") {
+    await syncSportsDbFixtures(refresh);
+  } else {
+    await syncSportsDbFixtures(false);
+  }
+
+  const sports =
+    sport === "nba"
+      ? (["nba"] as const)
+      : sport === "soccer"
+        ? (["soccer"] as const)
+        : (["nba", "soccer"] as const);
+
+  const limit = Number(searchParams.get("limit") ?? "12");
+  const events = await listLiveMatchEvents([...sports], Math.min(limit, 24));
+
+  return NextResponse.json({
+    events,
+    syncedAt: new Date().toISOString(),
+  });
+}

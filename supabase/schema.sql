@@ -50,9 +50,17 @@ create table if not exists public.sportsdb_fixtures (
   date_event date,
   str_time text,
   str_thumb text,
+  slug text,
+  id_home_team text,
+  id_away_team text,
+  lineup jsonb default '[]'::jsonb,
   raw jsonb,
   synced_at timestamptz not null default now()
 );
+
+create unique index if not exists sportsdb_fixtures_slug_idx
+  on public.sportsdb_fixtures (slug)
+  where slug is not null;
 
 create index if not exists sportsdb_fixtures_sport_date_idx
   on public.sportsdb_fixtures (sport, date_event desc);

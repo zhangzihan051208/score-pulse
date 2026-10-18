@@ -1,17 +1,21 @@
 "use client";
 
 import Link from "next/link";
-import { ApiFixturesStrip } from "@/components/api-fixtures-strip";
 import { StatusPill } from "@/components/status-pill";
+import { useLiveEvents } from "@/hooks/use-live-events";
 import { useI18n } from "@/i18n/use-i18n";
 import { tx } from "@/lib/copy";
-import { athletes, events, overallScore } from "@/lib/data";
+import { events, formatWhen, overallScore } from "@/lib/data";
+import { resolveAthlete } from "@/lib/event-resolve";
 import { SPORT_CHIP } from "@/lib/sports";
-import { SPORTS, type Sport } from "@/lib/types";
+import { SPORTS, type MatchEvent, type Sport } from "@/lib/types";
+
+const LIVE_SPORTS: Sport[] = ["nba", "soccer"];
 
 export function HomeBoards() {
   const { locale, t } = useI18n();
-  const live = events.filter((e) => e.status === "live");
+  const { events: liveAll, syncedAt } = useLiveEvents();
+  const live = liveAll.filter((e) => e.status === "live");
 
   return (
     <div className="mx-auto max-w-6xl px-3 py-6">
@@ -25,6 +29,9 @@ export function HomeBoards() {
         <p className="mt-3 max-w-2xl text-sm leading-6 text-white/70 sm:text-base">
           {t.home.lead}
         </p>
+        {syncedAt && (
+          <p className="mt-3 text-xs text-white/50">{t.home.liveSyncHint}</p>
+        )}
       </section>
 
       {live.length > 0 && (
@@ -48,15 +55,20 @@ export function HomeBoards() {
         </section>
       )}
 
-      <ApiFixturesStrip />
-
       <div className="mt-6 grid gap-4 lg:grid-cols-[1fr_280px]">
         <div className="space-y-4">
           <h2 className="text-xs font-semibold tracking-widest text-muted-foreground uppercase">
             {t.home.boardsTitle}
           </h2>
-          {SPORTS.map((sport) => (
-            <BoardBlock key={sport} sport={sport} />
+          {LIVE_SPORTS.map((sport) => (
+            <LiveSportBlock
+              key={sport}
+              sport={sport as "nba" | "soccer"}
+              list={liveAll.filter((e) => e.sport === sport)}
+            />
+          ))}
+          {SPORTS.filter((s) => !LIVE_SPORTS.includes(s)).map((sport) => (
+            <LegacyBoardBlock key={sport} sport={sport} />
           ))}
         </div>
         <aside className="h-fit rounded-xl border bg-card lg:sticky lg:top-16">
@@ -64,14 +76,14 @@ export function HomeBoards() {
             {t.home.hot}
           </div>
           <ul>
-            {events
+            {liveAll
               .flatMap((event) =>
-                event.performances.map((p) => ({ event, p })),
+                event.performances.slice(0, 6).map((p) => ({ event, p })),
               )
-              .sort((a, b) => b.p.ratingCount - a.p.ratingCount)
               .slice(0, 8)
               .map(({ event, p }) => {
-                const athlete = athletes[p.athleteId];
+                const athlete = resolveAthlete(event, p.athleteId);
+                if (!athlete) return null;
                 return (
                   <li key={`${event.id}-${p.athleteId}`} className="border-b last:border-0">
                     <Link
@@ -98,10 +110,24 @@ export function HomeBoards() {
   );
 }
 
-function BoardBlock({ sport }: { sport: Sport }) {
+function LiveSportBlock({
+  sport,
+  list,
+}: {
+  sport: "nba" | "soccer";
+  list: MatchEvent[];
+}) {
   const { locale, t } = useI18n();
-  const list = events.filter((e) => e.sport === sport);
   const featured = list[0];
+
+  if (list.length === 0) {
+    return (
+      <section className="rounded-xl border border-dashed bg-card px-3 py-6 text-sm text-muted-foreground">
+        {t.home.liveEmpty}
+      </section>
+    );
+  }
+
   if (!featured) return null;
 
   return (
@@ -121,21 +147,11 @@ function BoardBlock({ sport }: { sport: Sport }) {
           {t.home.enter}
         </Link>
       </div>
-      <Link
-        href={`/events/${featured.slug}`}
-        className="block border-b px-3 py-3 hover:bg-muted/40"
-      >
-        <div className="flex items-center gap-2">
-          <StatusPill status={featured.status} />
-          <span className="font-medium">{tx(featured.title, locale)}</span>
-        </div>
-        <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">
-          {tx(featured.summary, locale)}
-        </p>
-      </Link>
+      <FeaturedEventRow event={featured} locale={locale} t={t} />
       <ul>
-        {featured.performances.map((p) => {
-          const athlete = athletes[p.athleteId];
+        {featured.performances.slice(0, 8).map((p) => {
+          const athlete = resolveAthlete(featured, p.athleteId);
+          if (!athlete) return null;
           return (
             <li key={p.athleteId} className="border-b last:border-0">
               <Link
@@ -153,7 +169,72 @@ function BoardBlock({ sport }: { sport: Sport }) {
             </li>
           );
         })}
+        {featured.performances.length > 8 && (
+          <li className="px-3 py-2 text-xs text-muted-foreground">
+            +{featured.performances.length - 8} {t.home.morePlayers}
+          </li>
+        )}
       </ul>
+    </section>
+  );
+}
+
+function FeaturedEventRow({
+  event,
+  locale,
+  t,
+}: {
+  event: MatchEvent;
+  locale: string;
+  t: ReturnType<typeof useI18n>["t"];
+}) {
+  return (
+    <Link
+      href={`/events/${event.slug}`}
+      className="block border-b px-3 py-3 hover:bg-muted/40"
+    >
+      <div className="flex items-center gap-2">
+        <StatusPill status={event.status} />
+        <span className="font-medium">{tx(event.title, locale as "en")}</span>
+      </div>
+      <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">
+        {tx(event.summary, locale as "en")} · {event.performances.length}{" "}
+        {t.home.players}
+      </p>
+    </Link>
+  );
+}
+
+function LegacyBoardBlock({ sport }: { sport: Sport }) {
+  const { locale, t } = useI18n();
+  const list = events.filter((e) => e.sport === sport);
+  const featured = list[0];
+  if (!featured) return null;
+
+  return (
+    <section className="overflow-hidden rounded-xl border bg-card opacity-90">
+      <div className="flex items-center justify-between gap-3 border-b px-3 py-2">
+        <div className="flex items-center gap-2">
+          <span className={`h-5 w-1 rounded-full ${SPORT_CHIP[sport]}`} />
+          <h3 className="font-semibold">{t.sports[sport]}</h3>
+          <span className="text-xs text-muted-foreground">{t.home.demoArchive}</span>
+        </div>
+        <Link
+          href={`/boards/${sport}`}
+          className="text-xs font-medium text-primary hover:underline"
+        >
+          {t.home.enter}
+        </Link>
+      </div>
+      <Link
+        href={`/events/${featured.slug}`}
+        className="block border-b px-3 py-3 hover:bg-muted/40"
+      >
+        <div className="flex items-center gap-2">
+          <StatusPill status={featured.status} />
+          <span className="font-medium">{tx(featured.title, locale)}</span>
+        </div>
+      </Link>
     </section>
   );
 }

@@ -3,16 +3,28 @@
 import Link from "next/link";
 import { StatusPill } from "@/components/status-pill";
 import { dimLabel, positionRoleLabels } from "@/i18n/position-dims";
+import { useLiveEvents } from "@/hooks/use-live-events";
 import { useI18n } from "@/i18n/use-i18n";
 import { tx } from "@/lib/copy";
-import { athletes, eventsBySport, formatWhen, overallScore } from "@/lib/data";
+import {
+  athletes,
+  eventsBySport,
+  formatWhen,
+  overallScore,
+} from "@/lib/data";
+import { resolveAthlete } from "@/lib/event-resolve";
 import { BOARD_POSITIONS, dimensionIds } from "@/lib/position-ratings";
 import { SPORT_ACCENT } from "@/lib/sports";
 import type { Sport } from "@/lib/types";
 
 export function BoardPage({ sport }: { sport: Sport }) {
   const { locale, t } = useI18n();
-  const list = eventsBySport(sport);
+  const isLive = sport === "nba" || sport === "soccer";
+  const { events: liveList, syncedAt } = useLiveEvents(
+    isLive ? sport : "nba",
+    isLive,
+  );
+  const list = isLive ? liveList : eventsBySport(sport);
   const positions = BOARD_POSITIONS[sport];
 
   return (
@@ -23,7 +35,12 @@ export function BoardPage({ sport }: { sport: Sport }) {
             ← {t.board.backHome}
           </Link>
           <h1 className="mt-2 text-3xl font-bold">{t.sports[sport]}</h1>
-          <p className="mt-2 max-w-2xl text-sm text-white/85">{t.sportBlurb[sport]}</p>
+          <p className="mt-2 max-w-2xl text-sm text-white/85">
+            {isLive ? t.home.liveBoardLead : t.sportBlurb[sport]}
+          </p>
+          {isLive && syncedAt && (
+            <p className="mt-2 text-xs text-white/60">{t.home.liveSyncHint}</p>
+          )}
         </div>
       </section>
 
@@ -34,24 +51,32 @@ export function BoardPage({ sport }: { sport: Sport }) {
           </h2>
           {list.length === 0 ? (
             <p className="rounded-xl border border-dashed px-4 py-12 text-center text-sm text-muted-foreground">
-              {t.board.empty}
+              {isLive ? t.home.liveEmpty : t.board.empty}
             </p>
           ) : (
             list.map((event) => (
               <article key={event.id} className="rounded-xl border bg-card">
-                <Link href={`/events/${event.slug}`} className="block border-b px-4 py-3 hover:bg-muted/40">
+                <Link
+                  href={`/events/${event.slug}`}
+                  className="block border-b px-4 py-3 hover:bg-muted/40"
+                >
                   <div className="flex flex-wrap items-center gap-2">
                     <StatusPill status={event.status} />
                     <h3 className="font-semibold">{tx(event.title, locale)}</h3>
                   </div>
                   <p className="mt-1 text-sm text-muted-foreground">
-                    {tx(event.subtitle, locale)} · {tx(event.venue, locale)} ·{" "}
-                    {formatWhen(event.startAt, locale)}
+                    {tx(event.subtitle, locale)} · {formatWhen(event.startAt, locale)}
+                    {event.live
+                      ? ` · ${event.performances.length} ${t.home.players}`
+                      : ""}
                   </p>
                 </Link>
                 <ul>
                   {event.performances.map((p) => {
-                    const athlete = athletes[p.athleteId];
+                    const athlete =
+                      resolveAthlete(event, p.athleteId) ??
+                      athletes[p.athleteId];
+                    if (!athlete) return null;
                     return (
                       <li key={p.athleteId}>
                         <Link

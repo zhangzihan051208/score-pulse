@@ -10,3 +10,11 @@ export const L = (
   es: string,
   ja: string,
 ): Localized => ({ en, zh, es, ja });
+
+/** Same copy in every locale (live API names). */
+export const S = (text: string): Localized => ({
+  en: text,
+  zh: text,
+  es: text,
+  ja: text,
+});

@@ -45,6 +45,12 @@ type Dict = {
     liveNow: string;
     apiFixtures: string;
     apiFixturesHint: string;
+    liveSyncHint: string;
+    liveEmpty: string;
+    liveBoardLead: string;
+    players: string;
+    morePlayers: string;
+    demoArchive: string;
   };
   board: {
     matches: string;
@@ -154,7 +160,15 @@ export const messages: Record<Locale, Dict> = {
       liveNow: "Live games",
       apiFixtures: "From TheSportsDB",
       apiFixturesHint:
-        "NBA & Premier League schedule/scores sync when Supabase service key is set.",
+        "Live NBA & Premier League threads refresh from TheSportsDB every ~90s.",
+      liveSyncHint: "Scores & rosters auto-refresh about every 90 seconds.",
+      liveEmpty:
+        "No live threads yet. Set Supabase service key and run sync, or wait for the next poll.",
+      liveBoardLead:
+        "Real recent matches with full squads from TheSportsDB — rate any listed player.",
+      players: "players",
+      morePlayers: "more on the thread",
+      demoArchive: "demo archive",
     },
     board: {
       matches: "Match threads",
@@ -331,7 +345,13 @@ export const messages: Record<Locale, Dict> = {
       rate: "打分",
       liveNow: "进行中",
       apiFixtures: "TheSportsDB 赛程",
-      apiFixturesHint: "配置 Supabase 服务端密钥后会同步 NBA 与英超比分。",
+      apiFixturesHint: "NBA 与英超真实赛程约每 90 秒自动刷新。",
+      liveSyncHint: "比分与名单约每 90 秒自动同步。",
+      liveEmpty: "暂无真实赛程。请配置 Supabase 服务端密钥并等待同步。",
+      liveBoardLead: "TheSportsDB 最近比赛与阵容，可为名单中任意球员打分。",
+      players: "名球员",
+      morePlayers: "人见比赛帖",
+      demoArchive: "演示归档",
     },
     board: {
       matches: "比赛帖",
@@ -507,7 +527,13 @@ export const messages: Record<Locale, Dict> = {
       rate: "Puntuar",
       liveNow: "En vivo",
       apiFixtures: "TheSportsDB",
-      apiFixturesHint: "NBA y Premier League se sincronizan con la service key.",
+      apiFixturesHint: "NBA y Premier League se actualizan cada ~90 s.",
+      liveSyncHint: "Marcadores y plantillas se refrescan cada ~90 s.",
+      liveEmpty: "Sin partidos reales aún. Configura Supabase service key.",
+      liveBoardLead: "Partidos recientes y plantillas completas desde TheSportsDB.",
+      players: "jugadores",
+      morePlayers: "más en el hilo",
+      demoArchive: "demo",
     },
     board: {
       matches: "Hilos",
@@ -684,7 +710,13 @@ export const messages: Record<Locale, Dict> = {
       rate: "採点",
       liveNow: "進行中",
       apiFixtures: "TheSportsDB",
-      apiFixturesHint: "service key 設定で NBA・PL の同期が有効になります。",
+      apiFixturesHint: "NBA・PL は約90秒ごとに自動更新。",
+      liveSyncHint: "スコアとメンバーは約90秒ごとに同期。",
+      liveEmpty: "実試合データがありません。service key を設定してください。",
+      liveBoardLead: "TheSportsDB の最近の試合とメンバー全員が採点対象。",
+      players: "選手",
+      morePlayers: "人はスレッドへ",
+      demoArchive: "デモ",
     },
     board: {
       matches: "試合スレ",

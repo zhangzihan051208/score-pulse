@@ -1,17 +1,30 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect, useState } from "react";
 import { useCommunity } from "@/hooks/use-community";
 import { useI18n } from "@/i18n/use-i18n";
 import { tx } from "@/lib/copy";
 import { athletes, events, formatWhen, getPerformance, overallScore } from "@/lib/data";
 import { allFeedItems } from "@/lib/store";
-import type { Localized } from "@/lib/types";
+import type { Localized, MatchEvent } from "@/lib/types";
 
 export function FeedList() {
   const { locale, t } = useI18n();
   const { state } = useCommunity();
   const items = allFeedItems(state);
+  const [liveById, setLiveById] = useState<Map<string, MatchEvent>>(new Map());
+
+  useEffect(() => {
+    fetch("/api/events?limit=24")
+      .then((r) => r.json())
+      .then((data: { events?: MatchEvent[] }) => {
+        const map = new Map<string, MatchEvent>();
+        for (const e of data.events ?? []) map.set(e.id, e);
+        setLiveById(map);
+      })
+      .catch(() => {});
+  }, []);
 
   return (
     <div className="mx-auto max-w-xl px-3 py-8">
@@ -24,7 +37,9 @@ export function FeedList() {
           </li>
         ) : (
           items.map((item, index) => {
-            const event = events.find((e) => e.id === item.eventId);
+            const event =
+              events.find((e) => e.id === item.eventId) ??
+              liveById.get(item.eventId);
             const athlete = athletes[item.athleteId];
             if (!event || !athlete) return null;
             const body =

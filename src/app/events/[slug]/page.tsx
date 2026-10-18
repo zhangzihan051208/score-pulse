@@ -1,10 +1,8 @@
 import { notFound } from "next/navigation";
-import { EventThread } from "@/components/event-thread";
-import { events } from "@/lib/data";
+import { LiveEventPage } from "@/components/live-event-page";
+import { resolveEventBySlug } from "@/lib/events-catalog";
 
-export function generateStaticParams() {
-  return events.map((event) => ({ slug: event.slug }));
-}
+export const dynamic = "force-dynamic";
 
 export async function generateMetadata({
   params,
@@ -12,7 +10,7 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const event = events.find((item) => item.slug === slug);
+  const event = await resolveEventBySlug(slug);
   return { title: event?.title.en ?? "Match" };
 }
 
@@ -22,7 +20,11 @@ export default async function EventPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const event = events.find((item) => item.slug === slug);
+  const event = await resolveEventBySlug(slug);
   if (!event) notFound();
+  if (event.live) {
+    return <LiveEventPage slug={slug} initial={event} />;
+  }
+  const { EventThread } = await import("@/components/event-thread");
   return <EventThread event={event} />;
 }

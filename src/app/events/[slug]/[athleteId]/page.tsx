@@ -1,15 +1,9 @@
 import { notFound } from "next/navigation";
-import { RateCard } from "@/components/rate-card";
-import { athletes, events } from "@/lib/data";
+import { LiveRatePage } from "@/components/live-rate-page";
+import { resolveEventBySlug } from "@/lib/events-catalog";
+import { resolveAthlete } from "@/lib/event-resolve";
 
-export function generateStaticParams() {
-  return events.flatMap((event) =>
-    event.performances.map((p) => ({
-      slug: event.slug,
-      athleteId: p.athleteId,
-    })),
-  );
-}
+export const dynamic = "force-dynamic";
 
 export async function generateMetadata({
   params,
@@ -17,11 +11,9 @@ export async function generateMetadata({
   params: Promise<{ slug: string; athleteId: string }>;
 }) {
   const { slug, athleteId } = await params;
-  const event = events.find((item) => item.slug === slug);
-  const athlete = athletes[athleteId];
-  return {
-    title: event && athlete ? `${athlete.name}` : "Rate",
-  };
+  const event = await resolveEventBySlug(slug);
+  const athlete = event ? resolveAthlete(event, athleteId) : undefined;
+  return { title: athlete?.name ?? "Rate" };
 }
 
 export default async function RatePage({
@@ -30,10 +22,24 @@ export default async function RatePage({
   params: Promise<{ slug: string; athleteId: string }>;
 }) {
   const { slug, athleteId } = await params;
-  const event = events.find((item) => item.slug === slug);
-  const athlete = athletes[athleteId];
+  const event = await resolveEventBySlug(slug);
   const performance = event?.performances.find((p) => p.athleteId === athleteId);
+  const athlete = event ? resolveAthlete(event, athleteId) : undefined;
   if (!event || !athlete || !performance) notFound();
+
+  if (event.live) {
+    return (
+      <LiveRatePage
+        slug={slug}
+        athleteId={athleteId}
+        initialEvent={event}
+        initialAthlete={athlete}
+        initialPerformance={performance}
+      />
+    );
+  }
+
+  const { RateCard } = await import("@/components/rate-card");
   return (
     <RateCard event={event} athlete={athlete} performance={performance} />
   );

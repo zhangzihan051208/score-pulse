@@ -30,6 +30,9 @@ export type TsdbEvent = {
   strLeague?: string;
   strHomeTeam?: string;
   strAwayTeam?: string;
+  idHomeTeam?: string;
+  idAwayTeam?: string;
+  strVenue?: string;
   intHomeScore?: string | null;
   intAwayScore?: string | null;
   strStatus?: string;
@@ -39,6 +42,22 @@ export type TsdbEvent = {
   strSport?: string;
   idLeague?: string;
 };
+
+export type TsdbLineupPlayer = {
+  idPlayer: string;
+  idEvent?: string;
+  strPlayer: string;
+  strTeam?: string;
+  idTeam?: string;
+  strPosition?: string;
+  strHome?: string;
+  strSubstitute?: string;
+  intSquadNumber?: string | null;
+};
+
+type LineupResponse = { lineup: TsdbLineupPlayer[] | null };
+type PlayersResponse = { player: TsdbLineupPlayer[] | null };
+type EventLookupResponse = { events: TsdbEvent[] | null };
 
 type EventsResponse = { events: TsdbEvent[] | null };
 
@@ -81,6 +100,30 @@ export async function fetchEventsOnDay(date: string, sport: "Soccer" | "Basketba
     { optional: true },
   );
   return data?.events ?? [];
+}
+
+export async function fetchEventById(idEvent: string) {
+  const data = await tsdb<EventLookupResponse>(
+    `lookupevent.php?id=${encodeURIComponent(idEvent)}`,
+    { optional: true },
+  );
+  return data?.events?.[0] ?? null;
+}
+
+export async function fetchLineup(idEvent: string) {
+  const data = await tsdb<LineupResponse>(
+    `lookuplineup.php?id=${encodeURIComponent(idEvent)}`,
+    { optional: true },
+  );
+  return data?.lineup ?? [];
+}
+
+export async function fetchTeamRoster(idTeam: string) {
+  const data = await tsdb<PlayersResponse>(
+    `lookup_all_players.php?id=${encodeURIComponent(idTeam)}`,
+    { optional: true },
+  );
+  return data?.player ?? [];
 }
 
 export function mapTsdbStatus(strStatus?: string): "live" | "upcoming" | "ended" {

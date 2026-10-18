@@ -6,7 +6,8 @@ import { StatusPill } from "@/components/status-pill";
 import { useCommunity } from "@/hooks/use-community";
 import { useI18n } from "@/i18n/use-i18n";
 import { tx } from "@/lib/copy";
-import { athletes, formatWhen, overallScore } from "@/lib/data";
+import { formatWhen, overallScore } from "@/lib/data";
+import { resolveAthlete } from "@/lib/event-resolve";
 import { mergedAverages } from "@/lib/store";
 import type { MatchEvent } from "@/lib/types";
 
@@ -38,9 +39,9 @@ export function EventThread({ event }: { event: MatchEvent }) {
 
       <div className="mx-auto max-w-3xl space-y-3 px-3 py-6">
         {event.performances.map((p) => {
-          const athlete = athletes[p.athleteId];
+          const athlete = resolveAthlete(event, p.athleteId);
           const merged = mergedAverages(event, p.athleteId, state);
-          if (!merged) return null;
+          if (!merged || !athlete) return null;
           return (
             <article key={p.athleteId} className="rounded-xl border bg-card p-4">
               <div className="flex items-start justify-between gap-3">

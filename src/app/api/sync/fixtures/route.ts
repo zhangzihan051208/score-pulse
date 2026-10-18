@@ -17,8 +17,11 @@ export async function POST(request: Request) {
   return NextResponse.json({ synced: result.count });
 }
 
-export async function GET() {
-  const result = await syncSportsDbFixtures();
+export async function GET(request: Request) {
+  const force =
+    new URL(request.url).searchParams.get("force") === "1" ||
+    new URL(request.url).searchParams.get("sync") === "1";
+  const result = await syncSportsDbFixtures(force);
   if (!result.ok) {
     return NextResponse.json({ error: result.error }, { status: 500 });
   }

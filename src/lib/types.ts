@@ -44,6 +44,9 @@ export type MatchEvent = {
   summary: Localized;
   cover: string;
   performances: Performance[];
+  /** Live TheSportsDB roster keyed by player id */
+  roster?: Record<string, Athlete>;
+  live?: boolean;
 };
 
 export type SeedComment = {
