@@ -2,6 +2,11 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import {
+  CommunityRatingsPanel,
+  type RemoteComment,
+  type RemoteRating,
+} from "@/components/community-ratings-panel";
 import { GradeSlider } from "@/components/grade-slider";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -11,7 +16,7 @@ import { useCommunity } from "@/hooks/use-community";
 import { useI18n } from "@/i18n/use-i18n";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 import { tx } from "@/lib/copy";
-import { formatWhen, meanScore } from "@/lib/data";
+import { meanScore } from "@/lib/data";
 import {
   commentsFor,
   emptyScores,
@@ -21,13 +26,10 @@ import {
 import { SPORT_DIMENSIONS } from "@/lib/sports";
 import type {
   Athlete,
-  Locale,
   Localized,
   MatchEvent,
   Performance,
   ScoreMap,
-  SeedComment,
-  UserComment,
 } from "@/lib/types";
 
 export function RateCard({
@@ -41,36 +43,38 @@ export function RateCard({
 }) {
   const { locale, t } = useI18n();
   const { user, enabled: authEnabled } = useAuth();
+  const userId = user?.id;
   const { state, postTake } = useCommunity();
   const dims = SPORT_DIMENSIONS[event.sport];
   const localMine = getUserRating(state, event.id, athlete.id);
   const merged = mergedAverages(event, athlete.id, state);
   const localComments = commentsFor(event.id, athlete.id, state);
 
-  const [remoteComments, setRemoteComments] = useState<
-    Array<{
-      id: string;
-      author: string;
-      body: string;
-      createdAt: string;
-      userId?: string;
-    }>
-  >([]);
+  const [remoteComments, setRemoteComments] = useState<RemoteComment[]>([]);
+  const [remoteRatings, setRemoteRatings] = useState<RemoteRating[]>([]);
   const [remoteMine, setRemoteMine] = useState<ScoreMap | null>(null);
+  const [remoteCommunityAvg, setRemoteCommunityAvg] = useState<ScoreMap | null>(
+    null,
+  );
 
   const loadRemote = useCallback(async () => {
     if (!authEnabled) return;
+    const qs = new URLSearchParams({ sport: event.sport });
     const res = await fetch(
-      `/api/community/${encodeURIComponent(event.id)}/${encodeURIComponent(athlete.id)}`,
+      `/api/community/${encodeURIComponent(event.id)}/${encodeURIComponent(athlete.id)}?${qs}`,
     );
     if (!res.ok) return;
     const data = (await res.json()) as {
-      comments: typeof remoteComments;
+      comments: RemoteComment[];
+      ratings: RemoteRating[];
       mine: ScoreMap | null;
+      communityAvg: ScoreMap | null;
     };
     setRemoteComments(data.comments ?? []);
+    setRemoteRatings(data.ratings ?? []);
     setRemoteMine(data.mine);
-  }, [athlete.id, authEnabled, event.id]);
+    setRemoteCommunityAvg(data.communityAvg ?? null);
+  }, [athlete.id, authEnabled, event.id, event.sport]);
 
   useEffect(() => {
     loadRemote();
@@ -81,24 +85,59 @@ export function RateCard({
       ? { eventId: event.id, athleteId: athlete.id, scores: remoteMine, updatedAt: "" }
       : localMine;
 
-  const comments = useMemo(() => {
-    const remote = remoteComments.map((c) => ({
-      id: c.id,
-      eventId: event.id,
-      athleteId: athlete.id,
-      author: c.author,
-      body: c.body,
-      createdAt: c.createdAt,
-      local: true as const,
-    }));
-    const seen = new Set(remote.map((c) => c.id));
-    const localOnly = localComments.filter(
-      (c) => !("id" in c) || !seen.has(c.id),
-    );
-    return [...remote, ...localOnly].sort(
-      (a, b) => +new Date(b.createdAt) - +new Date(a.createdAt),
-    );
-  }, [athlete.id, event.id, localComments, remoteComments]);
+  const panelRatings = useMemo((): RemoteRating[] => {
+    if (authEnabled) return remoteRatings;
+    const entry = getUserRating(state, event.id, athlete.id);
+    if (!entry) return [];
+    return [
+      {
+        userId: "local",
+        author: state.nickname,
+        scores: entry.scores,
+        updatedAt: entry.updatedAt,
+        isYou: true,
+      },
+    ];
+  }, [authEnabled, athlete.id, event.id, remoteRatings, state]);
+
+  const panelComments = useMemo((): RemoteComment[] => {
+    if (authEnabled) return remoteComments;
+    return localComments.map((c) => {
+      const isLocalUser = "local" in c && c.local;
+      const isYou =
+        isLocalUser && c.author === state.nickname;
+      return {
+        id: c.id,
+        author: c.author,
+        body: isLocalUser ? c.body : tx(c.body as Localized, locale),
+        createdAt: c.createdAt,
+        isYou,
+      };
+    });
+  }, [
+    authEnabled,
+    localComments,
+    locale,
+    remoteComments,
+    state.nickname,
+  ]);
+
+  const displayMerged = useMemo(() => {
+    if (authEnabled && remoteCommunityAvg && remoteRatings.length > 0) {
+      return {
+        avg: remoteCommunityAvg,
+        count: remoteRatings.length,
+        mine: remoteMine,
+      };
+    }
+    return merged;
+  }, [
+    authEnabled,
+    merged,
+    remoteCommunityAvg,
+    remoteMine,
+    remoteRatings.length,
+  ]);
 
   const cloudPost = authEnabled && isSupabaseConfigured();
   const mustSignIn = cloudPost && !user;
@@ -124,7 +163,7 @@ export function RateCard({
   }
 
   return (
-    <div className="mx-auto max-w-xl px-3 py-6">
+    <div className="mx-auto max-w-2xl px-3 py-6">
       <Link
         href={`/events/${event.slug}`}
         className="text-xs text-muted-foreground hover:underline"
@@ -143,27 +182,32 @@ export function RateCard({
             {performance.result ? ` · ${tx(performance.result, locale)}` : ""}
           </p>
         </div>
-        {merged && (
+        {displayMerged && (
           <div className="text-right">
             <p className="text-[11px] text-muted-foreground">{t.rate.community}</p>
-            <Overall value={meanScore(merged.avg)} />
+            <Overall value={meanScore(displayMerged.avg)} />
           </div>
         )}
       </div>
 
       <p className="mt-3 text-sm leading-6">{tx(performance.highlight, locale)}</p>
 
-      {merged && (
+      {displayMerged && (
         <div className="mt-4 rounded-lg bg-muted/60 p-3">
           <p className="mb-2 text-[11px] font-medium tracking-wide text-muted-foreground uppercase">
             {t.rate.community}
+            {authEnabled && remoteRatings.length > 0 ? (
+              <span className="ml-1 font-normal normal-case text-muted-foreground">
+                ({remoteRatings.length})
+              </span>
+            ) : null}
           </p>
           <div className="flex flex-wrap gap-1.5">
             {dims.map((id) => (
               <span key={id} className="rounded-md bg-background px-2 py-1 text-xs">
                 {t.dims[event.sport][id]}{" "}
                 <span className="font-semibold tabular-nums">
-                  {(merged.avg[id] ?? 0).toFixed(1)}
+                  {(displayMerged.avg[id] ?? 0).toFixed(1)}
                 </span>
               </span>
             ))}
@@ -210,7 +254,7 @@ export function RateCard({
           setError(null);
           setSaved(true);
           queueMicrotask(() => {
-            document.getElementById("takes-list")?.scrollIntoView({
+            document.getElementById("community-board")?.scrollIntoView({
               behavior: "smooth",
               block: "start",
             });
@@ -278,40 +322,12 @@ export function RateCard({
         {saved && <p className="text-center text-sm text-primary">{t.rate.posted}</p>}
       </form>
 
-      <h2 className="mt-8 text-sm font-semibold">{t.rate.takes}</h2>
-      <ul id="takes-list" className="mt-3 space-y-3">
-        {comments.length === 0 ? (
-          <li className="rounded-lg border border-dashed px-3 py-8 text-center text-sm text-muted-foreground">
-            {t.rate.noComments}
-          </li>
-        ) : (
-          comments.map((comment) => {
-            const minePost = "local" in comment && comment.local;
-            return (
-              <li
-                key={comment.id}
-                className={`rounded-lg border bg-card p-3 ${minePost ? "border-primary/40" : ""}`}
-              >
-                <div className="flex justify-between text-xs text-muted-foreground">
-                  <span className="font-medium text-foreground">
-                    {comment.author}
-                    {minePost ? ` · ${t.rate.you}` : ""}
-                  </span>
-                  <time>{formatWhen(comment.createdAt, locale)}</time>
-                </div>
-                <p className="mt-2 text-sm leading-6">
-                  {commentBody(comment, locale)}
-                </p>
-              </li>
-            );
-          })
-        )}
-      </ul>
+      <CommunityRatingsPanel
+        sport={event.sport}
+        dimIds={[...dims]}
+        ratings={panelRatings}
+        comments={panelComments}
+      />
     </div>
   );
-}
-
-function commentBody(comment: SeedComment | UserComment, locale: Locale) {
-  if ("local" in comment && comment.local) return comment.body;
-  return tx(comment.body as Localized, locale);
 }

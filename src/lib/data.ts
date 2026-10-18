@@ -120,7 +120,7 @@ export const events: MatchEvent[] = [
     title: L("Lakers vs Celtics", "湖人 vs 凯尔特人", "Lakers vs Celtics", "レイカーズ vs セルティックス"),
     subtitle: L("NBA · National TV", "NBA · 全美转播", "NBA · TV nacional", "NBA · 全国放送"),
     venue: L("Crypto.com Arena, Los Angeles", "洛杉矶加密货币球馆", "Crypto.com Arena, Los Ángeles", "クリプト・ドットコム・アリーナ"),
-    startAt: "2026-04-12T19:30:00-07:00",
+    startAt: "2026-10-18T19:30:00-07:00",
     status: "live",
     cover: "from-[#c45911] to-[#e67e22]",
     summary: L(
@@ -193,7 +193,7 @@ export const events: MatchEvent[] = [
     title: L("Real Madrid vs Man City", "皇马 vs 曼城", "Real Madrid vs Man City", "レアル vs マンC"),
     subtitle: L("UCL quarterfinal · 1st leg", "欧冠 1/4 首回合", "UCL cuartos · ida", "CL 準々決勝・第1戦"),
     venue: L("Santiago Bernabéu, Madrid", "伯纳乌", "Santiago Bernabéu", "ベルナベウ"),
-    startAt: "2026-04-08T21:00:00+02:00",
+    startAt: "2026-10-15T21:00:00+02:00",
     status: "ended",
     cover: "from-[#1e7a46] to-[#27ae60]",
     summary: L(
@@ -317,7 +317,7 @@ export const events: MatchEvent[] = [
     title: L("Monaco Grand Prix", "摩纳哥大奖赛", "GP de Mónaco", "モナコGP"),
     subtitle: L("Formula 1 · Race", "F1 正赛", "Fórmula 1", "F1 決勝"),
     venue: L("Circuit de Monaco", "摩纳哥街道赛", "Circuito de Mónaco", "モンテカルロ市街地"),
-    startAt: "2026-05-24T15:00:00+02:00",
+    startAt: "2026-10-12T15:00:00+02:00",
     status: "live",
     cover: "from-[#7f1d1d] to-[#e11d48]",
     summary: L(
@@ -389,7 +389,7 @@ export const events: MatchEvent[] = [
     title: L("Sinner vs Alcaraz", "辛纳 vs 阿尔卡拉斯", "Sinner vs Alcaraz", "シナー vs アルカラス"),
     subtitle: L("Roland-Garros final", "法网决赛", "Final de Roland-Garros", "全仏オープン決勝"),
     venue: L("Court Philippe-Chatrier, Paris", "菲利普·夏蒂埃球场", "Philippe-Chatrier", "フィリップ・シャトリエ"),
-    startAt: "2026-06-07T15:00:00+02:00",
+    startAt: "2026-10-05T15:00:00+02:00",
     status: "ended",
     cover: "from-[#365314] to-[#65a30d]",
     summary: L(
@@ -444,7 +444,7 @@ export const events: MatchEvent[] = [
     title: L("Pereira vs Ankalaev", "佩雷拉 vs 安卡拉耶夫", "Pereira vs Ankalaev", "ペレイラ vs アンカラエフ"),
     subtitle: L("UFC · Light heavyweight title", "UFC · 轻重量级金腰带", "UFC · Semipesado", "UFC ・LHW王座"),
     venue: L("T-Mobile Arena, Las Vegas", "拉斯维加斯 T-Mobile 球馆", "T-Mobile Arena, Las Vegas", "T-モバイル・アリーナ"),
-    startAt: "2026-04-18T22:00:00-07:00",
+    startAt: "2026-10-17T22:00:00-07:00",
     status: "live",
     cover: "from-[#111827] to-[#6b7280]",
     summary: L(

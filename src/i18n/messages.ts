@@ -73,6 +73,14 @@ type Dict = {
     noComments: string;
     takes: string;
     you: string;
+    communityBoard: string;
+    filterAll: string;
+    filterMine: string;
+    filterOthers: string;
+    radarLegend: string;
+    allRatings: string;
+    noCommunityYet: string;
+    noCommentsInFilter: string;
   };
   feed: {
     title: string;
@@ -171,6 +179,14 @@ export const messages: Record<Locale, Dict> = {
       noComments: "No takes yet. Be the first.",
       takes: "Takes",
       you: "You",
+      communityBoard: "Community grades",
+      filterAll: "All",
+      filterMine: "Mine",
+      filterOthers: "Others",
+      radarLegend: "Orange = community avg · Blue = your card",
+      allRatings: "Every rating",
+      noCommunityYet: "No cloud ratings yet. Sign in and post the first card.",
+      noCommentsInFilter: "No comments in this filter.",
     },
     feed: {
       title: "Feed",
@@ -335,6 +351,14 @@ export const messages: Record<Locale, Dict> = {
       noComments: "还没有短评。",
       takes: "短评",
       you: "我",
+      communityBoard: "社区评分",
+      filterAll: "全部",
+      filterMine: "我的",
+      filterOthers: "他人",
+      radarLegend: "橙色 = 社区均分 · 蓝色 = 你的评分",
+      allRatings: "全部评分卡",
+      noCommunityYet: "还没有云端评分，登录后发布第一条。",
+      noCommentsInFilter: "该筛选下暂无评论。",
     },
     feed: {
       title: "动态",
@@ -499,6 +523,14 @@ export const messages: Record<Locale, Dict> = {
       noComments: "Aún no hay comentarios.",
       takes: "Comentarios",
       you: "Tú",
+      communityBoard: "Notas de la comunidad",
+      filterAll: "Todos",
+      filterMine: "Mías",
+      filterOthers: "Otros",
+      radarLegend: "Naranja = media · Azul = tu tarjeta",
+      allRatings: "Cada nota",
+      noCommunityYet: "Aún no hay notas en la nube.",
+      noCommentsInFilter: "Sin comentarios en este filtro.",
     },
     feed: {
       title: "Feed",
@@ -663,6 +695,14 @@ export const messages: Record<Locale, Dict> = {
       noComments: "まだ一言がありません。",
       takes: "一言",
       you: "自分",
+      communityBoard: "コミュニティ採点",
+      filterAll: "すべて",
+      filterMine: "自分",
+      filterOthers: "他人",
+      radarLegend: "橙 = 平均 · 青 = あなた",
+      allRatings: "すべての採点",
+      noCommunityYet: "クラウド採点はまだありません。",
+      noCommentsInFilter: "このフィルターにコメントはありません。",
     },
     feed: {
       title: "フィード",
