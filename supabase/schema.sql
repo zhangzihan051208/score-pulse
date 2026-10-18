@@ -33,6 +33,9 @@ create table if not exists public.comments (
 create index if not exists comments_event_athlete_idx
   on public.comments (event_id, athlete_id, created_at desc);
 
+create unique index if not exists comments_one_per_user_take_idx
+  on public.comments (user_id, event_id, athlete_id);
+
 create table if not exists public.sportsdb_fixtures (
   id_event text primary key,
   sport text not null,

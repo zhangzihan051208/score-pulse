@@ -10,21 +10,12 @@ import { overallFromScores } from "@/lib/store";
 import { averageScores } from "@/lib/score-aggregate";
 import type { PositionKey, ScoreMap } from "@/lib/types";
 
-export type RemoteRating = {
+export type CommunityTake = {
   userId: string;
   author: string;
   scores: ScoreMap;
   updatedAt: string;
-  isYou: boolean;
-};
-
-export type RemoteComment = {
-  id: string;
-  author: string;
-  body: string;
-  createdAt: string;
-  scores?: ScoreMap;
-  userId?: string;
+  body?: string;
   isYou: boolean;
 };
 
@@ -33,13 +24,11 @@ type Filter = "all" | "mine" | "others";
 export function CommunityRatingsPanel({
   positionKey,
   dimIds,
-  ratings,
-  comments,
+  takes,
 }: {
   positionKey: PositionKey;
   dimIds: string[];
-  ratings: RemoteRating[];
-  comments: RemoteComment[];
+  takes: CommunityTake[];
 }) {
   const { locale, t } = useI18n();
   const [filter, setFilter] = useState<Filter>("all");
@@ -47,21 +36,15 @@ export function CommunityRatingsPanel({
   const dimLabels = dimIds.map((id) => dimLabel(locale, positionKey, id));
 
   const communityAvg = useMemo(
-    () => averageScores(ratings.map((r) => r.scores), dimIds),
-    [ratings, dimIds],
+    () => averageScores(takes.map((row) => row.scores), dimIds),
+    [takes, dimIds],
   );
 
-  const mineRating = ratings.find((r) => r.isYou);
+  const mineTake = takes.find((row) => row.isYou);
 
-  const filteredRatings = ratings.filter((r) => {
-    if (filter === "mine") return r.isYou;
-    if (filter === "others") return !r.isYou;
-    return true;
-  });
-
-  const filteredComments = comments.filter((c) => {
-    if (filter === "mine") return c.isYou;
-    if (filter === "others") return !c.isYou;
+  const filtered = takes.filter((row) => {
+    if (filter === "mine") return row.isYou;
+    if (filter === "others") return !row.isYou;
     return true;
   });
 
@@ -72,7 +55,7 @@ export function CommunityRatingsPanel({
       stroke: string;
       fill: string;
     }[] = [];
-    if (communityAvg && ratings.length > 0) {
+    if (communityAvg && takes.length > 0) {
       out.push({
         label: t.rate.community,
         scores: communityAvg,
@@ -80,18 +63,18 @@ export function CommunityRatingsPanel({
         fill: "oklch(0.58 0.19 38 / 0.2)",
       });
     }
-    if (mineRating) {
+    if (mineTake) {
       out.push({
         label: t.rate.you,
-        scores: mineRating.scores,
+        scores: mineTake.scores,
         stroke: "oklch(0.45 0.12 250)",
         fill: "oklch(0.45 0.12 250 / 0.25)",
       });
     }
     return out;
-  }, [communityAvg, mineRating, ratings.length, t.rate.community, t.rate.you]);
+  }, [communityAvg, mineTake, takes.length, t.rate.community, t.rate.you]);
 
-  if (ratings.length === 0 && comments.length === 0) {
+  if (takes.length === 0) {
     return (
       <section className="mt-8 rounded-xl border border-dashed px-3 py-8 text-center text-sm text-muted-foreground">
         {t.rate.noCommunityYet}
@@ -128,72 +111,26 @@ export function CommunityRatingsPanel({
           </p>
           <DimensionRadar dimIds={dimIds} dimLabels={dimLabels} series={radarSeries} />
           <div className="mt-3 flex flex-wrap justify-center gap-3 text-xs">
-            {communityAvg && ratings.length > 0 && (
+            {communityAvg && takes.length > 0 && (
               <span className="inline-flex items-center gap-1.5">
                 <span className="size-2 rounded-full bg-primary" />
                 {t.rate.community}{" "}
                 <span className="font-semibold tabular-nums">
                   {overallScore(communityAvg, positionKey).toFixed(1)}
                 </span>
-                <span className="text-muted-foreground">({ratings.length})</span>
+                <span className="text-muted-foreground">({takes.length})</span>
               </span>
             )}
-            {mineRating && (
+            {mineTake && (
               <span className="inline-flex items-center gap-1.5">
                 <span className="size-2 rounded-full bg-blue-700" />
                 {t.rate.you}{" "}
                 <span className="font-semibold tabular-nums">
-                  {overallFromScores(mineRating.scores, positionKey).toFixed(1)}
+                  {overallFromScores(mineTake.scores, positionKey).toFixed(1)}
                 </span>
               </span>
             )}
           </div>
-        </div>
-      )}
-
-      {filteredRatings.length > 0 && (
-        <div className="space-y-2">
-          <h3 className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
-            {t.rate.allRatings}
-          </h3>
-          <ul className="space-y-2">
-            {filteredRatings.map((r) => (
-              <li
-                key={r.userId}
-                className={`rounded-lg border bg-card p-3 ${r.isYou ? "border-primary/40" : ""}`}
-              >
-                <div className="flex items-start justify-between gap-2">
-                  <div>
-                    <p className="text-sm font-medium">
-                      {r.author}
-                      {r.isYou ? ` · ${t.rate.you}` : ""}
-                    </p>
-                    <time className="text-[11px] text-muted-foreground">
-                      {formatWhen(r.updatedAt, locale)}
-                    </time>
-                  </div>
-                  <Overall value={overallFromScores(r.scores, positionKey)} />
-                </div>
-                <div className="mt-3 flex justify-center sm:justify-start">
-                  <DimensionRadar
-                    dimIds={dimIds}
-                    dimLabels={dimLabels}
-                    series={[
-                      {
-                        label: r.author,
-                        scores: r.scores,
-                        stroke: r.isYou ? "oklch(0.45 0.12 250)" : "oklch(0.55 0.02 40)",
-                        fill: r.isYou
-                          ? "oklch(0.45 0.12 250 / 0.25)"
-                          : "oklch(0.55 0.02 40 / 0.15)",
-                      },
-                    ]}
-                    size={180}
-                  />
-                </div>
-              </li>
-            ))}
-          </ul>
         </div>
       )}
 
@@ -202,41 +139,52 @@ export function CommunityRatingsPanel({
           {t.rate.takes}
         </h3>
         <ul id="takes-list" className="space-y-3">
-          {filteredComments.length === 0 ? (
+          {filtered.length === 0 ? (
             <li className="rounded-lg border border-dashed px-3 py-6 text-center text-sm text-muted-foreground">
               {t.rate.noCommentsInFilter}
             </li>
           ) : (
-            filteredComments.map((c) => (
+            filtered.map((row) => (
               <li
-                key={c.id}
-                className={`rounded-lg border bg-card p-3 ${c.isYou ? "border-primary/40" : ""}`}
+                key={row.userId}
+                className={`rounded-lg border bg-card p-3 ${row.isYou ? "border-primary/40" : ""}`}
               >
-                <div className="flex justify-between gap-2 text-xs text-muted-foreground">
-                  <span className="font-medium text-foreground">
-                    {c.author}
-                    {c.isYou ? ` · ${t.rate.you}` : ""}
-                  </span>
-                  <time>{formatWhen(c.createdAt, locale)}</time>
-                </div>
-                <p className="mt-2 text-sm leading-6">{c.body}</p>
-                {c.scores && (
-                  <div className="mt-3 border-t pt-3">
-                    <DimensionRadar
-                      dimIds={dimIds}
-                      dimLabels={dimLabels}
-                      series={[
-                        {
-                          label: c.author,
-                          scores: c.scores,
-                          stroke: "oklch(0.58 0.19 38)",
-                          fill: "oklch(0.58 0.19 38 / 0.15)",
-                        },
-                      ]}
-                      size={160}
-                    />
+                <div className="flex items-start justify-between gap-2">
+                  <div>
+                    <p className="text-sm font-medium">
+                      {row.author}
+                      {row.isYou ? ` · ${t.rate.you}` : ""}
+                    </p>
+                    <time className="text-[11px] text-muted-foreground">
+                      {formatWhen(row.updatedAt, locale)}
+                    </time>
                   </div>
+                  <Overall value={overallFromScores(row.scores, positionKey)} />
+                </div>
+                {row.body?.trim() ? (
+                  <p className="mt-2 text-sm leading-6">{row.body}</p>
+                ) : (
+                  <p className="mt-2 text-xs text-muted-foreground">{t.rate.scoreOnly}</p>
                 )}
+                <div className="mt-3 border-t pt-3">
+                  <DimensionRadar
+                    dimIds={dimIds}
+                    dimLabels={dimLabels}
+                    series={[
+                      {
+                        label: row.author,
+                        scores: row.scores,
+                        stroke: row.isYou
+                          ? "oklch(0.45 0.12 250)"
+                          : "oklch(0.55 0.02 40)",
+                        fill: row.isYou
+                          ? "oklch(0.45 0.12 250 / 0.25)"
+                          : "oklch(0.55 0.02 40 / 0.15)",
+                      },
+                    ]}
+                    size={180}
+                  />
+                </div>
               </li>
             ))
           )}

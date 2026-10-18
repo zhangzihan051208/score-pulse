@@ -83,10 +83,12 @@ type Dict = {
     noCommunityYet: string;
     noCommentsInFilter: string;
     overallWeighted: string;
+    scoreOnly: string;
   };
   feed: {
     title: string;
     lead: string;
+    take: string;
     comment: string;
     rating: string;
     empty: string;
@@ -192,10 +194,12 @@ export const messages: Record<Locale, Dict> = {
       noCommunityYet: "No cloud ratings yet. Sign in and post the first card.",
       noCommentsInFilter: "No comments in this filter.",
       overallWeighted: "Overall uses role weights (shown top-right).",
+      scoreOnly: "Score only — no written take.",
     },
     feed: {
       title: "Feed",
       lead: "Ratings and takes from every board, newest first.",
+      take: "Card",
       comment: "Take",
       rating: "Rating",
       empty: "Nothing here yet. Grade a player.",
@@ -366,10 +370,12 @@ export const messages: Record<Locale, Dict> = {
       noCommunityYet: "还没有云端评分，登录后发布第一条。",
       noCommentsInFilter: "该筛选下暂无评论。",
       overallWeighted: "总分为该位置加权（见右上角）。",
+      scoreOnly: "仅评分，未写短评。",
     },
     feed: {
       title: "动态",
       lead: "全分区的评分和短评，最新在上。",
+      take: "评分卡",
       comment: "短评",
       rating: "评分",
       empty: "还没有动态。先去给球员打分。",
@@ -541,10 +547,12 @@ export const messages: Record<Locale, Dict> = {
       noCommunityYet: "Aún no hay notas en la nube.",
       noCommentsInFilter: "Sin comentarios en este filtro.",
       overallWeighted: "La nota global usa pesos del rol.",
+      scoreOnly: "Solo nota numérica, sin texto.",
     },
     feed: {
       title: "Feed",
       lead: "Notas y comentarios de todos los tablones.",
+      take: "Ficha",
       comment: "Take",
       rating: "Nota",
       empty: "Nada aún. Puntúa a un jugador.",
@@ -716,10 +724,12 @@ export const messages: Record<Locale, Dict> = {
       noCommunityYet: "クラウド採点はまだありません。",
       noCommentsInFilter: "このフィルターにコメントはありません。",
       overallWeighted: "総合点はポジション加重（右上）。",
+      scoreOnly: "採点のみ（コメントなし）。",
     },
     feed: {
       title: "フィード",
       lead: "全板の採点と一言。新しい順。",
+      take: "カード",
       comment: "一言",
       rating: "採点",
       empty: "まだありません。選手を採点してください。",

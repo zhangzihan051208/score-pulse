@@ -136,27 +136,55 @@ export function commentsFor(
 }
 
 export function allFeedItems(state: CommunityState) {
-  const comments = [...seedComments, ...state.comments].map((c) => ({
-    kind: "comment" as const,
-    at: c.createdAt,
-    ...c,
-  }));
-  const commented = new Set(
-    state.comments.map((c) => `${c.eventId}:${c.athleteId}`),
-  );
-  const ratings = Object.values(state.ratings)
-    .filter((r) => !commented.has(`${r.eventId}:${r.athleteId}`))
-    .map((r) => ({
-      kind: "rating" as const,
-      at: r.updatedAt,
-      eventId: r.eventId,
-      athleteId: r.athleteId,
-      author: state.nickname,
-      scores: r.scores,
-    }));
-  return [...comments, ...ratings].sort(
-    (a, b) => +new Date(b.at) - +new Date(a.at),
-  );
+  type FeedItem = {
+    kind: "take";
+    at: string;
+    eventId: string;
+    athleteId: string;
+    author: string;
+    scores: ScoreMap;
+    body?: string;
+  };
+
+  const byKey = new Map<string, FeedItem>();
+
+  for (const c of [...seedComments, ...state.comments]) {
+    const key = `${c.eventId}:${c.athleteId}:${c.author}`;
+    const existing = byKey.get(key);
+    const at = c.createdAt;
+    const bodyText = "local" in c && c.local ? c.body : undefined;
+    byKey.set(key, {
+      kind: "take",
+      at: existing && +new Date(existing.at) > +new Date(at) ? existing.at : at,
+      eventId: c.eventId,
+      athleteId: c.athleteId,
+      author: c.author,
+      scores: c.scores ?? existing?.scores ?? {},
+      body: bodyText ?? existing?.body,
+    });
+  }
+
+  for (const r of Object.values(state.ratings)) {
+    const key = `${r.eventId}:${r.athleteId}:${state.nickname}`;
+    const existing = byKey.get(key);
+    if (existing) {
+      existing.scores = r.scores;
+      if (+new Date(r.updatedAt) > +new Date(existing.at)) {
+        existing.at = r.updatedAt;
+      }
+    } else {
+      byKey.set(key, {
+        kind: "take",
+        at: r.updatedAt,
+        eventId: r.eventId,
+        athleteId: r.athleteId,
+        author: state.nickname,
+        scores: r.scores,
+      });
+    }
+  }
+
+  return [...byKey.values()].sort((a, b) => +new Date(b.at) - +new Date(a.at));
 }
 
 export function clampScore(n: number) {

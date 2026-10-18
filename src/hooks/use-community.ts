@@ -27,33 +27,48 @@ export function useCommunity() {
     ) => {
       const current = getCommunitySnapshot();
       const author = (nickname ?? current.nickname).trim() || "Row 12";
+      const key = performanceKey(eventId, athleteId);
       const rating: UserRating = {
         eventId,
         athleteId,
         scores,
         updatedAt: new Date().toISOString(),
       };
-      const comments = body?.trim()
-        ? ([
-            {
-              id: `local-${crypto.randomUUID()}`,
-              eventId,
-              athleteId,
-              author,
-              body: body.trim(),
-              createdAt: new Date().toISOString(),
-              scores,
-              local: true as const,
-            } satisfies UserComment,
-            ...current.comments,
-          ] as UserComment[])
-        : current.comments;
+
+      const trimmed = body?.trim() ?? "";
+      const withoutThisTake = current.comments.filter(
+        (c) =>
+          !(
+            c.eventId === eventId &&
+            c.athleteId === athleteId &&
+            c.local &&
+            c.author === author
+          ),
+      );
+
+      const comments =
+        trimmed.length >= 8
+          ? ([
+              {
+                id: `local-${key}`,
+                eventId,
+                athleteId,
+                author,
+                body: trimmed,
+                createdAt: new Date().toISOString(),
+                scores,
+                local: true as const,
+              } satisfies UserComment,
+              ...withoutThisTake,
+            ] as UserComment[])
+          : withoutThisTake;
+
       saveState({
         ...current,
         nickname: author,
         ratings: {
           ...current.ratings,
-          [performanceKey(eventId, athleteId)]: rating,
+          [key]: rating,
         },
         comments,
       });

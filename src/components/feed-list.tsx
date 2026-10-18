@@ -41,7 +41,7 @@ export function FeedList() {
                 >
                   <div className="flex justify-between text-xs text-muted-foreground">
                     <span>
-                      {item.kind === "comment" ? t.feed.comment : t.feed.rating} · {item.author}
+                      {t.feed.take} · {item.author}
                     </span>
                     <time>{formatWhen(item.at, locale)}</time>
                   </div>
@@ -54,8 +54,9 @@ export function FeedList() {
                   </p>
                   {body ? (
                     <p className="mt-1 line-clamp-3 text-sm text-muted-foreground">{body}</p>
-                  ) : "scores" in item && item.scores ? (
-                    <p className="mt-1 text-sm text-primary">
+                  ) : null}
+                  {"scores" in item && item.scores && (
+                    <p className="mt-1 text-sm font-medium text-primary">
                       {(() => {
                         const perf = getPerformance(event, item.athleteId);
                         return perf
@@ -63,7 +64,7 @@ export function FeedList() {
                           : "—";
                       })()}
                     </p>
-                  ) : null}
+                  )}
                 </Link>
               </li>
             );

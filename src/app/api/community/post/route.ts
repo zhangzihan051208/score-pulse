@@ -30,6 +30,18 @@ export async function POST(request: Request) {
   const body = (await request.json()) as Body;
   const { eventId, athleteId, sport, scores, comment, displayName } = body;
 
+  const trimmedComment = comment?.trim() ?? "";
+  if (trimmedComment.length > 0 && trimmedComment.length < 8) {
+    return NextResponse.json(
+      { error: "Comment must be at least 8 characters, or leave it blank." },
+      { status: 400 },
+    );
+  }
+
+  if (!scores || typeof scores !== "object" || Object.keys(scores).length === 0) {
+    return NextResponse.json({ error: "Scores are required." }, { status: 400 });
+  }
+
   if (displayName?.trim()) {
     await supabase
       .from("profiles")
@@ -62,13 +74,24 @@ export async function POST(request: Request) {
     user.email?.split("@")[0] ||
     "Fan";
 
-  if (comment?.trim()) {
+  const { error: deleteError } = await supabase
+    .from("comments")
+    .delete()
+    .eq("user_id", user.id)
+    .eq("event_id", eventId)
+    .eq("athlete_id", athleteId);
+
+  if (deleteError) {
+    return NextResponse.json({ error: deleteError.message }, { status: 500 });
+  }
+
+  if (trimmedComment.length >= 8) {
     const { error: commentError } = await supabase.from("comments").insert({
       user_id: user.id,
       event_id: eventId,
       athlete_id: athleteId,
       author: author.slice(0, 32),
-      body: comment.trim(),
+      body: trimmedComment,
       scores,
     });
     if (commentError) {

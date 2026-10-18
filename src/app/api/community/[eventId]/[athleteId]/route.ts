@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
+import { mergeTakes, scoresForAggregation } from "@/lib/community-takes";
 import { averageScores } from "@/lib/score-aggregate";
 import {
   dimensionIds,
@@ -15,9 +16,9 @@ export async function GET(
 ) {
   if (!isSupabaseConfigured()) {
     return NextResponse.json({
-      comments: [],
-      ratings: [],
+      takes: [],
       mine: null,
+      mineComment: "",
       communityAvg: null,
       ratingCount: 0,
     });
@@ -51,7 +52,12 @@ export async function GET(
       .order("updated_at", { ascending: false }),
   ]);
 
-  const userIds = [...new Set((ratings ?? []).map((r) => r.user_id))];
+  const userIds = [
+    ...new Set([
+      ...(ratings ?? []).map((r) => r.user_id),
+      ...(comments ?? []).map((c) => c.user_id),
+    ]),
+  ];
   const profileMap = new Map<string, string>();
   if (userIds.length > 0) {
     const { data: profiles } = await supabase
@@ -63,34 +69,42 @@ export async function GET(
     }
   }
 
-  const mine =
-    user && ratings
-      ? (ratings.find((r) => r.user_id === user.id)?.scores as ScoreMap | undefined) ??
-        null
-      : null;
+  const commentRows = (comments ?? []).map((c) => ({
+    id: c.id,
+    userId: c.user_id,
+    author: c.author ?? profileMap.get(c.user_id) ?? "Fan",
+    body: c.body,
+    createdAt: c.created_at,
+    scores: c.scores as ScoreMap | undefined,
+    isYou: user?.id === c.user_id,
+  }));
 
-  const scoreRows = (ratings ?? []).map((r) => r.scores as ScoreMap);
+  const ratingRows = (ratings ?? []).map((r) => ({
+    userId: r.user_id,
+    author: profileMap.get(r.user_id) ?? "Fan",
+    scores: r.scores as ScoreMap,
+    updatedAt: r.updated_at,
+    isYou: user?.id === r.user_id,
+  }));
+
+  const takes = mergeTakes(ratingRows, commentRows);
+  const scoreRows = scoresForAggregation(takes);
   const communityAvg = averageScores(scoreRows, [...dimIds]);
 
+  const mineTake = user ? takes.find((t) => t.userId === user.id) : undefined;
+
   return NextResponse.json({
-    comments: (comments ?? []).map((c) => ({
-      id: c.id,
-      author: c.author ?? "Fan",
-      body: c.body,
-      createdAt: c.created_at,
-      scores: c.scores as ScoreMap | undefined,
-      userId: c.user_id,
-      isYou: user?.id === c.user_id,
+    takes: takes.map((t) => ({
+      userId: t.userId,
+      author: t.author,
+      scores: t.scores,
+      updatedAt: t.updatedAt,
+      body: t.body ?? "",
+      isYou: t.isYou,
     })),
-    ratings: (ratings ?? []).map((r) => ({
-      userId: r.user_id,
-      author: profileMap.get(r.user_id) ?? "Fan",
-      scores: r.scores as ScoreMap,
-      updatedAt: r.updated_at,
-      isYou: user?.id === r.user_id,
-    })),
-    ratingCount: ratings?.length ?? 0,
+    ratingCount: takes.length,
     communityAvg,
-    mine,
+    mine: mineTake?.scores ?? null,
+    mineComment: mineTake?.body ?? "",
   });
 }

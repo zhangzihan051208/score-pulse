@@ -1,12 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   CommunityRatingsPanel,
-  type RemoteComment,
-  type RemoteRating,
+  type CommunityTake,
 } from "@/components/community-ratings-panel";
+import { mergeTakes } from "@/lib/community-takes";
 import { GradeSlider } from "@/components/grade-slider";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -45,16 +45,20 @@ export function RateCard({
 }) {
   const { locale, t } = useI18n();
   const { user, enabled: authEnabled } = useAuth();
-  const userId = user?.id;
   const { state, postTake } = useCommunity();
+  const [draft, setDraft] = useState<ScoreMap | null>(null);
+  const [body, setBody] = useState("");
+  const [nameDraft, setNameDraft] = useState<string | null>(null);
+  const [saved, setSaved] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const commentPrefilled = useRef(false);
   const positionKey = performance.positionKey;
   const dims = dimensionIds(positionKey);
   const localMine = getUserRating(state, event.id, athlete.id);
   const merged = mergedAverages(event, athlete.id, state);
   const localComments = commentsFor(event.id, athlete.id, state);
 
-  const [remoteComments, setRemoteComments] = useState<RemoteComment[]>([]);
-  const [remoteRatings, setRemoteRatings] = useState<RemoteRating[]>([]);
+  const [remoteTakes, setRemoteTakes] = useState<CommunityTake[]>([]);
   const [remoteMine, setRemoteMine] = useState<ScoreMap | null>(null);
   const [remoteCommunityAvg, setRemoteCommunityAvg] = useState<ScoreMap | null>(
     null,
@@ -68,15 +72,18 @@ export function RateCard({
     );
     if (!res.ok) return;
     const data = (await res.json()) as {
-      comments: RemoteComment[];
-      ratings: RemoteRating[];
+      takes: CommunityTake[];
       mine: ScoreMap | null;
+      mineComment?: string;
       communityAvg: ScoreMap | null;
     };
-    setRemoteComments(data.comments ?? []);
-    setRemoteRatings(data.ratings ?? []);
+    setRemoteTakes(data.takes ?? []);
     setRemoteMine(data.mine);
     setRemoteCommunityAvg(data.communityAvg ?? null);
+    if (!commentPrefilled.current) {
+      setBody(data.mineComment ?? "");
+      commentPrefilled.current = true;
+    }
   }, [athlete.id, authEnabled, event.id, positionKey]);
 
   useEffect(() => {
@@ -88,74 +95,72 @@ export function RateCard({
       ? { eventId: event.id, athleteId: athlete.id, scores: remoteMine, updatedAt: "" }
       : localMine;
 
-  const panelRatings = useMemo((): RemoteRating[] => {
-    if (authEnabled) return remoteRatings;
+  const panelTakes = useMemo((): CommunityTake[] => {
+    if (authEnabled) return remoteTakes;
     const entry = getUserRating(state, event.id, athlete.id);
-    if (!entry) return [];
-    return [
-      {
-        userId: "local",
-        author: state.nickname,
-        scores: entry.scores,
-        updatedAt: entry.updatedAt,
-        isYou: true,
-      },
-    ];
-  }, [authEnabled, athlete.id, event.id, remoteRatings, state]);
-
-  const panelComments = useMemo((): RemoteComment[] => {
-    if (authEnabled) return remoteComments;
-    return localComments.map((c) => {
-      const isLocalUser = "local" in c && c.local;
-      const isYou =
-        isLocalUser && c.author === state.nickname;
-      return {
-        id: c.id,
-        author: c.author,
-        body: isLocalUser ? c.body : tx(c.body as Localized, locale),
-        createdAt: c.createdAt,
-        isYou,
-      };
-    });
+    const ratingRows = entry
+      ? [
+          {
+            userId: "local",
+            author: state.nickname,
+            scores: entry.scores,
+            updatedAt: entry.updatedAt,
+            isYou: true,
+          },
+        ]
+      : [];
+    const commentRows = localComments
+      .filter((c) => c.scores || ("local" in c && c.local))
+      .map((c) => {
+        const isLocalUser = "local" in c && c.local;
+        return {
+          id: c.id,
+          userId: isLocalUser ? "local" : c.id,
+          author: c.author,
+          body: isLocalUser ? c.body : tx(c.body as Localized, locale),
+          createdAt: c.createdAt,
+          scores: c.scores,
+          isYou: isLocalUser && c.author === state.nickname,
+        };
+      });
+    return mergeTakes(ratingRows, commentRows).map((t) => ({
+      userId: t.userId,
+      author: t.author,
+      scores: t.scores,
+      updatedAt: t.updatedAt,
+      body: t.body,
+      isYou: t.isYou,
+    }));
   }, [
     authEnabled,
+    athlete.id,
+    event.id,
     localComments,
     locale,
-    remoteComments,
-    state.nickname,
+    remoteTakes,
+    state,
   ]);
 
   const displayMerged = useMemo(() => {
-    if (authEnabled && remoteCommunityAvg && remoteRatings.length > 0) {
+    if (authEnabled && remoteCommunityAvg && remoteTakes.length > 0) {
       return {
         avg: remoteCommunityAvg,
-        count: remoteRatings.length,
+        count: remoteTakes.length,
         mine: remoteMine,
       };
     }
     return merged;
-  }, [
-    authEnabled,
-    merged,
-    remoteCommunityAvg,
-    remoteMine,
-    remoteRatings.length,
-  ]);
+  }, [authEnabled, merged, remoteCommunityAvg, remoteMine, remoteTakes.length]);
 
   const cloudPost = authEnabled && isSupabaseConfigured();
   const mustSignIn = cloudPost && !user;
 
-  const [draft, setDraft] = useState<ScoreMap | null>(null);
   const baseScores = {
     ...emptyScores(event.sport, positionKey),
     ...(mine?.scores ?? {}),
   };
   const scores = draft ?? baseScores;
-  const [body, setBody] = useState("");
-  const [nameDraft, setNameDraft] = useState<string | null>(null);
   const name = nameDraft ?? state.nickname;
-  const [saved, setSaved] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
   function patchScore(id: string, next: number) {
     setDraft((prev) => {
@@ -199,9 +204,9 @@ export function RateCard({
         <div className="mt-4 rounded-lg bg-muted/60 p-3">
           <p className="mb-2 text-[11px] font-medium tracking-wide text-muted-foreground uppercase">
             {t.rate.community}
-            {authEnabled && remoteRatings.length > 0 ? (
+            {authEnabled && remoteTakes.length > 0 ? (
               <span className="ml-1 font-normal normal-case text-muted-foreground">
-                ({remoteRatings.length})
+                ({remoteTakes.length})
               </span>
             ) : null}
           </p>
@@ -252,9 +257,9 @@ export function RateCard({
             await loadRemote();
           } else {
             postTake(event.id, athlete.id, scores, body, name);
+            if (!body.trim()) setBody("");
           }
           setDraft(null);
-          setBody("");
           setError(null);
           setSaved(true);
           queueMicrotask(() => {
@@ -330,8 +335,7 @@ export function RateCard({
       <CommunityRatingsPanel
         positionKey={positionKey}
         dimIds={[...dims]}
-        ratings={panelRatings}
-        comments={panelComments}
+        takes={panelTakes}
       />
     </div>
   );
