@@ -126,7 +126,7 @@ export function RateCard({
           setError(null);
           setSaved(true);
           queueMicrotask(() => {
-            document.getElementById("takes")?.scrollIntoView({
+            document.getElementById("takes-list")?.scrollIntoView({
               behavior: "smooth",
               block: "start",
             });
@@ -186,10 +186,8 @@ export function RateCard({
         {saved && <p className="text-center text-sm text-primary">{t.rate.posted}</p>}
       </form>
 
-      <h2 id="takes" className="mt-8 text-sm font-semibold">
-        {t.rate.takes}
-      </h2>
-      <ul className="mt-3 space-y-3">
+      <h2 className="mt-8 text-sm font-semibold">{t.rate.takes}</h2>
+      <ul id="takes-list" className="mt-3 space-y-3">
         {comments.length === 0 ? (
           <li className="rounded-lg border border-dashed px-3 py-8 text-center text-sm text-muted-foreground">
             {t.rate.noComments}

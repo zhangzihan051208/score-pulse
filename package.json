@@ -3,7 +3,10 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev --port 43147",
+    "dev": "next dev --port 43147 --webpack",
+    "dev:turbo": "next dev --port 43147 --turbo",
+    "preview": "next build && next start --port 43147",
+    "smoke": "node scripts/smoke.mjs",
     "build": "next build",
     "start": "next start --port 43147",
     "lint": "eslint"
@@ -26,6 +29,7 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.4.2",
+    "playwright": "^1.49.1",
     "tailwindcss": "^4",
     "typescript": "^5"
   }
