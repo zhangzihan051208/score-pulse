@@ -1,6 +1,5 @@
 "use client";
 
-import { useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { LocaleSwitcher } from "@/components/locale-switcher";
@@ -10,18 +9,19 @@ import { cn } from "cn";
 
 export function SiteHeader() {
   const pathname = usePathname();
-  const { locale, t } = useI18n();
-
-  useEffect(() => {
-    document.documentElement.lang = locale === "zh" ? "zh-CN" : locale;
-  }, [locale]);
+  const { t } = useI18n();
 
   return (
     <header className="sticky top-0 z-40 bg-[#141414] text-white">
       <div className="mx-auto flex h-12 max-w-6xl items-center justify-between gap-3 px-3">
         <div className="flex min-w-0 items-center gap-4">
-          <Link href="/" className="shrink-0 text-base font-bold tracking-tight">
-            {t.brand}
+          <Link href="/" className="min-w-0 shrink-0">
+            <span className="block text-base font-bold tracking-tight leading-none">
+              {t.brand}
+            </span>
+            <span className="hidden max-w-[14rem] truncate text-[10px] font-normal text-white/55 sm:block">
+              {t.tagline}
+            </span>
           </Link>
           <nav className="hidden items-center gap-1 overflow-x-auto md:flex">
             {SPORTS.map((sport) => {

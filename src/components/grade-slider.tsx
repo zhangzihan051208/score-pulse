@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Minus, Plus } from "lucide-react";
 import { clampScore } from "@/lib/store";
 
@@ -14,88 +14,123 @@ export function GradeSlider({
   onChange: (value: number) => void;
 }) {
   const trackRef = useRef<HTMLDivElement>(null);
-  const pct = (value / 10) * 100;
+  const dragging = useRef(false);
+  const onChangeRef = useRef(onChange);
+  const [live, setLive] = useState(value);
 
-  function setFromClientX(clientX: number) {
+  useEffect(() => {
+    onChangeRef.current = onChange;
+  }, [onChange]);
+
+  useEffect(() => {
+    if (!dragging.current) setLive(value);
+  }, [value]);
+
+  useEffect(() => {
+    function onMove(e: PointerEvent) {
+      if (!dragging.current) return;
+      const track = trackRef.current;
+      if (!track) return;
+      const { left, width } = track.getBoundingClientRect();
+      if (width <= 0) return;
+      const ratio = Math.min(1, Math.max(0, (e.clientX - left) / width));
+      const next = clampScore(ratio * 10);
+      setLive(next);
+      onChangeRef.current(next);
+    }
+    function onUp() {
+      dragging.current = false;
+    }
+    window.addEventListener("pointermove", onMove);
+    window.addEventListener("pointerup", onUp);
+    window.addEventListener("pointercancel", onUp);
+    return () => {
+      window.removeEventListener("pointermove", onMove);
+      window.removeEventListener("pointerup", onUp);
+      window.removeEventListener("pointercancel", onUp);
+    };
+  }, []);
+
+  function nudge(delta: number) {
+    const next = clampScore(live + delta);
+    setLive(next);
+    onChangeRef.current(next);
+  }
+
+  function startDrag(clientX: number) {
     const track = trackRef.current;
     if (!track) return;
+    dragging.current = true;
     const { left, width } = track.getBoundingClientRect();
     if (width <= 0) return;
     const ratio = Math.min(1, Math.max(0, (clientX - left) / width));
-    onChange(clampScore(ratio * 10));
+    const next = clampScore(ratio * 10);
+    setLive(next);
+    onChangeRef.current(next);
   }
 
+  const pct = (live / 10) * 100;
+
   return (
-    <div className="grid grid-cols-[6rem_1fr_2.5rem] items-center gap-2 sm:grid-cols-[6.5rem_1fr_auto_2.5rem]">
-      <span className="text-sm font-medium">{label}</span>
-      <div
-        ref={trackRef}
-        role="slider"
-        tabIndex={0}
-        aria-label={label}
-        aria-valuemin={0}
-        aria-valuemax={10}
-        aria-valuenow={value}
-        aria-valuetext={value.toFixed(1)}
-        className="relative flex h-8 touch-none items-center select-none"
-        onPointerDown={(e) => {
-          if (e.button !== 0) return;
-          e.preventDefault();
-          e.currentTarget.focus();
-          e.currentTarget.setPointerCapture(e.pointerId);
-          setFromClientX(e.clientX);
-        }}
-        onPointerMove={(e) => {
-          if (!e.currentTarget.hasPointerCapture(e.pointerId)) return;
-          setFromClientX(e.clientX);
-        }}
-        onPointerUp={(e) => {
-          if (e.currentTarget.hasPointerCapture(e.pointerId)) {
-            e.currentTarget.releasePointerCapture(e.pointerId);
-          }
-        }}
-        onKeyDown={(e) => {
-          if (e.key === "ArrowLeft" || e.key === "ArrowDown") {
-            e.preventDefault();
-            onChange(clampScore(value - 0.5));
-          }
-          if (e.key === "ArrowRight" || e.key === "ArrowUp") {
-            e.preventDefault();
-            onChange(clampScore(value + 0.5));
-          }
-        }}
-      >
-        <div className="h-2 w-full rounded-full bg-muted" />
-        <div
-          className="absolute h-2 rounded-full bg-primary"
-          style={{ width: `${pct}%` }}
-        />
-        <div
-          className="absolute top-1/2 size-5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary shadow-md ring-2 ring-background"
-          style={{ left: `${pct}%` }}
-        />
+    <div className="space-y-1.5">
+      <div className="flex items-center justify-between gap-2">
+        <span className="text-sm font-medium">{label}</span>
+        <span className="text-sm font-semibold tabular-nums">{live.toFixed(1)}</span>
       </div>
-      <div className="hidden items-center gap-1 sm:flex">
+      <div className="flex items-center gap-2">
         <button
           type="button"
           aria-label={`${label} -0.5`}
-          className="flex size-7 items-center justify-center rounded-md border bg-background hover:bg-muted"
-          onClick={() => onChange(clampScore(value - 0.5))}
+          className="flex size-8 shrink-0 items-center justify-center rounded-md border bg-background hover:bg-muted"
+          onClick={() => nudge(-0.5)}
         >
           <Minus className="size-3.5" />
         </button>
+        <div
+          ref={trackRef}
+          role="slider"
+          tabIndex={0}
+          aria-label={label}
+          aria-valuemin={0}
+          aria-valuemax={10}
+          aria-valuenow={live}
+          aria-valuetext={live.toFixed(1)}
+          className="relative h-8 min-w-0 flex-1 cursor-pointer touch-none select-none"
+          onPointerDown={(e) => {
+            if (e.button !== 0) return;
+            e.preventDefault();
+            startDrag(e.clientX);
+          }}
+          onKeyDown={(e) => {
+            if (e.key === "ArrowLeft" || e.key === "ArrowDown") {
+              e.preventDefault();
+              nudge(-0.5);
+            }
+            if (e.key === "ArrowRight" || e.key === "ArrowUp") {
+              e.preventDefault();
+              nudge(0.5);
+            }
+          }}
+        >
+          <div className="pointer-events-none absolute inset-y-0 left-0 right-0 m-auto h-2 rounded-full bg-muted" />
+          <div
+            className="pointer-events-none absolute inset-y-0 left-0 m-auto h-2 rounded-full bg-primary"
+            style={{ width: `${pct}%` }}
+          />
+          <div
+            className="pointer-events-none absolute top-1/2 size-5 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white bg-primary shadow-md"
+            style={{ left: `${pct}%` }}
+          />
+        </div>
         <button
           type="button"
           aria-label={`${label} +0.5`}
-          className="flex size-7 items-center justify-center rounded-md border bg-background hover:bg-muted"
-          onClick={() => onChange(clampScore(value + 0.5))}
+          className="flex size-8 shrink-0 items-center justify-center rounded-md border bg-background hover:bg-muted"
+          onClick={() => nudge(0.5)}
         >
           <Plus className="size-3.5" />
         </button>
       </div>
-      <span className="text-right text-sm font-semibold tabular-nums">
-        {value.toFixed(1)}
-      </span>
     </div>
   );
 }

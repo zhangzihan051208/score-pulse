@@ -661,8 +661,8 @@ export const messages: Record<Locale, Dict> = {
 };
 
 export const localeLabels: Record<Locale, string> = {
-  en: "EN",
+  en: "English",
   zh: "中文",
-  es: "ES",
+  es: "Español",
   ja: "日本語",
 };
