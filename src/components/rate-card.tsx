@@ -1,13 +1,15 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { GradeSlider } from "@/components/grade-slider";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Overall } from "@/components/score-rows";
+import { useAuth } from "@/hooks/use-auth";
 import { useCommunity } from "@/hooks/use-community";
 import { useI18n } from "@/i18n/use-i18n";
+import { isSupabaseConfigured } from "@/lib/supabase/config";
 import { tx } from "@/lib/copy";
 import { formatWhen, meanScore } from "@/lib/data";
 import {
@@ -38,11 +40,68 @@ export function RateCard({
   performance: Performance;
 }) {
   const { locale, t } = useI18n();
+  const { user, enabled: authEnabled } = useAuth();
   const { state, postTake } = useCommunity();
   const dims = SPORT_DIMENSIONS[event.sport];
-  const mine = getUserRating(state, event.id, athlete.id);
+  const localMine = getUserRating(state, event.id, athlete.id);
   const merged = mergedAverages(event, athlete.id, state);
-  const comments = commentsFor(event.id, athlete.id, state);
+  const localComments = commentsFor(event.id, athlete.id, state);
+
+  const [remoteComments, setRemoteComments] = useState<
+    Array<{
+      id: string;
+      author: string;
+      body: string;
+      createdAt: string;
+      userId?: string;
+    }>
+  >([]);
+  const [remoteMine, setRemoteMine] = useState<ScoreMap | null>(null);
+
+  const loadRemote = useCallback(async () => {
+    if (!authEnabled) return;
+    const res = await fetch(
+      `/api/community/${encodeURIComponent(event.id)}/${encodeURIComponent(athlete.id)}`,
+    );
+    if (!res.ok) return;
+    const data = (await res.json()) as {
+      comments: typeof remoteComments;
+      mine: ScoreMap | null;
+    };
+    setRemoteComments(data.comments ?? []);
+    setRemoteMine(data.mine);
+  }, [athlete.id, authEnabled, event.id]);
+
+  useEffect(() => {
+    loadRemote();
+  }, [loadRemote]);
+
+  const mine =
+    authEnabled && remoteMine
+      ? { eventId: event.id, athleteId: athlete.id, scores: remoteMine, updatedAt: "" }
+      : localMine;
+
+  const comments = useMemo(() => {
+    const remote = remoteComments.map((c) => ({
+      id: c.id,
+      eventId: event.id,
+      athleteId: athlete.id,
+      author: c.author,
+      body: c.body,
+      createdAt: c.createdAt,
+      local: true as const,
+    }));
+    const seen = new Set(remote.map((c) => c.id));
+    const localOnly = localComments.filter(
+      (c) => !("id" in c) || !seen.has(c.id),
+    );
+    return [...remote, ...localOnly].sort(
+      (a, b) => +new Date(b.createdAt) - +new Date(a.createdAt),
+    );
+  }, [athlete.id, event.id, localComments, remoteComments]);
+
+  const cloudPost = authEnabled && isSupabaseConfigured();
+  const mustSignIn = cloudPost && !user;
 
   const [draft, setDraft] = useState<ScoreMap | null>(null);
   const baseScores = {
@@ -114,13 +173,38 @@ export function RateCard({
 
       <form
         className="mt-6 space-y-5"
-        onSubmit={(e) => {
+        onSubmit={async (e) => {
           e.preventDefault();
+          if (mustSignIn) {
+            setError(t.auth.signInToPost);
+            return;
+          }
           if (body.trim() && body.trim().length < 8) {
             setError(t.rate.needComment);
             return;
           }
-          postTake(event.id, athlete.id, scores, body, name);
+          if (cloudPost && user) {
+            const res = await fetch("/api/community/post", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                eventId: event.id,
+                athleteId: athlete.id,
+                sport: event.sport,
+                scores,
+                comment: body,
+                displayName: name,
+              }),
+            });
+            if (!res.ok) {
+              const data = (await res.json()) as { error?: string };
+              setError(data.error ?? t.auth.failed);
+              return;
+            }
+            await loadRemote();
+          } else {
+            postTake(event.id, athlete.id, scores, body, name);
+          }
           setDraft(null);
           setBody("");
           setError(null);
@@ -179,8 +263,16 @@ export function RateCard({
           </div>
         </div>
 
+        {mustSignIn && (
+          <p className="text-sm text-muted-foreground">
+            {t.auth.signInToPost}{" "}
+            <Link href="/login" className="font-medium text-primary hover:underline">
+              {t.auth.signIn}
+            </Link>
+          </p>
+        )}
         {error && <p className="text-sm text-destructive">{error}</p>}
-        <Button type="submit" size="lg" className="w-full">
+        <Button type="submit" size="lg" className="w-full" disabled={mustSignIn}>
           {t.rate.post}
         </Button>
         {saved && <p className="text-center text-sm text-primary">{t.rate.posted}</p>}

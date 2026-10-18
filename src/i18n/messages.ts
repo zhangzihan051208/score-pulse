@@ -9,6 +9,22 @@ type Dict = {
     feed: string;
     guide: string;
   };
+  auth: {
+    signIn: string;
+    signOut: string;
+    signedIn: string;
+    loading: string;
+    email: string;
+    password: string;
+    createAccount: string;
+    needAccount: string;
+    haveAccount: string;
+    lead: string;
+    checkEmail: string;
+    failed: string;
+    notConfigured: string;
+    signInToPost: string;
+  };
   language: string;
   sports: Record<Sport, string>;
   sportBlurb: Record<Sport, string>;
@@ -27,6 +43,8 @@ type Dict = {
     matches: string;
     rate: string;
     liveNow: string;
+    apiFixtures: string;
+    apiFixturesHint: string;
   };
   board: {
     matches: string;
@@ -78,6 +96,22 @@ export const messages: Record<Locale, Dict> = {
     brand: "Sideline",
     tagline: "Rate the night, not the reputation",
     nav: { home: "Home", boards: "Boards", feed: "Feed", guide: "Guide" },
+    auth: {
+      signIn: "Sign in",
+      signOut: "Sign out",
+      signedIn: "Fan",
+      loading: "…",
+      email: "Email",
+      password: "Password",
+      createAccount: "Create account",
+      needAccount: "Need an account? Sign up",
+      haveAccount: "Already have an account? Sign in",
+      lead: "Sign in to save ratings and comments to the cloud.",
+      checkEmail: "Check your email to confirm, then sign in.",
+      failed: "Something went wrong.",
+      notConfigured: "Supabase keys are missing. Add them to .env.local.",
+      signInToPost: "Sign in to post your rating to Sideline cloud.",
+    },
     language: "Language",
     sports: {
       nba: "NBA",
@@ -106,6 +140,9 @@ export const messages: Record<Locale, Dict> = {
       matches: "matches",
       rate: "Rate",
       liveNow: "Live games",
+      apiFixtures: "From TheSportsDB",
+      apiFixturesHint:
+        "NBA & Premier League schedule/scores sync when Supabase service key is set.",
     },
     board: {
       matches: "Match threads",
@@ -224,6 +261,22 @@ export const messages: Record<Locale, Dict> = {
     brand: "Sideline",
     tagline: "评这场，而不是评名气",
     nav: { home: "首页", boards: "分区", feed: "动态", guide: "手册" },
+    auth: {
+      signIn: "登录",
+      signOut: "退出",
+      signedIn: "球迷",
+      loading: "…",
+      email: "邮箱",
+      password: "密码",
+      createAccount: "注册",
+      needAccount: "没有账号？注册",
+      haveAccount: "已有账号？登录",
+      lead: "登录后评分与评论会保存到云端。",
+      checkEmail: "请查收确认邮件后再登录。",
+      failed: "出错了。",
+      notConfigured: "未配置 Supabase，请在 .env.local 添加密钥。",
+      signInToPost: "登录后再提交评分到云端。",
+    },
     language: "语言",
     sports: {
       nba: "NBA",
@@ -252,6 +305,8 @@ export const messages: Record<Locale, Dict> = {
       matches: "场比赛",
       rate: "打分",
       liveNow: "进行中",
+      apiFixtures: "TheSportsDB 赛程",
+      apiFixturesHint: "配置 Supabase 服务端密钥后会同步 NBA 与英超比分。",
     },
     board: {
       matches: "比赛帖",
@@ -370,6 +425,22 @@ export const messages: Record<Locale, Dict> = {
     brand: "Sideline",
     tagline: "Nota la noche, no la fama",
     nav: { home: "Inicio", boards: "Tablones", feed: "Feed", guide: "Guía" },
+    auth: {
+      signIn: "Entrar",
+      signOut: "Salir",
+      signedIn: "Fan",
+      loading: "…",
+      email: "Correo",
+      password: "Contraseña",
+      createAccount: "Crear cuenta",
+      needAccount: "¿Sin cuenta? Regístrate",
+      haveAccount: "¿Ya tienes cuenta? Entra",
+      lead: "Inicia sesión para guardar notas en la nube.",
+      checkEmail: "Revisa tu correo para confirmar.",
+      failed: "Algo falló.",
+      notConfigured: "Faltan claves de Supabase en .env.local.",
+      signInToPost: "Inicia sesión para publicar tu nota.",
+    },
     language: "Idioma",
     sports: {
       nba: "NBA",
@@ -398,6 +469,8 @@ export const messages: Record<Locale, Dict> = {
       matches: "partidos",
       rate: "Puntuar",
       liveNow: "En vivo",
+      apiFixtures: "TheSportsDB",
+      apiFixturesHint: "NBA y Premier League se sincronizan con la service key.",
     },
     board: {
       matches: "Hilos",
@@ -516,6 +589,22 @@ export const messages: Record<Locale, Dict> = {
     brand: "Sideline",
     tagline: "名声ではなく、この一戦を採点する",
     nav: { home: "ホーム", boards: "板", feed: "フィード", guide: "ガイド" },
+    auth: {
+      signIn: "ログイン",
+      signOut: "ログアウト",
+      signedIn: "ファン",
+      loading: "…",
+      email: "メール",
+      password: "パスワード",
+      createAccount: "アカウント作成",
+      needAccount: "アカウント作成はこちら",
+      haveAccount: "ログインはこちら",
+      lead: "ログインすると採点とコメントがクラウドに保存されます。",
+      checkEmail: "確認メールをチェックしてください。",
+      failed: "エラーが発生しました。",
+      notConfigured: "Supabase のキーを .env.local に設定してください。",
+      signInToPost: "投稿するにはログインしてください。",
+    },
     language: "言語",
     sports: {
       nba: "NBA",
@@ -544,6 +633,8 @@ export const messages: Record<Locale, Dict> = {
       matches: "試合",
       rate: "採点",
       liveNow: "進行中",
+      apiFixtures: "TheSportsDB",
+      apiFixturesHint: "service key 設定で NBA・PL の同期が有効になります。",
     },
     board: {
       matches: "試合スレ",

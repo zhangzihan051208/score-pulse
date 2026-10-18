@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { AuthMenu } from "@/components/auth-menu";
 import { LocaleSwitcher } from "@/components/locale-switcher";
 import { useI18n } from "@/i18n/use-i18n";
 import { SPORTS } from "@/lib/types";
@@ -61,6 +62,7 @@ export function SiteHeader() {
           >
             {t.nav.guide}
           </Link>
+          <AuthMenu />
           <LocaleSwitcher />
         </div>
       </div>

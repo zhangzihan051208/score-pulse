@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { ApiFixturesStrip } from "@/components/api-fixtures-strip";
 import { StatusPill } from "@/components/status-pill";
 import { useI18n } from "@/i18n/use-i18n";
 import { tx } from "@/lib/copy";
@@ -46,6 +47,8 @@ export function HomeBoards() {
           </div>
         </section>
       )}
+
+      <ApiFixturesStrip />
 
       <div className="mt-6 grid gap-4 lg:grid-cols-[1fr_280px]">
         <div className="space-y-4">
