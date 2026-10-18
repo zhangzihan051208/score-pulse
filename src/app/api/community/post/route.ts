@@ -1,12 +1,13 @@
 import { createClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 import { NextResponse } from "next/server";
-import type { ScoreMap, Sport } from "@/lib/types";
+import type { PositionKey, ScoreMap, Sport } from "@/lib/types";
 
 type Body = {
   eventId: string;
   athleteId: string;
   sport: Sport;
+  positionKey?: PositionKey;
   scores: ScoreMap;
   comment?: string;
   displayName?: string;

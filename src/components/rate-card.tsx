@@ -16,14 +16,16 @@ import { useCommunity } from "@/hooks/use-community";
 import { useI18n } from "@/i18n/use-i18n";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 import { tx } from "@/lib/copy";
-import { meanScore } from "@/lib/data";
+import { overallScore } from "@/lib/data";
+import { dimLabel } from "@/i18n/position-dims";
 import {
   commentsFor,
   emptyScores,
   getUserRating,
   mergedAverages,
+  overallFromScores,
 } from "@/lib/store";
-import { SPORT_DIMENSIONS } from "@/lib/sports";
+import { dimensionIds } from "@/lib/position-ratings";
 import type {
   Athlete,
   Localized,
@@ -45,7 +47,8 @@ export function RateCard({
   const { user, enabled: authEnabled } = useAuth();
   const userId = user?.id;
   const { state, postTake } = useCommunity();
-  const dims = SPORT_DIMENSIONS[event.sport];
+  const positionKey = performance.positionKey;
+  const dims = dimensionIds(positionKey);
   const localMine = getUserRating(state, event.id, athlete.id);
   const merged = mergedAverages(event, athlete.id, state);
   const localComments = commentsFor(event.id, athlete.id, state);
@@ -59,7 +62,7 @@ export function RateCard({
 
   const loadRemote = useCallback(async () => {
     if (!authEnabled) return;
-    const qs = new URLSearchParams({ sport: event.sport });
+    const qs = new URLSearchParams({ positionKey });
     const res = await fetch(
       `/api/community/${encodeURIComponent(event.id)}/${encodeURIComponent(athlete.id)}?${qs}`,
     );
@@ -74,7 +77,7 @@ export function RateCard({
     setRemoteRatings(data.ratings ?? []);
     setRemoteMine(data.mine);
     setRemoteCommunityAvg(data.communityAvg ?? null);
-  }, [athlete.id, authEnabled, event.id, event.sport]);
+  }, [athlete.id, authEnabled, event.id, positionKey]);
 
   useEffect(() => {
     loadRemote();
@@ -144,7 +147,7 @@ export function RateCard({
 
   const [draft, setDraft] = useState<ScoreMap | null>(null);
   const baseScores = {
-    ...emptyScores(event.sport),
+    ...emptyScores(event.sport, positionKey),
     ...(mine?.scores ?? {}),
   };
   const scores = draft ?? baseScores;
@@ -185,7 +188,7 @@ export function RateCard({
         {displayMerged && (
           <div className="text-right">
             <p className="text-[11px] text-muted-foreground">{t.rate.community}</p>
-            <Overall value={meanScore(displayMerged.avg)} />
+            <Overall value={overallScore(displayMerged.avg, positionKey)} />
           </div>
         )}
       </div>
@@ -205,7 +208,7 @@ export function RateCard({
           <div className="flex flex-wrap gap-1.5">
             {dims.map((id) => (
               <span key={id} className="rounded-md bg-background px-2 py-1 text-xs">
-                {t.dims[event.sport][id]}{" "}
+                {dimLabel(locale, positionKey, id)}{" "}
                 <span className="font-semibold tabular-nums">
                   {(displayMerged.avg[id] ?? 0).toFixed(1)}
                 </span>
@@ -235,6 +238,7 @@ export function RateCard({
                 eventId: event.id,
                 athleteId: athlete.id,
                 sport: event.sport,
+                positionKey,
                 scores,
                 comment: body,
                 displayName: name,
@@ -265,14 +269,15 @@ export function RateCard({
           <div className="mb-3 flex items-baseline justify-between">
             <h2 className="text-sm font-semibold">{t.rate.yourTake}</h2>
             <span className="text-lg font-bold tabular-nums text-primary">
-              {meanScore(scores).toFixed(1)}
+              {overallFromScores(scores, positionKey).toFixed(1)}
             </span>
           </div>
+          <p className="mb-2 text-[11px] text-muted-foreground">{t.rate.overallWeighted}</p>
           <div className="space-y-3">
             {dims.map((id) => (
               <GradeSlider
                 key={id}
-                label={t.dims[event.sport][id]}
+                label={dimLabel(locale, positionKey, id)}
                 value={scores[id] ?? 7}
                 onChange={(next) => patchScore(id, next)}
               />
@@ -323,7 +328,7 @@ export function RateCard({
       </form>
 
       <CommunityRatingsPanel
-        sport={event.sport}
+        positionKey={positionKey}
         dimIds={[...dims]}
         ratings={panelRatings}
         comments={panelComments}

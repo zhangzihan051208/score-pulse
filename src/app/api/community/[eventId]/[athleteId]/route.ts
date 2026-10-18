@@ -1,9 +1,13 @@
 import { createClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 import { averageScores } from "@/lib/score-aggregate";
-import { SPORT_DIMENSIONS } from "@/lib/sports";
+import {
+  dimensionIds,
+  POSITION_PROFILES,
+  type PositionKey,
+} from "@/lib/position-ratings";
 import { NextResponse } from "next/server";
-import type { ScoreMap, Sport } from "@/lib/types";
+import type { ScoreMap } from "@/lib/types";
 
 export async function GET(
   request: Request,
@@ -21,8 +25,10 @@ export async function GET(
 
   const { eventId, athleteId } = await context.params;
   const { searchParams } = new URL(request.url);
-  const sport = (searchParams.get("sport") ?? "nba") as Sport;
-  const dimIds = SPORT_DIMENSIONS[sport] ?? SPORT_DIMENSIONS.nba;
+  const positionKey = (searchParams.get("positionKey") ??
+    "nba.guard") as PositionKey;
+  const dimIds =
+    POSITION_PROFILES[positionKey]?.dimensions ?? dimensionIds("nba.guard");
 
   const supabase = await createClient();
   const {

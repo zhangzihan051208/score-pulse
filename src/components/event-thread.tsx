@@ -6,7 +6,7 @@ import { StatusPill } from "@/components/status-pill";
 import { useCommunity } from "@/hooks/use-community";
 import { useI18n } from "@/i18n/use-i18n";
 import { tx } from "@/lib/copy";
-import { athletes, formatWhen, meanScore } from "@/lib/data";
+import { athletes, formatWhen, overallScore } from "@/lib/data";
 import { mergedAverages } from "@/lib/store";
 import type { MatchEvent } from "@/lib/types";
 
@@ -58,7 +58,7 @@ export function EventThread({ event }: { event: MatchEvent }) {
                   </div>
                 </div>
                 <div className="text-right">
-                  <Overall value={meanScore(merged.avg)} />
+                  <Overall value={overallScore(merged.avg, merged.positionKey)} />
                   <p className="text-[11px] text-muted-foreground">
                     {merged.count.toLocaleString()} {t.event.ratings}
                   </p>
@@ -74,7 +74,7 @@ export function EventThread({ event }: { event: MatchEvent }) {
                 ))}
               </dl>
               <div className="mt-4">
-                <ScoreRows sport={event.sport} scores={merged.avg} compact />
+                <ScoreRows positionKey={p.positionKey} scores={merged.avg} compact />
               </div>
               <Link
                 href={`/events/${event.slug}/${athlete.id}`}

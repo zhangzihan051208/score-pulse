@@ -49,6 +49,7 @@ type Dict = {
   board: {
     matches: string;
     dimensions: string;
+    dimensionsHint: string;
     empty: string;
     backHome: string;
   };
@@ -81,6 +82,7 @@ type Dict = {
     allRatings: string;
     noCommunityYet: string;
     noCommentsInFilter: string;
+    overallWeighted: string;
   };
   feed: {
     title: string;
@@ -154,7 +156,9 @@ export const messages: Record<Locale, Dict> = {
     },
     board: {
       matches: "Match threads",
-      dimensions: "This board’s five grades",
+      dimensions: "Grades by role",
+      dimensionsHint:
+        "Each position has its own five axes. Overall is weighted for that role, not a flat average.",
       empty: "No matches in this filter.",
       backHome: "All boards",
     },
@@ -187,6 +191,7 @@ export const messages: Record<Locale, Dict> = {
       allRatings: "Every rating",
       noCommunityYet: "No cloud ratings yet. Sign in and post the first card.",
       noCommentsInFilter: "No comments in this filter.",
+      overallWeighted: "Overall uses role weights (shown top-right).",
     },
     feed: {
       title: "Feed",
@@ -207,10 +212,10 @@ export const messages: Record<Locale, Dict> = {
           ],
         },
         {
-          title: "Five grades, sport-specific",
+          title: "Five grades, position-specific",
           body: [
-            "Keep exactly five sliders. Only the labels change. Overall is the average — no sixth control.",
-            "NBA is not UFC. If the axes are generic, the grades become noise.",
+            "Keep exactly five sliders. Labels and weights change by role (e.g. striker vs keeper, guard vs center).",
+            "Overall is a weighted sum for that position — not a flat average of the five.",
           ],
         },
         {
@@ -326,7 +331,8 @@ export const messages: Record<Locale, Dict> = {
     },
     board: {
       matches: "比赛帖",
-      dimensions: "本分区五维",
+      dimensions: "按位置五维",
+      dimensionsHint: "不同位置有五项独立维度；总分按该位置权重加权，不是简单平均。",
       empty: "没有符合筛选的比赛。",
       backHome: "全部分区",
     },
@@ -359,6 +365,7 @@ export const messages: Record<Locale, Dict> = {
       allRatings: "全部评分卡",
       noCommunityYet: "还没有云端评分，登录后发布第一条。",
       noCommentsInFilter: "该筛选下暂无评论。",
+      overallWeighted: "总分为该位置加权（见右上角）。",
     },
     feed: {
       title: "动态",
@@ -498,7 +505,9 @@ export const messages: Record<Locale, Dict> = {
     },
     board: {
       matches: "Hilos",
-      dimensions: "Las cinco notas de este tablón",
+      dimensions: "Notas por rol",
+      dimensionsHint:
+        "Cada posición tiene cinco ejes propios. La nota global es ponderada, no un promedio plano.",
       empty: "No hay partidos en este filtro.",
       backHome: "Todos",
     },
@@ -531,6 +540,7 @@ export const messages: Record<Locale, Dict> = {
       allRatings: "Cada nota",
       noCommunityYet: "Aún no hay notas en la nube.",
       noCommentsInFilter: "Sin comentarios en este filtro.",
+      overallWeighted: "La nota global usa pesos del rol.",
     },
     feed: {
       title: "Feed",
@@ -670,7 +680,9 @@ export const messages: Record<Locale, Dict> = {
     },
     board: {
       matches: "試合スレ",
-      dimensions: "この板の五つの軸",
+      dimensions: "ポジション別五軸",
+      dimensionsHint:
+        "ポジションごとに五つの軸。総合はその役割の重み付け合計（単純平均ではない）。",
       empty: "該当する試合はありません。",
       backHome: "すべての板",
     },
@@ -703,6 +715,7 @@ export const messages: Record<Locale, Dict> = {
       allRatings: "すべての採点",
       noCommunityYet: "クラウド採点はまだありません。",
       noCommentsInFilter: "このフィルターにコメントはありません。",
+      overallWeighted: "総合点はポジション加重（右上）。",
     },
     feed: {
       title: "フィード",

@@ -1,7 +1,12 @@
 "use client";
 
 import { performanceKey, seedComments } from "./data";
-import { SPORT_DIMENSIONS } from "./sports";
+import {
+  dimensionIds,
+  emptyScoresForPosition,
+  weightedOverall,
+} from "./position-ratings";
+import type { PositionKey } from "./position-ratings";
 import type {
   MatchEvent,
   ScoreMap,
@@ -11,7 +16,7 @@ import type {
   UserRating,
 } from "./types";
 
-const STORAGE_KEY = "sideline-community-v2";
+const STORAGE_KEY = "sideline-community-v3";
 
 export type CommunityState = {
   nickname: string;
@@ -30,8 +35,8 @@ let snapshot: CommunityState = defaultState;
 let snapshotRaw: string | null = null;
 let hydrated = false;
 
-export function emptyScores(sport: Sport): ScoreMap {
-  return Object.fromEntries(SPORT_DIMENSIONS[sport].map((id) => [id, 7]));
+export function emptyScores(_sport: Sport, positionKey: PositionKey): ScoreMap {
+  return emptyScoresForPosition(positionKey);
 }
 
 function parseState(raw: string | null): CommunityState {
@@ -95,13 +100,14 @@ export function mergedAverages(
 ) {
   const performance = event.performances.find((p) => p.athleteId === athleteId);
   if (!performance) return null;
-  const dims = SPORT_DIMENSIONS[event.sport];
+  const dims = dimensionIds(performance.positionKey);
   const mine = getUserRating(state, event.id, athleteId);
   if (!mine) {
     return {
       avg: performance.communityAvg,
       count: performance.ratingCount,
       mine: null as ScoreMap | null,
+      positionKey: performance.positionKey,
     };
   }
   const count = performance.ratingCount + 1;
@@ -111,7 +117,12 @@ export function mergedAverages(
     const you = mine.scores[id] ?? seed;
     avg[id] = Number(((seed * performance.ratingCount + you) / count).toFixed(1));
   }
-  return { avg, count, mine: mine.scores };
+  return {
+    avg,
+    count,
+    mine: mine.scores,
+    positionKey: performance.positionKey,
+  };
 }
 
 export function commentsFor(
@@ -151,3 +162,5 @@ export function allFeedItems(state: CommunityState) {
 export function clampScore(n: number) {
   return Math.min(10, Math.max(0, Math.round(n * 2) / 2));
 }
+
+export { weightedOverall as overallFromScores };

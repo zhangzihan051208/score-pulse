@@ -1,4 +1,5 @@
 import { L } from "./copy";
+import { weightedOverall, type PositionKey } from "./position-ratings";
 import type { Athlete, MatchEvent, SeedComment } from "./types";
 
 export const athletes: Record<string, Athlete> = {
@@ -132,6 +133,7 @@ export const events: MatchEvent[] = [
     performances: [
       {
         athleteId: "lebron",
+        positionKey: "nba.forward",
         role: L("Forward", "前锋", "Alero", "フォワード"),
         result: L("Q4 · 24 PTS", "第四节 · 24 分", "Q4 · 24 PTS", "Q4 · 24得点"),
         highlight: L(
@@ -145,11 +147,18 @@ export const events: MatchEvent[] = [
           pts("AST", "助攻", "AST", "アシスト", "9"),
           pts("TO", "失误", "PER", "TO", "4"),
         ],
-        communityAvg: { scoring: 7.6, defense: 6.8, playmaking: 8.7, hustle: 7.4, clutch: 7.9 },
+        communityAvg: {
+          scoring: 7.6,
+          defense: 6.8,
+          rebounding: 7.2,
+          versatility: 8.0,
+          clutch: 7.9,
+        },
         ratingCount: 8421,
       },
       {
         athleteId: "doncic",
+        positionKey: "nba.guard",
         role: L("Guard", "后卫", "Base", "ガード"),
         result: L("Q4 · 31 PTS", "第四节 · 31 分", "Q4 · 31 PTS", "Q4 · 31得点"),
         highlight: L(
@@ -163,11 +172,18 @@ export const events: MatchEvent[] = [
           pts("REB", "篮板", "REB", "リバウンド", "8"),
           pts("TO", "失误", "PER", "TO", "5"),
         ],
-        communityAvg: { scoring: 8.8, defense: 6.2, playmaking: 8.1, hustle: 7.0, clutch: 8.4 },
+        communityAvg: {
+          scoring: 8.8,
+          playmaking: 8.1,
+          perimeter_def: 6.2,
+          hustle: 7.0,
+          clutch: 8.4,
+        },
         ratingCount: 9102,
       },
       {
         athleteId: "tatum",
+        positionKey: "nba.forward",
         role: L("Forward", "前锋", "Alero", "フォワード"),
         result: L("Q4 · 28 PTS", "第四节 · 28 分", "Q4 · 28 PTS", "Q4 · 28得点"),
         highlight: L(
@@ -181,7 +197,13 @@ export const events: MatchEvent[] = [
           pts("3PM", "三分", "TRI", "3P", "6"),
           pts("+/-", "+/-", "+/-", "+/-", "+7"),
         ],
-        communityAvg: { scoring: 8.5, defense: 7.6, playmaking: 7.2, hustle: 8.1, clutch: 8.3 },
+        communityAvg: {
+          scoring: 8.5,
+          defense: 7.6,
+          rebounding: 7.0,
+          versatility: 7.2,
+          clutch: 8.3,
+        },
         ratingCount: 7760,
       },
     ],
@@ -205,6 +227,7 @@ export const events: MatchEvent[] = [
     performances: [
       {
         athleteId: "vini",
+        positionKey: "soccer.winger",
         role: L("Left wing", "左边锋", "Extremo", "左ウイング"),
         result: L("1 goal, 1 assist", "1 球 1 助", "1 gol, 1 asistencia", "1得点1アシスト"),
         highlight: L(
@@ -218,11 +241,18 @@ export const events: MatchEvent[] = [
           pts("Shots", "射门", "Tiros", "シュート", "5"),
           pts("Dribbles", "过人", "Regates", "ドリブル", "7"),
         ],
-        communityAvg: { attack: 8.9, creation: 8.4, defending: 5.8, workrate: 7.6, composure: 8.1 },
+        communityAvg: {
+          dribbling: 8.9,
+          crossing: 7.8,
+          finishing: 8.4,
+          tracking: 7.6,
+          decision: 8.1,
+        },
         ratingCount: 15220,
       },
       {
         athleteId: "haaland",
+        positionKey: "soccer.striker",
         role: L("Striker", "中锋", "Delantero", "ストライカー"),
         result: L("1 goal", "1 球", "1 gol", "1得点"),
         highlight: L(
@@ -236,11 +266,18 @@ export const events: MatchEvent[] = [
           pts("xG", "xG", "xG", "xG", "0.84"),
           pts("Touches", "触球", "Toques", "タッチ", "21"),
         ],
-        communityAvg: { attack: 8.2, creation: 5.9, defending: 5.1, workrate: 6.8, composure: 7.7 },
+        communityAvg: {
+          finishing: 8.2,
+          movement: 7.4,
+          linkup: 5.9,
+          pressing: 6.8,
+          composure: 7.7,
+        },
         ratingCount: 12880,
       },
       {
         athleteId: "bellingham",
+        positionKey: "soccer.midfielder",
         role: L("Midfield", "中场", "Mediocampo", "ミッドフィルダー"),
         result: L("Box crashes", "插上", "Llegadas", "ボックス突入"),
         highlight: L(
@@ -254,7 +291,13 @@ export const events: MatchEvent[] = [
           pts("Tackles", "抢断", "Entradas", "タックル", "4"),
           pts("Pass %", "传球%", "Pase %", "パス%", "88"),
         ],
-        communityAvg: { attack: 7.4, creation: 7.8, defending: 8.0, workrate: 8.6, composure: 8.3 },
+        communityAvg: {
+          passing: 7.8,
+          vision: 8.0,
+          defending: 7.4,
+          stamina: 8.6,
+          tempo: 8.3,
+        },
         ratingCount: 10104,
       },
     ],
@@ -278,6 +321,7 @@ export const events: MatchEvent[] = [
     performances: [
       {
         athleteId: "mahomes",
+        positionKey: "nfl.quarterback",
         role: L("Quarterback", "四分卫", "Mariscal", "QB"),
         highlight: L(
           "Board is watching the first read vs Philadelphia’s disguised coverage.",
@@ -289,11 +333,18 @@ export const events: MatchEvent[] = [
           pts("Last 3", "近 3 场", "Últimos 3", "直近3", "9 TD / 2 INT"),
           pts("Pressure %", "受压%", "Presión", "プレッシャー", "32%"),
         ],
-        communityAvg: { execution: 8.4, physicality: 7.2, awareness: 8.8, consistency: 8.0, clutch: 9.0 },
+        communityAvg: {
+          passing: 8.4,
+          decisions: 8.8,
+          pocket: 7.2,
+          mobility: 8.0,
+          clutch: 9.0,
+        },
         ratingCount: 4201,
       },
       {
         athleteId: "hurts",
+        positionKey: "nfl.quarterback",
         role: L("Quarterback", "四分卫", "Mariscal", "QB"),
         highlight: L(
           "Tush push still exists. Grade the throws on early downs, not just the sneak.",
@@ -305,7 +356,13 @@ export const events: MatchEvent[] = [
           pts("Rush TD", "冲球TD", "TD tierra", "ラッシュTD", "4 last 4"),
           pts("Cmp %", "完成率", "Comp %", "成功%", "68"),
         ],
-        communityAvg: { execution: 7.9, physicality: 8.7, awareness: 7.6, consistency: 7.4, clutch: 8.1 },
+        communityAvg: {
+          passing: 7.9,
+          decisions: 7.6,
+          pocket: 7.4,
+          mobility: 8.7,
+          clutch: 8.1,
+        },
         ratingCount: 3888,
       },
     ],
@@ -329,6 +386,7 @@ export const events: MatchEvent[] = [
     performances: [
       {
         athleteId: "leclerc",
+        positionKey: "f1.driver",
         role: L("Ferrari", "法拉利", "Ferrari", "フェラーリ"),
         result: L("P1 · Lap 41", "P1 · 第 41 圈", "P1 · Vuelta 41", "P1 · 41周"),
         highlight: L(
@@ -342,11 +400,18 @@ export const events: MatchEvent[] = [
           pts("Pit", "进站", "Pit", "ピット", "1"),
           pts("Gap", "领先", "Ventaja", "差", "+4.2s"),
         ],
-        communityAvg: { pace: 9.0, racecraft: 8.4, tyres: 8.7, consistency: 8.9, composure: 8.8 },
+        communityAvg: {
+          pace: 9.0,
+          racecraft: 8.4,
+          tyres: 8.7,
+          consistency: 8.9,
+          wet: 8.5,
+        },
         ratingCount: 6402,
       },
       {
         athleteId: "verstappen",
+        positionKey: "f1.driver",
         role: L("Red Bull", "红牛", "Red Bull", "レッドブル"),
         result: L("P2 · Lap 41", "P2 · 第 41 圈", "P2 · Vuelta 41", "P2 · 41周"),
         highlight: L(
@@ -360,11 +425,18 @@ export const events: MatchEvent[] = [
           pts("Start", "发车", "Salida", "スタート", "P4"),
           pts("Tyre", "轮胎", "Goma", "タイヤ", "Hard"),
         ],
-        communityAvg: { pace: 8.6, racecraft: 9.1, tyres: 8.3, consistency: 8.7, composure: 9.0 },
+        communityAvg: {
+          pace: 8.6,
+          racecraft: 9.1,
+          tyres: 8.3,
+          consistency: 8.7,
+          wet: 8.8,
+        },
         ratingCount: 7011,
       },
       {
         athleteId: "norris",
+        positionKey: "f1.driver",
         role: L("McLaren", "迈凯伦", "McLaren", "マクラーレン"),
         result: L("P3 · Lap 41", "P3 · 第 41 圈", "P3 · Vuelta 41", "P3 · 41周"),
         highlight: L(
@@ -377,7 +449,13 @@ export const events: MatchEvent[] = [
           pts("Pos", "位置", "Pos", "順位", "P3"),
           pts("Pit", "进站", "Pit", "ピット", "1"),
         ],
-        communityAvg: { pace: 8.2, racecraft: 8.0, tyres: 8.1, consistency: 8.4, composure: 8.3 },
+        communityAvg: {
+          pace: 8.2,
+          racecraft: 8.0,
+          tyres: 8.1,
+          consistency: 8.4,
+          wet: 8.0,
+        },
         ratingCount: 4550,
       },
     ],
@@ -401,6 +479,7 @@ export const events: MatchEvent[] = [
     performances: [
       {
         athleteId: "alcaraz",
+        positionKey: "tennis.player",
         role: L("Champion", "冠军", "Campeón", "優勝"),
         result: L("3–6 7–5 6–4 4–6 6–3", "3–6 7–5 6–4 4–6 6–3", "3–6 7–5 6–4 4–6 6–3", "3–6 7–5 6–4 4–6 6–3"),
         highlight: L(
@@ -414,11 +493,18 @@ export const events: MatchEvent[] = [
           pts("BP saved", "破发点救回", "BP salvados", "BP救出", "9/12"),
           pts("Winners", "制胜分", "Winners", "ウィナー", "52"),
         ],
-        communityAvg: { serve: 8.1, return: 8.8, rally: 9.0, movement: 9.2, clutch: 9.1 },
+        communityAvg: {
+          serve: 8.1,
+          return: 8.8,
+          groundstrokes: 9.0,
+          movement: 9.2,
+          mental: 9.1,
+        },
         ratingCount: 18940,
       },
       {
         athleteId: "sinner",
+        positionKey: "tennis.player",
         role: L("Finalist", "亚军", "Finalista", "準優勝"),
         result: L("6–3 5–7 4–6 6–4 3–6", "6–3 5–7 4–6 6–4 3–6", "6–3 5–7 4–6 6–4 3–6", "6–3 5–7 4–6 6–4 3–6"),
         highlight: L(
@@ -432,7 +518,13 @@ export const events: MatchEvent[] = [
           pts("UE", "非受迫", "Err. no forz.", "UE", "41"),
           pts("Winners", "制胜分", "Winners", "ウィナー", "47"),
         ],
-        communityAvg: { serve: 8.6, return: 7.7, rally: 8.4, movement: 8.0, clutch: 7.9 },
+        communityAvg: {
+          serve: 8.6,
+          return: 7.7,
+          groundstrokes: 8.4,
+          movement: 8.0,
+          mental: 7.9,
+        },
         ratingCount: 16402,
       },
     ],
@@ -456,6 +548,7 @@ export const events: MatchEvent[] = [
     performances: [
       {
         athleteId: "pereira",
+        positionKey: "ufc.striker",
         role: L("Champion", "卫冕", "Campeón", "王者"),
         result: L("Rd 3", "第 3 回合", "Asalto 3", "3R"),
         highlight: L(
@@ -468,11 +561,18 @@ export const events: MatchEvent[] = [
           pts("Sig. strikes", "有效击打", "Golpes sig.", "有効打", "48"),
           pts("TD stuffed", "防守摔倒", "TD defendidos", "TD防御", "1/3"),
         ],
-        communityAvg: { striking: 8.6, grappling: 6.4, cardio: 7.8, control: 7.2, composure: 8.4 },
+        communityAvg: {
+          striking: 8.6,
+          power: 8.2,
+          defense: 6.4,
+          cardio: 7.8,
+          composure: 8.4,
+        },
         ratingCount: 11200,
       },
       {
         athleteId: "ankalaev",
+        positionKey: "ufc.grappler",
         role: L("Challenger", "挑战者", "Retador", "挑戦者"),
         result: L("Rd 3", "第 3 回合", "Asalto 3", "3R"),
         highlight: L(
@@ -485,7 +585,13 @@ export const events: MatchEvent[] = [
           pts("TD", "摔倒", "Derribos", "TD", "2/5"),
           pts("Ctrl", "控制", "Control", "コントロール", "2:14"),
         ],
-        communityAvg: { striking: 6.9, grappling: 8.5, cardio: 8.1, control: 8.0, composure: 7.7 },
+        communityAvg: {
+          grappling: 8.5,
+          control: 8.0,
+          transitions: 7.8,
+          cardio: 8.1,
+          composure: 7.7,
+        },
         ratingCount: 9804,
       },
     ],
@@ -499,7 +605,13 @@ export const seedComments: SeedComment[] = [
     athleteId: "doncic",
     author: "row24",
     createdAt: "2026-04-13T02:44:00Z",
-    scores: { scoring: 9, defense: 6, playmaking: 8, hustle: 7, clutch: 8.5 },
+    scores: {
+      scoring: 9,
+      playmaking: 8,
+      perimeter_def: 6,
+      hustle: 7,
+      clutch: 8.5,
+    },
     body: L(
       "31 is 31. The live-ball turnovers after timeouts are why defense sits at 6.",
       "31 分就是 31 分。暂停回来的活球失误，所以防守只给 6。",
@@ -513,7 +625,13 @@ export const seedComments: SeedComment[] = [
     athleteId: "tatum",
     author: "garden-seat",
     createdAt: "2026-04-13T02:51:00Z",
-    scores: { scoring: 8.5, defense: 8, playmaking: 7, hustle: 8.5, clutch: 8.5 },
+    scores: {
+      scoring: 8.5,
+      defense: 8,
+      rebounding: 7.5,
+      versatility: 7,
+      clutch: 8.5,
+    },
     body: L(
       "He stopped settling. That’s the whole card.",
       "他不再倒手投。这张卡就这一句。",
@@ -527,7 +645,13 @@ export const seedComments: SeedComment[] = [
     athleteId: "haaland",
     author: "etihad-expat",
     createdAt: "2026-04-08T21:58:00+02:00",
-    scores: { attack: 8, creation: 5.5, defending: 5, workrate: 6.5, composure: 8 },
+    scores: {
+      finishing: 8,
+      movement: 7,
+      linkup: 5.5,
+      pressing: 6.5,
+      composure: 8,
+    },
     body: L(
       "Finish was elite. If you ding creation, say whether you wanted him dropping in or the 8s finding him.",
       "终结是顶级。你要扣做戏，先说你是想让他回撤，还是让 8 号去找他。",
@@ -541,7 +665,13 @@ export const seedComments: SeedComment[] = [
     athleteId: "leclerc",
     author: "harbour",
     createdAt: "2026-05-24T14:20:00+02:00",
-    scores: { pace: 9, racecraft: 8.5, tyres: 8.5, consistency: 9, composure: 9 },
+    scores: {
+      pace: 9,
+      racecraft: 8.5,
+      tyres: 8.5,
+      consistency: 9,
+      wet: 8.5,
+    },
     body: L(
       "This is the drive people wanted in 2022. Gap management, not a selfie lap.",
       "这才是 2022 大家想看的那场。管差距，不是自拍圈。",
@@ -555,7 +685,13 @@ export const seedComments: SeedComment[] = [
     athleteId: "sinner",
     author: "clay-watch",
     createdAt: "2026-06-07T18:40:00+02:00",
-    scores: { serve: 8.5, return: 7.5, rally: 8.5, movement: 8, clutch: 7.5 },
+    scores: {
+      serve: 8.5,
+      return: 7.5,
+      groundstrokes: 8.5,
+      movement: 8,
+      mental: 7.5,
+    },
     body: L(
       "Losing on clay is allowed to still be an 8. Depth died; the first-strike tennis did not.",
       "红土输球也可以是 8 分。深度没了，第一拍还在。",
@@ -569,7 +705,13 @@ export const seedComments: SeedComment[] = [
     athleteId: "pereira",
     author: "octagon-rail",
     createdAt: "2026-04-19T06:12:00Z",
-    scores: { striking: 8.5, grappling: 6, cardio: 8, control: 7, composure: 8.5 },
+    scores: {
+      striking: 8.5,
+      power: 8,
+      defense: 6,
+      cardio: 8,
+      composure: 8.5,
+    },
     body: L(
       "Left hook is loaded. If Ankalaev chains a second takedown, this card flips.",
       "左勾在槽里。安卡拉耶夫如果能连第二次摔倒，这张卡会翻。",
@@ -591,10 +733,22 @@ export function performanceKey(eventId: string, athleteId: string) {
   return `${eventId}:${athleteId}`;
 }
 
+/** Simple mean — prefer {@link overallScore} when position is known. */
 export function meanScore(scores: ScoreMapLike) {
   const values = Object.values(scores).filter((n) => typeof n === "number");
   if (!values.length) return 0;
   return values.reduce((a, b) => a + b, 0) / values.length;
+}
+
+export function overallScore(
+  scores: ScoreMapLike,
+  positionKey: PositionKey,
+): number {
+  return weightedOverall(scores as Record<string, number>, positionKey);
+}
+
+export function getPerformance(event: MatchEvent, athleteId: string) {
+  return event.performances.find((p) => p.athleteId === athleteId);
 }
 
 type ScoreMapLike = Record<string, number>;

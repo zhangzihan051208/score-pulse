@@ -3,10 +3,12 @@
 import { useMemo, useState } from "react";
 import { DimensionRadar } from "@/components/dimension-radar";
 import { Overall } from "@/components/score-rows";
+import { dimLabel } from "@/i18n/position-dims";
 import { useI18n } from "@/i18n/use-i18n";
-import { formatWhen, meanScore } from "@/lib/data";
+import { formatWhen, overallScore } from "@/lib/data";
+import { overallFromScores } from "@/lib/store";
 import { averageScores } from "@/lib/score-aggregate";
-import type { ScoreMap, Sport } from "@/lib/types";
+import type { PositionKey, ScoreMap } from "@/lib/types";
 
 export type RemoteRating = {
   userId: string;
@@ -29,12 +31,12 @@ export type RemoteComment = {
 type Filter = "all" | "mine" | "others";
 
 export function CommunityRatingsPanel({
-  sport,
+  positionKey,
   dimIds,
   ratings,
   comments,
 }: {
-  sport: Sport;
+  positionKey: PositionKey;
   dimIds: string[];
   ratings: RemoteRating[];
   comments: RemoteComment[];
@@ -42,7 +44,7 @@ export function CommunityRatingsPanel({
   const { locale, t } = useI18n();
   const [filter, setFilter] = useState<Filter>("all");
 
-  const dimLabels = dimIds.map((id) => t.dims[sport][id]);
+  const dimLabels = dimIds.map((id) => dimLabel(locale, positionKey, id));
 
   const communityAvg = useMemo(
     () => averageScores(ratings.map((r) => r.scores), dimIds),
@@ -131,7 +133,7 @@ export function CommunityRatingsPanel({
                 <span className="size-2 rounded-full bg-primary" />
                 {t.rate.community}{" "}
                 <span className="font-semibold tabular-nums">
-                  {meanScore(communityAvg).toFixed(1)}
+                  {overallScore(communityAvg, positionKey).toFixed(1)}
                 </span>
                 <span className="text-muted-foreground">({ratings.length})</span>
               </span>
@@ -141,7 +143,7 @@ export function CommunityRatingsPanel({
                 <span className="size-2 rounded-full bg-blue-700" />
                 {t.rate.you}{" "}
                 <span className="font-semibold tabular-nums">
-                  {meanScore(mineRating.scores).toFixed(1)}
+                  {overallFromScores(mineRating.scores, positionKey).toFixed(1)}
                 </span>
               </span>
             )}
@@ -170,7 +172,7 @@ export function CommunityRatingsPanel({
                       {formatWhen(r.updatedAt, locale)}
                     </time>
                   </div>
-                  <Overall value={meanScore(r.scores)} />
+                  <Overall value={overallFromScores(r.scores, positionKey)} />
                 </div>
                 <div className="mt-3 flex justify-center sm:justify-start">
                   <DimensionRadar

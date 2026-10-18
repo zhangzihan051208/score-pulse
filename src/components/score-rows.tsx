@@ -1,20 +1,21 @@
 "use client";
 
+import { dimLabel } from "@/i18n/position-dims";
 import { useI18n } from "@/i18n/use-i18n";
-import { SPORT_DIMENSIONS } from "@/lib/sports";
-import type { ScoreMap, Sport } from "@/lib/types";
+import { dimensionIds } from "@/lib/position-ratings";
+import type { PositionKey, ScoreMap } from "@/lib/types";
 
 export function ScoreRows({
-  sport,
+  positionKey,
   scores,
   compact = false,
 }: {
-  sport: Sport;
+  positionKey: PositionKey;
   scores: ScoreMap;
   compact?: boolean;
 }) {
-  const { t } = useI18n();
-  const dims = SPORT_DIMENSIONS[sport];
+  const { locale } = useI18n();
+  const dims = dimensionIds(positionKey);
 
   return (
     <div className={compact ? "space-y-1" : "space-y-1.5"}>
@@ -26,7 +27,7 @@ export function ScoreRows({
             className="grid grid-cols-[5.5rem_1fr_2.25rem] items-center gap-2"
           >
             <span className="truncate text-xs text-muted-foreground">
-              {t.dims[sport][id]}
+              {dimLabel(locale, positionKey, id)}
             </span>
             <div className="h-1.5 overflow-hidden rounded-full bg-muted">
               <div

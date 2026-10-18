@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useCommunity } from "@/hooks/use-community";
 import { useI18n } from "@/i18n/use-i18n";
 import { tx } from "@/lib/copy";
-import { athletes, events, formatWhen, meanScore } from "@/lib/data";
+import { athletes, events, formatWhen, getPerformance, overallScore } from "@/lib/data";
 import { allFeedItems } from "@/lib/store";
 import type { Localized } from "@/lib/types";
 
@@ -56,7 +56,12 @@ export function FeedList() {
                     <p className="mt-1 line-clamp-3 text-sm text-muted-foreground">{body}</p>
                   ) : "scores" in item && item.scores ? (
                     <p className="mt-1 text-sm text-primary">
-                      {meanScore(item.scores).toFixed(1)}
+                      {(() => {
+                        const perf = getPerformance(event, item.athleteId);
+                        return perf
+                          ? overallScore(item.scores, perf.positionKey).toFixed(1)
+                          : "—";
+                      })()}
                     </p>
                   ) : null}
                 </Link>

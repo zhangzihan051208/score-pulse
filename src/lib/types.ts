@@ -10,6 +10,9 @@ export type EventStatus = "live" | "upcoming" | "ended";
 
 export type ScoreMap = Record<string, number>;
 
+import type { PositionKey as PositionKeyType } from "./position-ratings";
+export type PositionKey = PositionKeyType;
+
 export type Athlete = {
   id: string;
   name: string;
@@ -20,6 +23,7 @@ export type Athlete = {
 
 export type Performance = {
   athleteId: string;
+  positionKey: PositionKey;
   role: Localized;
   result?: Localized;
   highlight: Localized;

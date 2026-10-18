@@ -5,7 +5,7 @@ import { ApiFixturesStrip } from "@/components/api-fixtures-strip";
 import { StatusPill } from "@/components/status-pill";
 import { useI18n } from "@/i18n/use-i18n";
 import { tx } from "@/lib/copy";
-import { athletes, events, meanScore } from "@/lib/data";
+import { athletes, events, overallScore } from "@/lib/data";
 import { SPORT_CHIP } from "@/lib/sports";
 import { SPORTS, type Sport } from "@/lib/types";
 
@@ -85,7 +85,7 @@ export function HomeBoards() {
                         </p>
                       </div>
                       <span className="text-sm font-bold tabular-nums text-primary">
-                        {meanScore(p.communityAvg).toFixed(1)}
+                        {overallScore(p.communityAvg, p.positionKey).toFixed(1)}
                       </span>
                     </Link>
                   </li>
@@ -147,7 +147,7 @@ function BoardBlock({ sport }: { sport: Sport }) {
                   {athlete.name}
                 </span>
                 <span className="font-semibold tabular-nums text-primary">
-                  {meanScore(p.communityAvg).toFixed(1)}
+                  {overallScore(p.communityAvg, p.positionKey).toFixed(1)}
                 </span>
               </Link>
             </li>

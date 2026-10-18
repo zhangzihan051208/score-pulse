@@ -2,15 +2,18 @@
 
 import Link from "next/link";
 import { StatusPill } from "@/components/status-pill";
+import { dimLabel, positionRoleLabels } from "@/i18n/position-dims";
 import { useI18n } from "@/i18n/use-i18n";
 import { tx } from "@/lib/copy";
-import { athletes, eventsBySport, formatWhen, meanScore } from "@/lib/data";
-import { SPORT_ACCENT, SPORT_DIMENSIONS } from "@/lib/sports";
+import { athletes, eventsBySport, formatWhen, overallScore } from "@/lib/data";
+import { BOARD_POSITIONS, dimensionIds } from "@/lib/position-ratings";
+import { SPORT_ACCENT } from "@/lib/sports";
 import type { Sport } from "@/lib/types";
 
 export function BoardPage({ sport }: { sport: Sport }) {
   const { locale, t } = useI18n();
   const list = eventsBySport(sport);
+  const positions = BOARD_POSITIONS[sport];
 
   return (
     <div>
@@ -62,7 +65,7 @@ export function BoardPage({ sport }: { sport: Sport }) {
                             </span>
                           </span>
                           <span className="font-semibold tabular-nums text-primary">
-                            {meanScore(p.communityAvg).toFixed(1)}
+                            {overallScore(p.communityAvg, p.positionKey).toFixed(1)}
                           </span>
                         </Link>
                       </li>
@@ -74,19 +77,28 @@ export function BoardPage({ sport }: { sport: Sport }) {
           )}
         </div>
         <aside className="h-fit rounded-xl border bg-card p-4">
-          <p className="mb-3 text-xs font-semibold tracking-widest text-muted-foreground uppercase">
+          <p className="mb-1 text-xs font-semibold tracking-widest text-muted-foreground uppercase">
             {t.board.dimensions}
           </p>
-          <ol className="space-y-2">
-            {SPORT_DIMENSIONS[sport].map((id, index) => (
-              <li key={id} className="flex items-center gap-2 text-sm">
-                <span className="w-4 tabular-nums text-muted-foreground">
-                  {index + 1}
-                </span>
-                {t.dims[sport][id]}
-              </li>
+          <p className="mb-3 text-[11px] leading-5 text-muted-foreground">
+            {t.board.dimensionsHint}
+          </p>
+          <div className="space-y-4">
+            {positions.map((key) => (
+              <div key={key}>
+                <p className="text-xs font-semibold">
+                  {positionRoleLabels[locale][key]}
+                </p>
+                <ol className="mt-1 space-y-0.5">
+                  {dimensionIds(key).map((id) => (
+                    <li key={id} className="text-[11px] text-muted-foreground">
+                      · {dimLabel(locale, key, id)}
+                    </li>
+                  ))}
+                </ol>
+              </div>
             ))}
-          </ol>
+          </div>
         </aside>
       </div>
     </div>
