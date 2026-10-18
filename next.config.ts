@@ -1,7 +1,15 @@
 import type { NextConfig } from "next";
 
+const previewOrigins = [
+  "127.0.0.1",
+  "localhost",
+  "*.cursor.com",
+  "*.cursor.sh",
+  "*.cursorapi.com",
+];
+
 const nextConfig: NextConfig = {
-  allowedDevOrigins: ["127.0.0.1", "localhost"],
+  allowedDevOrigins: previewOrigins,
   turbopack: {
     rules: {
       "*.css": {

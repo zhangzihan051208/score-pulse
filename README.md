@@ -11,7 +11,7 @@ npm run preview      # production build + serve (most stable for QA)
 npm run smoke        # Playwright smoke (dev or preview must be running)
 ```
 
-Open `http://127.0.0.1:43147`. If buttons or language feel dead in dev, use `npm run preview` — Next.js blocks some dev assets until `allowedDevOrigins` is set (already in `next.config.ts`).
+Open `http://127.0.0.1:43147` or use Cursor **Preview** (Desktop). Styling needs Tailwind v4 via `postcss.config.mjs` (`@tailwindcss/postcss`). If the page looks like plain text, restart `npm run dev` after `npm install`, or run `npm run preview` for a production build. Preview tunnels are allowed in `next.config.ts` (`allowedDevOrigins`).
 
 ## What you get
 
