@@ -18,6 +18,30 @@ try {
   if (!res?.ok()) fail("home load", `status ${res?.status()}`);
   else pass("home load");
 
+  const cssHref = await page
+    .locator('link[rel="stylesheet"][href*="layout.css"]')
+    .first()
+    .getAttribute("href");
+  if (cssHref) {
+    const cssRes = await page.request.get(new URL(cssHref, BASE).toString());
+    const type = cssRes.headers()["content-type"] || "";
+    const body = await cssRes.text();
+    if (cssRes.ok() && type.includes("text/css") && body.includes(".flex")) {
+      pass("tailwind css", "layout.css served with utilities");
+    } else {
+      fail(
+        "tailwind css",
+        `ok=${cssRes.ok()} type=${type} hasFlex=${body.includes(".flex")}`,
+      );
+    }
+  } else fail("tailwind css", "no layout.css link");
+
+  const headerBg = await page.locator("header").evaluate((el) => {
+    return getComputedStyle(el).backgroundColor;
+  });
+  if (headerBg === "rgb(20, 20, 20)") pass("styled header", headerBg);
+  else fail("styled header", headerBg);
+
   const boards = await page.locator('a[href="/boards/nba"]').count();
   if (boards > 0) pass("nba board link");
   else fail("nba board link", "missing");
