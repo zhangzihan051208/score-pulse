@@ -23,11 +23,26 @@ export type Athlete = {
   jerseyNumber?: string;
 };
 
+export type FavoriteTeam = {
+  id: string;
+  name: string;
+};
+
+export type FavoritePair = {
+  primary?: FavoriteTeam;
+  secondary?: FavoriteTeam;
+};
+
+export type FavoritePartition = string;
+
+export type FavoriteTeamsMap = Record<FavoritePartition, FavoritePair>;
+
 export type UserProfile = {
   id: string;
   displayName: string;
   avatarUrl: string | null;
   bio: string | null;
+  favoriteTeams: FavoriteTeamsMap;
   updatedAt: string | null;
 };
 
@@ -48,6 +63,10 @@ export type MatchEvent = {
   sport: Sport;
   leagueId?: string;
   leagueSlug?: string;
+  homeTeamId?: string;
+  awayTeamId?: string;
+  homeTeamName?: string;
+  awayTeamName?: string;
   title: Localized;
   subtitle: Localized;
   venue: Localized;

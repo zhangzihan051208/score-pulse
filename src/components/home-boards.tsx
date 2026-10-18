@@ -1,8 +1,12 @@
 "use client";
 
 import Link from "next/link";
+import { useMemo } from "react";
+import { HomeMyTeams } from "@/components/home-my-teams";
 import { StatusPill } from "@/components/status-pill";
+import { useFavoriteTeams } from "@/hooks/use-favorite-teams";
 import { useLiveEvents } from "@/hooks/use-live-events";
+import { sortEventsForHome } from "@/lib/favorite-teams";
 import { useI18n } from "@/i18n/use-i18n";
 import { tx } from "@/lib/copy";
 import { events, formatWhen, overallScore } from "@/lib/data";
@@ -18,7 +22,12 @@ const LIVE_SPORTS: Sport[] = ["nba", "soccer"];
 export function HomeBoards() {
   const { locale, t } = useI18n();
   const { events: liveAll, syncedAt } = useLiveEvents();
-  const live = liveAll.filter((e) => e.status === "live");
+  const { favorites, hydrated } = useFavoriteTeams();
+  const sortedAll = useMemo(
+    () => (hydrated ? sortEventsForHome(liveAll, favorites) : liveAll),
+    [favorites, hydrated, liveAll],
+  );
+  const live = sortedAll.filter((e) => e.status === "live");
 
   return (
     <div className="mx-auto max-w-6xl px-3 py-6">
@@ -36,6 +45,8 @@ export function HomeBoards() {
           <p className="mt-3 text-xs text-white/50">{t.home.liveSyncHint}</p>
         )}
       </section>
+
+      <HomeMyTeams events={sortedAll} />
 
       {live.length > 0 && (
         <section className="mt-5">
@@ -67,7 +78,7 @@ export function HomeBoards() {
             <LiveSportBlock
               key={sport}
               sport={sport as "nba" | "soccer"}
-              list={liveAll.filter((e) => e.sport === sport)}
+              list={sortedAll.filter((e) => e.sport === sport)}
             />
           ))}
           {SPORTS.filter((s) => !LIVE_SPORTS.includes(s)).map((sport) => (

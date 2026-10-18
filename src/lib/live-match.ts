@@ -25,6 +25,8 @@ export type LiveFixtureRow = {
   str_time: string | null;
   str_thumb: string | null;
   slug: string | null;
+  id_home_team?: string | null;
+  id_away_team?: string | null;
   lineup: StoredLineupPlayer[] | null;
   raw?: Record<string, unknown> | null;
   synced_at?: string;
@@ -126,6 +128,15 @@ export function fixtureToMatchEvent(row: LiveFixtureRow): MatchEvent | null {
   const league =
     getLeagueByTsdbId(row.league_id ?? undefined) ??
     leagueMatchesRow(row);
+  const raw = (row.raw as Record<string, unknown> | null) ?? {};
+  const homeTeamId =
+    row.id_home_team ??
+    (raw.idHomeTeam as string | undefined) ??
+    undefined;
+  const awayTeamId =
+    row.id_away_team ??
+    (raw.idAwayTeam as string | undefined) ??
+    undefined;
 
   return {
     id: row.id_event,
@@ -133,6 +144,10 @@ export function fixtureToMatchEvent(row: LiveFixtureRow): MatchEvent | null {
     sport,
     leagueId: league?.tsdbId ?? row.league_id ?? undefined,
     leagueSlug: league?.slug,
+    homeTeamId,
+    awayTeamId,
+    homeTeamName: row.str_home_team ?? undefined,
+    awayTeamName: row.str_away_team ?? undefined,
     title: S(title),
     subtitle: S(
       row.str_league ?? league?.label ?? (sport === "nba" ? "NBA" : "Football"),

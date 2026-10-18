@@ -20,6 +20,26 @@ type Dict = {
     players: string;
     empty: string;
   };
+  teams: {
+    title: string;
+    lead: string;
+    primary: string;
+    secondary: string;
+    searchPlaceholder: string;
+    clear: string;
+    saved: string;
+    localHint: string;
+    viewSchedule: string;
+    fullSchedule: string;
+    scheduleEmpty: string;
+    noPrimary: string;
+    homeTitle: string;
+    homeEmpty: string;
+    setTeams: string;
+    manage: string;
+    allFixtures: string;
+    noFixturesYet: string;
+  };
   profile: {
     title: string;
     lead: string;
@@ -158,6 +178,26 @@ export const messages: Record<Locale, Dict> = {
       matches: "Matches",
       players: "Players",
       empty: "No matches or players for that query. Try another spelling or sync fixtures.",
+    },
+    teams: {
+      title: "My teams",
+      lead: "Pick a primary and secondary team in each league board. Home prioritizes your primary team's matches.",
+      primary: "Primary team",
+      secondary: "Secondary team",
+      searchPlaceholder: "Search club name…",
+      clear: "Clear",
+      saved: "Teams saved",
+      localHint: "Saved on this device; sign in to sync across devices.",
+      viewSchedule: "Full schedule",
+      fullSchedule: "All synced fixtures",
+      scheduleEmpty: "No synced fixtures for this team yet. Run a fixtures sync.",
+      noPrimary: "Set a primary team for this league first.",
+      homeTitle: "Your teams",
+      homeEmpty: "Set primary teams to see live and upcoming matches first on the home page.",
+      setTeams: "Set my teams",
+      manage: "Manage teams",
+      allFixtures: "All fixtures",
+      noFixturesYet: "No synced matches for your teams yet — try syncing fixtures.",
     },
     profile: {
       title: "Your profile",
@@ -380,6 +420,26 @@ export const messages: Record<Locale, Dict> = {
       players: "球员",
       empty: "没有结果，换个关键词或先同步赛程。",
     },
+    teams: {
+      title: "我的主队",
+      lead: "每个联赛分区可设一支主队、一支副队。首页优先展示主队比赛。",
+      primary: "主队",
+      secondary: "副队",
+      searchPlaceholder: "搜索球队…",
+      clear: "清除",
+      saved: "已保存",
+      localHint: "保存在本机；登录后可云端同步。",
+      viewSchedule: "全部赛程",
+      fullSchedule: "已同步的全部比赛",
+      scheduleEmpty: "暂无该队赛程，请先同步 fixtures。",
+      noPrimary: "请先在本分区设置主队。",
+      homeTitle: "我的主队",
+      homeEmpty: "设置主队后，首页会优先显示主队的进行中与即将开赛比赛。",
+      setTeams: "去设置主队",
+      manage: "管理主队",
+      allFixtures: "全部赛程",
+      noFixturesYet: "还没有主队的同步比赛，请先同步赛程。",
+    },
     profile: {
       title: "个人主页",
       lead: "昵称、头像和签名会显示在评分与评论中。",
@@ -595,6 +655,26 @@ export const messages: Record<Locale, Dict> = {
       matches: "Partidos",
       players: "Jugadores",
       empty: "Sin resultados. Prueba otra búsqueda o sincroniza.",
+    },
+    teams: {
+      title: "Mis equipos",
+      lead: "Elige equipo principal y secundario por liga. Inicio prioriza al principal.",
+      primary: "Principal",
+      secondary: "Secundario",
+      searchPlaceholder: "Buscar club…",
+      clear: "Quitar",
+      saved: "Guardado",
+      localHint: "En este dispositivo; inicia sesión para sincronizar.",
+      viewSchedule: "Calendario completo",
+      fullSchedule: "Partidos sincronizados",
+      scheduleEmpty: "Sin partidos sincronizados para este equipo.",
+      noPrimary: "Configura primero el equipo principal.",
+      homeTitle: "Tus equipos",
+      homeEmpty: "Configura equipos para ver sus partidos primero en inicio.",
+      setTeams: "Configurar equipos",
+      manage: "Gestionar",
+      allFixtures: "Todos los partidos",
+      noFixturesYet: "Aún no hay partidos sincronizados para tus equipos.",
     },
     profile: {
       title: "Tu perfil",
@@ -812,6 +892,26 @@ export const messages: Record<Locale, Dict> = {
       matches: "試合",
       players: "選手",
       empty: "該当なし。別のキーワードか同期を試してください。",
+    },
+    teams: {
+      title: "マイチーム",
+      lead: "リーグごとに主・副チームを設定。ホームで主チームの試合を優先表示。",
+      primary: "主チーム",
+      secondary: "副チーム",
+      searchPlaceholder: "クラブを検索…",
+      clear: "解除",
+      saved: "保存しました",
+      localHint: "この端末に保存。ログインでクラウド同期。",
+      viewSchedule: "全日程",
+      fullSchedule: "同期済みの全試合",
+      scheduleEmpty: "このチームの同期試合がありません。",
+      noPrimary: "先に主チームを設定してください。",
+      homeTitle: "マイチーム",
+      homeEmpty: "主チームを設定すると、ホームでその試合が優先表示されます。",
+      setTeams: "チームを設定",
+      manage: "管理",
+      allFixtures: "全試合",
+      noFixturesYet: "主チームの同期試合がまだありません。",
     },
     profile: {
       title: "プロフィール",

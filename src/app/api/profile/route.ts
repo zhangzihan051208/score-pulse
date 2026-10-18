@@ -1,3 +1,4 @@
+import { normalizeFavorites } from "@/lib/favorite-teams";
 import { createClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 import { NextResponse } from "next/server";
@@ -7,6 +8,7 @@ function rowToProfile(row: {
   display_name: string | null;
   avatar_url: string | null;
   bio: string | null;
+  favorite_teams?: unknown;
   updated_at: string;
 }) {
   return {
@@ -14,6 +16,7 @@ function rowToProfile(row: {
     displayName: row.display_name?.trim() || "Fan",
     avatarUrl: row.avatar_url?.trim() || null,
     bio: row.bio?.trim() || null,
+    favoriteTeams: normalizeFavorites(row.favorite_teams),
     updatedAt: row.updated_at,
   };
 }
@@ -34,7 +37,7 @@ export async function GET() {
 
   const { data, error } = await supabase
     .from("profiles")
-    .select("id, display_name, avatar_url, bio, updated_at")
+    .select("id, display_name, avatar_url, bio, favorite_teams, updated_at")
     .eq("id", user.id)
     .maybeSingle();
 
@@ -52,6 +55,7 @@ export async function GET() {
           "Fan",
         avatarUrl: null,
         bio: null,
+        favoriteTeams: {},
         updatedAt: null,
       },
     });
@@ -64,6 +68,7 @@ type PatchBody = {
   displayName?: string;
   avatarUrl?: string | null;
   bio?: string | null;
+  favoriteTeams?: Record<string, unknown>;
 };
 
 export async function PATCH(request: Request) {
@@ -105,17 +110,20 @@ export async function PATCH(request: Request) {
     );
   }
 
-  const patch: Record<string, string | null> = {
+  const patch: Record<string, unknown> = {
     updated_at: new Date().toISOString(),
   };
   if (displayName !== undefined) patch.display_name = displayName;
   if (body.avatarUrl !== undefined) patch.avatar_url = avatarUrl ?? null;
   if (body.bio !== undefined) patch.bio = bio ?? null;
+  if (body.favoriteTeams !== undefined) {
+    patch.favorite_teams = normalizeFavorites(body.favoriteTeams);
+  }
 
   const { data, error } = await supabase
     .from("profiles")
     .upsert({ id: user.id, ...patch })
-    .select("id, display_name, avatar_url, bio, updated_at")
+    .select("id, display_name, avatar_url, bio, favorite_teams, updated_at")
     .single();
 
   if (error) {

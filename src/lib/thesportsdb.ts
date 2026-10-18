@@ -127,6 +127,18 @@ export async function fetchLineup(idEvent: string) {
   return data?.lineup ?? [];
 }
 
+type SearchTeamsResponse = { teams: { idTeam: string; strTeam: string; strLeague?: string }[] | null };
+
+export async function searchTeamsByName(query: string) {
+  const q = query.trim();
+  if (q.length < 2) return [];
+  const data = await tsdb<SearchTeamsResponse>(
+    `searchteams.php?t=${encodeURIComponent(q)}`,
+    { optional: true },
+  );
+  return data?.teams ?? [];
+}
+
 export async function fetchTeamRoster(idTeam: string) {
   const data = await tsdb<PlayersResponse>(
     `lookup_all_players.php?id=${encodeURIComponent(idTeam)}`,

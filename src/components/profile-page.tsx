@@ -58,6 +58,12 @@ export function ProfilePageInner() {
         >
           {t.auth.signIn}
         </Link>
+        <Link
+          href="/my-teams"
+          className="mt-4 block text-sm text-primary hover:underline"
+        >
+          {t.teams.title} →
+        </Link>
       </div>
     );
   }
@@ -76,6 +82,12 @@ export function ProfilePageInner() {
       </Link>
       <h1 className="mt-3 text-2xl font-bold">{t.profile.title}</h1>
       <p className="mt-1 text-sm text-muted-foreground">{t.profile.lead}</p>
+      <Link
+        href="/my-teams"
+        className="mt-3 inline-block text-sm font-medium text-primary hover:underline"
+      >
+        {t.teams.title} →
+      </Link>
 
       <div className="mt-6 flex items-center gap-4">
         <PlayerAvatar athlete={previewAthlete} size="lg" showJerseyBadge={false} />

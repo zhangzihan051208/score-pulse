@@ -5,6 +5,7 @@ create table if not exists public.profiles (
   display_name text,
   avatar_url text,
   bio text,
+  favorite_teams jsonb not null default '{}'::jsonb,
   updated_at timestamptz not null default now()
 );
 

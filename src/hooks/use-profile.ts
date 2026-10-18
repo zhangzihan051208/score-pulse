@@ -2,7 +2,8 @@
 
 import { useAuth } from "@/hooks/use-auth";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
-import type { UserProfile } from "@/lib/types";
+import { normalizeFavorites } from "@/lib/favorite-teams";
+import type { FavoriteTeamsMap, UserProfile } from "@/lib/types";
 import { useCallback, useEffect, useState } from "react";
 
 export function useProfile() {
@@ -39,6 +40,7 @@ export function useProfile() {
     displayName?: string;
     avatarUrl?: string | null;
     bio?: string | null;
+    favoriteTeams?: FavoriteTeamsMap;
   }) {
     if (!cloud || !user) return { ok: false as const, error: "Not signed in" };
     const res = await fetch("/api/profile", {

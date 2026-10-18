@@ -17,6 +17,7 @@ import {
   type TsdbEvent,
   type TsdbLineupPlayer,
 } from "@/lib/thesportsdb";
+import { statusRank } from "@/lib/favorite-teams";
 import {
   getLeagueBySlug,
   isTrackedFixture,
@@ -288,7 +289,7 @@ const FIXTURE_SELECT =
   "id_event,sport,str_event,str_league,str_home_team,str_away_team,int_home_score,int_away_score,str_status,date_event,str_time,str_thumb,slug,lineup,raw,synced_at";
 
 const FIXTURE_SELECT_MIN =
-  "id_event,sport,league_id,str_event,str_league,str_home_team,str_away_team,int_home_score,int_away_score,str_status,date_event,str_time,str_thumb,raw,synced_at";
+  "id_event,sport,league_id,str_event,str_league,str_home_team,str_away_team,id_home_team,id_away_team,int_home_score,int_away_score,str_status,date_event,str_time,str_thumb,raw,synced_at";
 
 export async function listFixtures(
   sports: string[],
@@ -483,6 +484,100 @@ export async function searchFixtures(query: string, limit = 20) {
   }
 
   return { matches: matches.slice(0, limit), players: players.slice(0, limit) };
+}
+
+export type TeamSearchHit = {
+  id: string;
+  name: string;
+  league?: string;
+  sport: "nba" | "soccer";
+};
+
+export async function searchTeamsInFixtures(
+  query: string,
+  sport?: "nba" | "soccer",
+  leagueId?: string,
+  limit = 12,
+): Promise<TeamSearchHit[]> {
+  const admin = createServiceClient();
+  const q = query.trim().toLowerCase();
+  if (!admin || q.length < 2) return [];
+
+  let db = admin
+    .from("sportsdb_fixtures")
+    .select(FIXTURE_SELECT_MIN)
+    .in("sport", sport ? [sport] : ["nba", "soccer"])
+    .order("date_event", { ascending: false })
+    .limit(200);
+
+  const res = await db;
+  const byId = new Map<string, TeamSearchHit>();
+
+  for (const row of res.data ?? []) {
+    const hydrated = hydrateFixtureRow(row as Record<string, unknown>);
+    if (!isTrackedFixture(hydrated)) continue;
+    if (leagueId && hydrated.league_id !== leagueId) continue;
+
+    const candidates: { id?: string | null; name?: string | null }[] = [
+      { id: hydrated.id_home_team, name: hydrated.str_home_team },
+      { id: hydrated.id_away_team, name: hydrated.str_away_team },
+    ];
+    for (const c of candidates) {
+      if (!c.id || !c.name) continue;
+      if (!c.name.toLowerCase().includes(q)) continue;
+      if (byId.has(c.id)) continue;
+      byId.set(c.id, {
+        id: c.id,
+        name: c.name,
+        league: hydrated.str_league ?? undefined,
+        sport: hydrated.sport as "nba" | "soccer",
+      });
+      if (byId.size >= limit) break;
+    }
+    if (byId.size >= limit) break;
+  }
+
+  return [...byId.values()];
+}
+
+export async function listFixturesForTeam(
+  teamId: string,
+  sport: "nba" | "soccer",
+  teamName?: string,
+  limit = 40,
+): Promise<MatchEvent[]> {
+  const admin = createServiceClient();
+  if (!admin) return [];
+
+  const res = await admin
+    .from("sportsdb_fixtures")
+    .select(FIXTURE_SELECT_MIN)
+    .eq("sport", sport)
+    .order("date_event", { ascending: false })
+    .limit(250);
+
+  const nameLower = teamName?.toLowerCase();
+  const rows = (res.data ?? [])
+    .map((row) => hydrateFixtureRow(row as Record<string, unknown>))
+    .filter((row) => isTrackedFixture(row))
+    .filter((row) => {
+      if (row.id_home_team === teamId || row.id_away_team === teamId) return true;
+      if (!nameLower) return false;
+      return (
+        row.str_home_team?.toLowerCase() === nameLower ||
+        row.str_away_team?.toLowerCase() === nameLower
+      );
+    })
+    .slice(0, limit);
+
+  return rows
+    .map((r) => fixtureToMatchEvent(r))
+    .filter((e): e is MatchEvent => Boolean(e))
+    .sort((a, b) => {
+      const sr = statusRank(a.status) - statusRank(b.status);
+      if (sr !== 0) return sr;
+      return b.startAt.localeCompare(a.startAt);
+    });
 }
 
 export async function getLiveMatchById(idEvent: string) {
