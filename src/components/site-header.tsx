@@ -45,6 +45,15 @@ export function SiteHeader() {
         </div>
         <div className="flex items-center gap-3">
           <Link
+            href="/search"
+            className={cn(
+              "hidden text-sm text-white/75 hover:text-white sm:inline",
+              pathname.startsWith("/search") && "text-white",
+            )}
+          >
+            {t.nav.search}
+          </Link>
+          <Link
             href="/feed"
             className={cn(
               "hidden text-sm text-white/75 hover:text-white sm:inline",
@@ -67,6 +76,15 @@ export function SiteHeader() {
         </div>
       </div>
       <nav className="flex gap-1 overflow-x-auto border-t border-white/10 px-2 py-1 md:hidden">
+        <Link
+          href="/search"
+          className={cn(
+            "shrink-0 rounded px-2 py-1 text-xs text-white/75",
+            pathname.startsWith("/search") && "bg-white/15 text-white",
+          )}
+        >
+          {t.nav.search}
+        </Link>
         {SPORTS.map((sport) => (
           <Link
             key={sport}

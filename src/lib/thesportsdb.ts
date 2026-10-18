@@ -1,8 +1,14 @@
 /** TheSportsDB V1 — https://www.thesportsdb.com/api.php */
 
+/** @deprecated use SIDELINE_LEAGUES from @/lib/leagues */
 export const TSDB_LEAGUES = {
   nba: "4387",
   epl: "4328",
+  laLiga: "4335",
+  bundesliga: "4331",
+  serieA: "4332",
+  ligue1: "4334",
+  ucl: "4480",
 } as const;
 
 const BASE = "https://www.thesportsdb.com/api/v1/json";

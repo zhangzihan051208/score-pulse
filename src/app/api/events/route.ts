@@ -7,6 +7,7 @@ import { NextResponse } from "next/server";
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const sport = searchParams.get("sport");
+  const league = searchParams.get("league") ?? undefined;
   const refresh = searchParams.get("refresh") === "1";
 
   if (refresh || searchParams.get("sync") === "1") {
@@ -23,7 +24,11 @@ export async function GET(request: Request) {
         : (["nba", "soccer"] as const);
 
   const limit = Number(searchParams.get("limit") ?? "12");
-  const events = await listLiveMatchEvents([...sports], Math.min(limit, 24));
+  const events = await listLiveMatchEvents(
+    [...sports],
+    Math.min(limit, 48),
+    league,
+  );
 
   return NextResponse.json({
     events,

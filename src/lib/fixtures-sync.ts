@@ -14,14 +14,22 @@ import {
   fetchNextLeagueEvents,
   fetchPastLeagueEvents,
   fetchTeamRoster,
-  TSDB_LEAGUES,
   type TsdbEvent,
   type TsdbLineupPlayer,
 } from "@/lib/thesportsdb";
+import {
+  getLeagueBySlug,
+  isTrackedFixture,
+  leagueMatchesRow,
+  SIDELINE_LEAGUES,
+  tsdbEventBelongsToLeague,
+  type LeagueConfig,
+} from "@/lib/leagues";
 import type { MatchEvent } from "./types";
 
 const LIVE_SYNC_MS = 3 * 60 * 1000;
-const ENRICH_LIMIT_PER_SPORT = 10;
+const ENRICH_PER_LEAGUE = 6;
+const EVENTS_FETCH_PER_LEAGUE = 35;
 
 function rowFromEvent(sport: "nba" | "soccer", leagueId: string, ev: TsdbEvent) {
   const home = ev.strHomeTeam ?? "Home";
@@ -54,19 +62,10 @@ function rowFromEvent(sport: "nba" | "soccer", leagueId: string, ev: TsdbEvent) 
 
 function isLiveLeagueRow(row: {
   sport: string;
+  league_id?: string | null;
   str_league: string | null;
 }): boolean {
-  const league = row.str_league ?? "";
-  if (row.sport === "nba") {
-    return league === "NBA" || league.startsWith("NBA ");
-  }
-  if (row.sport === "soccer") {
-    return (
-      league.includes("Premier League") ||
-      league.includes("English Premier League")
-    );
-  }
-  return false;
+  return isTrackedFixture(row);
 }
 
 function hydrateFixtureRow(row: Record<string, unknown>): LiveFixtureRow {
@@ -170,63 +169,44 @@ export async function syncSportsDbFixtures(force = false) {
   }
 
   const now = new Date();
-  const days = dateRange(now, 5, 10);
+  const days = dateRange(now, 7, 14);
 
-  const [
-    nbaNext,
-    nbaPast,
-    nbaLast,
-    eplNext,
-    eplPast,
-    eplLast,
-    ...dayBuckets
-  ] = await Promise.all([
-    fetchNextLeagueEvents(TSDB_LEAGUES.nba, 20),
-    fetchPastLeagueEvents(TSDB_LEAGUES.nba, 20),
-    fetchLastLeagueEvents(TSDB_LEAGUES.nba, 15),
-    fetchNextLeagueEvents(TSDB_LEAGUES.epl, 20),
-    fetchPastLeagueEvents(TSDB_LEAGUES.epl, 20),
-    fetchLastLeagueEvents(TSDB_LEAGUES.epl, 15),
-    ...days.flatMap((d) => [
+  const leagueBuckets = await Promise.all(
+    SIDELINE_LEAGUES.map(async (league) => {
+      const [next, past, last] = await Promise.all([
+        fetchNextLeagueEvents(league.tsdbId, EVENTS_FETCH_PER_LEAGUE),
+        fetchPastLeagueEvents(league.tsdbId, EVENTS_FETCH_PER_LEAGUE),
+        fetchLastLeagueEvents(league.tsdbId, 20),
+      ]);
+      return { league, events: [...next, ...past, ...last] };
+    }),
+  );
+
+  const dayBuckets = await Promise.all(
+    days.flatMap((d) => [
       fetchEventsOnDay(d, "Soccer"),
       fetchEventsOnDay(d, "Basketball"),
     ]),
-  ]);
+  );
 
   const byId = new Map<string, ReturnType<typeof rowFromEvent>>();
 
-  const addNba = (ev: TsdbEvent) => {
-    if (
-      ev.idLeague !== TSDB_LEAGUES.nba &&
-      !ev.strLeague?.includes("NBA") &&
-      ev.strLeague !== "NBA"
-    ) {
-      return;
-    }
-    byId.set(ev.idEvent, rowFromEvent("nba", TSDB_LEAGUES.nba, ev));
-  };
-  const addEpl = (ev: TsdbEvent) => {
-    if (
-      !ev.strLeague ||
-      ev.strLeague.includes("Premier") ||
-      ev.strLeague.includes("English") ||
-      ev.idLeague === TSDB_LEAGUES.epl
-    ) {
-      byId.set(ev.idEvent, rowFromEvent("soccer", TSDB_LEAGUES.epl, ev));
-    }
+  const addEvent = (ev: TsdbEvent, league: LeagueConfig) => {
+    if (!tsdbEventBelongsToLeague(ev, league)) return;
+    byId.set(ev.idEvent, rowFromEvent(league.sport, league.tsdbId, ev));
   };
 
-  for (const ev of nbaNext) addNba(ev);
-  for (const ev of nbaPast) addNba(ev);
-  for (const ev of nbaLast) addNba(ev);
-  for (const ev of eplNext) addEpl(ev);
-  for (const ev of eplPast) addEpl(ev);
-  for (const ev of eplLast) addEpl(ev);
+  for (const { league, events: evs } of leagueBuckets) {
+    for (const ev of evs) addEvent(ev, league);
+  }
 
   for (const bucket of dayBuckets) {
     for (const ev of bucket) {
-      if (ev.idLeague === TSDB_LEAGUES.nba || ev.strLeague?.includes("NBA")) addNba(ev);
-      else if (ev.strSport === "Soccer") addEpl(ev);
+      for (const league of SIDELINE_LEAGUES) {
+        if (league.sport === "nba" && ev.strSport !== "Basketball") continue;
+        if (league.sport === "soccer" && ev.strSport !== "Soccer") continue;
+        addEvent(ev, league);
+      }
     }
   }
 
@@ -243,14 +223,20 @@ export async function syncSportsDbFixtures(force = false) {
   const sorted = [...rows].sort((a, b) =>
     (b.date_event ?? "").localeCompare(a.date_event ?? ""),
   );
-  const nbaIds = sorted
-    .filter((r) => r.sport === "nba" && isLiveLeagueRow(r))
-    .slice(0, ENRICH_LIMIT_PER_SPORT);
-  const soccerIds = sorted
-    .filter((r) => r.sport === "soccer" && isLiveLeagueRow(r))
-    .slice(0, ENRICH_LIMIT_PER_SPORT);
+  const enrichIds: typeof sorted = [];
+  for (const league of SIDELINE_LEAGUES) {
+    const slice = sorted
+      .filter(
+        (r) =>
+          isLiveLeagueRow(r) &&
+          (r.league_id === league.tsdbId ||
+            leagueMatchesRow(r)?.tsdbId === league.tsdbId),
+      )
+      .slice(0, ENRICH_PER_LEAGUE);
+    enrichIds.push(...slice);
+  }
 
-  for (const row of [...nbaIds, ...soccerIds]) {
+  for (const row of enrichIds) {
     const ev = row.raw as unknown as TsdbEvent;
     const sport = row.sport as "nba" | "soccer";
     try {
@@ -302,11 +288,17 @@ const FIXTURE_SELECT =
   "id_event,sport,str_event,str_league,str_home_team,str_away_team,int_home_score,int_away_score,str_status,date_event,str_time,str_thumb,slug,lineup,raw,synced_at";
 
 const FIXTURE_SELECT_MIN =
-  "id_event,sport,str_event,str_league,str_home_team,str_away_team,int_home_score,int_away_score,str_status,date_event,str_time,str_thumb,raw,synced_at";
+  "id_event,sport,league_id,str_event,str_league,str_home_team,str_away_team,int_home_score,int_away_score,str_status,date_event,str_time,str_thumb,raw,synced_at";
 
-export async function listFixtures(sports: string[], limit = 12) {
+export async function listFixtures(
+  sports: string[],
+  limit = 12,
+  leagueSlug?: string,
+) {
   const admin = createServiceClient();
   if (!admin) return [] as FixtureRow[];
+
+  const leagueFilter = leagueSlug ? getLeagueBySlug(leagueSlug) : undefined;
 
   let res = await admin
     .from("sportsdb_fixtures")
@@ -314,7 +306,7 @@ export async function listFixtures(sports: string[], limit = 12) {
     .in("sport", sports)
     .order("date_event", { ascending: false })
     .order("synced_at", { ascending: false })
-    .limit(Math.max(limit * 8, 40));
+    .limit(Math.max(limit * 12, 80));
   if (res.error) {
     return [];
   }
@@ -323,14 +315,22 @@ export async function listFixtures(sports: string[], limit = 12) {
   return data
     .map((row) => hydrateFixtureRow(row))
     .filter((row) => isLiveLeagueRow(row))
+    .filter((row) => {
+      if (!leagueFilter) return true;
+      return (
+        row.league_id === leagueFilter.tsdbId ||
+        leagueMatchesRow(row)?.tsdbId === leagueFilter.tsdbId
+      );
+    })
     .slice(0, limit);
 }
 
 export async function listLiveMatchEvents(
   sports: ("nba" | "soccer")[],
   limit = 12,
+  leagueSlug?: string,
 ): Promise<MatchEvent[]> {
-  const rows = await listFixtures(sports, limit);
+  const rows = await listFixtures(sports, limit, leagueSlug);
   return rows
     .map((r) => fixtureToMatchEvent(r))
     .filter((e): e is MatchEvent => Boolean(e));
@@ -339,10 +339,150 @@ export async function listLiveMatchEvents(
 export async function getLiveMatchBySlug(slug: string) {
   const admin = createServiceClient();
   if (!admin) return null;
-  const rows = await listFixtures(["nba", "soccer"], 40);
-  const row = rows.find((r) => r.slug === slug);
-  if (!row) return null;
+
+  let res = await admin
+    .from("sportsdb_fixtures")
+    .select(FIXTURE_SELECT_MIN)
+    .eq("slug", slug)
+    .maybeSingle();
+  let rowData = res.data;
+  if (!rowData) {
+    const wide = await admin
+      .from("sportsdb_fixtures")
+      .select(FIXTURE_SELECT_MIN)
+      .in("sport", ["nba", "soccer"])
+      .order("date_event", { ascending: false })
+      .limit(200);
+    rowData =
+      (wide.data ?? []).find((row) => {
+        const raw = row.raw as Record<string, unknown> | null;
+        return raw?.sideline_slug === slug;
+      }) ?? null;
+  }
+  if (!rowData) {
+    const batch = await listFixtures(["nba", "soccer"], 120);
+    const row = batch.find((r) => r.slug === slug);
+    if (!row) return null;
+    return fixtureToMatchEvent(row);
+  }
+  const row = hydrateFixtureRow(rowData as Record<string, unknown>);
+  if (!isLiveLeagueRow(row)) return null;
   return fixtureToMatchEvent(row);
+}
+
+export type SearchPlayerHit = {
+  athleteId: string;
+  athleteName: string;
+  team?: string;
+  eventSlug: string;
+  eventTitle: string;
+  leagueLabel: string;
+  sport: "nba" | "soccer";
+};
+
+export async function searchFixtures(query: string, limit = 20) {
+  const admin = createServiceClient();
+  const q = query.trim();
+  if (!admin || q.length < 2) {
+    return { matches: [] as MatchEvent[], players: [] as SearchPlayerHit[] };
+  }
+
+  const safe = q.replace(/[%_]/g, "");
+  let res = await admin
+    .from("sportsdb_fixtures")
+    .select(FIXTURE_SELECT_MIN)
+    .in("sport", ["nba", "soccer"])
+    .or(
+      `str_event.ilike.%${safe}%,str_home_team.ilike.%${safe}%,str_away_team.ilike.%${safe}%,str_league.ilike.%${safe}%`,
+    )
+    .order("date_event", { ascending: false })
+    .limit(80);
+
+  if (res.error) {
+    res = await admin
+      .from("sportsdb_fixtures")
+      .select(FIXTURE_SELECT_MIN)
+      .in("sport", ["nba", "soccer"])
+      .order("date_event", { ascending: false })
+      .limit(150);
+  }
+
+  const qLower = q.toLowerCase();
+  const rows = (res.data ?? [])
+    .map((row) => hydrateFixtureRow(row as Record<string, unknown>))
+    .filter((row) => isTrackedFixture(row))
+    .filter((row) => {
+      if (!res.error) return true;
+      const blob = [
+        row.str_event,
+        row.str_home_team,
+        row.str_away_team,
+        row.str_league,
+      ]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase();
+      if (blob.includes(qLower)) return true;
+      const lineup =
+        row.lineup ??
+        ((row.raw as Record<string, unknown> | undefined)?.lineup as
+          | StoredLineupPlayer[]
+          | undefined) ??
+        [];
+      return lineup.some((p) => p.strPlayer?.toLowerCase().includes(qLower));
+    });
+
+  const matches: MatchEvent[] = [];
+  const players: SearchPlayerHit[] = [];
+  const seenPlayer = new Set<string>();
+
+  for (const row of rows) {
+    const event = fixtureToMatchEvent(row);
+    if (!event) continue;
+
+    const titleHit =
+      row.str_event?.toLowerCase().includes(qLower) ||
+      row.str_home_team?.toLowerCase().includes(qLower) ||
+      row.str_away_team?.toLowerCase().includes(qLower) ||
+      row.str_league?.toLowerCase().includes(qLower);
+
+    if (titleHit && matches.length < limit) {
+      matches.push(event);
+    }
+
+    const lineup =
+      row.lineup ??
+      ((row.raw as Record<string, unknown> | undefined)?.lineup as
+        | StoredLineupPlayer[]
+        | undefined) ??
+      [];
+
+    for (const p of lineup) {
+      if (!p.strPlayer?.toLowerCase().includes(qLower) || !p.idPlayer) continue;
+      const key = `${row.id_event}:${p.idPlayer}`;
+      if (seenPlayer.has(key) || players.length >= limit) continue;
+      seenPlayer.add(key);
+      players.push({
+        athleteId: p.idPlayer,
+        athleteName: p.strPlayer,
+        team: p.strTeam?.slice(0, 3).toUpperCase(),
+        eventSlug: event.slug,
+        eventTitle: row.str_event ?? event.title.en,
+        leagueLabel: row.str_league ?? "",
+        sport: row.sport as "nba" | "soccer",
+      });
+    }
+  }
+
+  if (matches.length < limit) {
+    for (const row of rows) {
+      if (matches.some((m) => m.id === row.id_event)) continue;
+      const event = fixtureToMatchEvent(row);
+      if (event && matches.length < limit) matches.push(event);
+    }
+  }
+
+  return { matches: matches.slice(0, limit), players: players.slice(0, limit) };
 }
 
 export async function getLiveMatchById(idEvent: string) {

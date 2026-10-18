@@ -9,6 +9,8 @@ import { events, formatWhen, overallScore } from "@/lib/data";
 import { PlayerAvatar } from "@/components/player-avatar";
 import { resolveAthlete } from "@/lib/event-resolve";
 import { SPORT_CHIP } from "@/lib/sports";
+import { LeagueTabs } from "@/components/league-tabs";
+import { leagueLabel } from "@/i18n/league-labels";
 import { SPORTS, type MatchEvent, type Sport } from "@/lib/types";
 
 const LIVE_SPORTS: Sport[] = ["nba", "soccer"];
@@ -149,7 +151,14 @@ function LiveSportBlock({
           {t.home.enter}
         </Link>
       </div>
-      <FeaturedEventRow event={featured} locale={locale} t={t} />
+      {sport === "soccer" && (
+        <div className="border-b px-3 py-2">
+          <LeagueTabs sport="soccer" />
+        </div>
+      )}
+      {list.slice(0, sport === "soccer" ? 4 : 1).map((event) => (
+        <FeaturedEventRow key={event.id} event={event} locale={locale} t={t} />
+      ))}
       <ul>
         {featured.performances.slice(0, 8).map((p) => {
           const athlete = resolveAthlete(featured, p.athleteId);
@@ -200,8 +209,10 @@ function FeaturedEventRow({
         <span className="font-medium">{tx(event.title, locale as "en")}</span>
       </div>
       <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">
-        {tx(event.summary, locale as "en")} · {event.performances.length}{" "}
-        {t.home.players}
+        {event.leagueSlug
+          ? leagueLabel(locale as "en", event.leagueSlug)
+          : tx(event.subtitle, locale as "en")}{" "}
+        · {event.performances.length} {t.home.players}
       </p>
     </Link>
   );

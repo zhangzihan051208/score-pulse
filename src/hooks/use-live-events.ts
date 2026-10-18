@@ -8,6 +8,7 @@ const POLL_MS = 90_000;
 export function useLiveEvents(
   sport?: "nba" | "soccer",
   enabled = true,
+  leagueSlug?: string,
 ) {
   const [events, setEvents] = useState<MatchEvent[]>([]);
   const [loading, setLoading] = useState(enabled);
@@ -17,7 +18,8 @@ export function useLiveEvents(
     if (!enabled) return;
     const params = new URLSearchParams();
     if (sport) params.set("sport", sport);
-    params.set("limit", "16");
+    if (leagueSlug) params.set("league", leagueSlug);
+    params.set("limit", sport ? "32" : "48");
     if (refresh) params.set("sync", "1");
     const res = await fetch(`/api/events?${params}`);
     if (!res.ok) return;
@@ -28,7 +30,7 @@ export function useLiveEvents(
     setEvents(data.events ?? []);
     setSyncedAt(data.syncedAt ?? null);
     setLoading(false);
-  }, [enabled, sport]);
+  }, [enabled, leagueSlug, sport]);
 
   useEffect(() => {
     if (!enabled) {

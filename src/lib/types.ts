@@ -46,6 +46,8 @@ export type MatchEvent = {
   id: string;
   slug: string;
   sport: Sport;
+  leagueId?: string;
+  leagueSlug?: string;
   title: Localized;
   subtitle: Localized;
   venue: Localized;

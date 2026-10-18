@@ -4,6 +4,7 @@ import { inferPositionKey } from "./position-infer";
 import { fixtureSlug } from "./slugify";
 import { mapTsdbStatus } from "./thesportsdb";
 import type { TsdbLineupPlayer } from "./thesportsdb";
+import { getLeagueByTsdbId, leagueMatchesRow } from "./leagues";
 import { SPORT_ACCENT } from "./sports";
 import type { Athlete, MatchEvent, Performance, Sport } from "./types";
 
@@ -12,6 +13,7 @@ export type StoredLineupPlayer = TsdbLineupPlayer;
 export type LiveFixtureRow = {
   id_event: string;
   sport: string;
+  league_id?: string | null;
   str_event: string | null;
   str_league: string | null;
   str_home_team: string | null;
@@ -24,6 +26,7 @@ export type LiveFixtureRow = {
   str_thumb: string | null;
   slug: string | null;
   lineup: StoredLineupPlayer[] | null;
+  raw?: Record<string, unknown> | null;
   synced_at?: string;
 };
 
@@ -120,12 +123,20 @@ export function fixtureToMatchEvent(row: LiveFixtureRow): MatchEvent | null {
       ? `${row.int_home_score}-${row.int_away_score}`
       : null;
 
+  const league =
+    getLeagueByTsdbId(row.league_id ?? undefined) ??
+    leagueMatchesRow(row);
+
   return {
     id: row.id_event,
     slug,
     sport,
+    leagueId: league?.tsdbId ?? row.league_id ?? undefined,
+    leagueSlug: league?.slug,
     title: S(title),
-    subtitle: S(row.str_league ?? (sport === "nba" ? "NBA" : "Premier League")),
+    subtitle: S(
+      row.str_league ?? league?.label ?? (sport === "nba" ? "NBA" : "Football"),
+    ),
     venue: S("—"),
     startAt: startIso(row.date_event, row.str_time),
     status,

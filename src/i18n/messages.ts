@@ -9,6 +9,16 @@ type Dict = {
     feed: string;
     guide: string;
     profile: string;
+    search: string;
+  };
+  search: {
+    title: string;
+    lead: string;
+    placeholder: string;
+    hint: string;
+    matches: string;
+    players: string;
+    empty: string;
   };
   profile: {
     title: string;
@@ -73,6 +83,7 @@ type Dict = {
     dimensionsHint: string;
     empty: string;
     backHome: string;
+    allLeagues: string;
   };
   event: {
     ratePlayer: string;
@@ -137,6 +148,16 @@ export const messages: Record<Locale, Dict> = {
       feed: "Feed",
       guide: "Guide",
       profile: "Profile",
+      search: "Search",
+    },
+    search: {
+      title: "Search",
+      lead: "Find a match or player by team name, fixture, or player keyword.",
+      placeholder: "Team, match, or player…",
+      hint: "At least 2 characters. Searches synced NBA and football fixtures.",
+      matches: "Matches",
+      players: "Players",
+      empty: "No matches or players for that query. Try another spelling or sync fixtures.",
     },
     profile: {
       title: "Your profile",
@@ -215,6 +236,7 @@ export const messages: Record<Locale, Dict> = {
         "Each position has its own five axes. Overall is weighted for that role, not a flat average.",
       empty: "No matches in this filter.",
       backHome: "All boards",
+      allLeagues: "All leagues",
     },
     event: {
       ratePlayer: "Grade",
@@ -347,6 +369,16 @@ export const messages: Record<Locale, Dict> = {
       feed: "动态",
       guide: "手册",
       profile: "我的",
+      search: "搜索",
+    },
+    search: {
+      title: "搜索",
+      lead: "用球队、比赛或球员关键词查找。",
+      placeholder: "球队、比赛或球员…",
+      hint: "至少 2 个字。搜索已同步的 NBA 与足球赛程。",
+      matches: "比赛",
+      players: "球员",
+      empty: "没有结果，换个关键词或先同步赛程。",
     },
     profile: {
       title: "个人主页",
@@ -421,6 +453,7 @@ export const messages: Record<Locale, Dict> = {
       dimensionsHint: "不同位置有五项独立维度；总分按该位置权重加权，不是简单平均。",
       empty: "没有符合筛选的比赛。",
       backHome: "全部分区",
+      allLeagues: "全部联赛",
     },
     event: {
       ratePlayer: "去打分",
@@ -552,6 +585,16 @@ export const messages: Record<Locale, Dict> = {
       feed: "Feed",
       guide: "Guía",
       profile: "Perfil",
+      search: "Buscar",
+    },
+    search: {
+      title: "Buscar",
+      lead: "Encuentra partidos o jugadores por equipo, partido o nombre.",
+      placeholder: "Equipo, partido o jugador…",
+      hint: "Mínimo 2 caracteres. NBA y fútbol sincronizados.",
+      matches: "Partidos",
+      players: "Jugadores",
+      empty: "Sin resultados. Prueba otra búsqueda o sincroniza.",
     },
     profile: {
       title: "Tu perfil",
@@ -627,6 +670,7 @@ export const messages: Record<Locale, Dict> = {
         "Cada posición tiene cinco ejes propios. La nota global es ponderada, no un promedio plano.",
       empty: "No hay partidos en este filtro.",
       backHome: "Todos",
+      allLeagues: "Todas las ligas",
     },
     event: {
       ratePlayer: "Puntuar",
@@ -758,6 +802,16 @@ export const messages: Record<Locale, Dict> = {
       feed: "フィード",
       guide: "ガイド",
       profile: "プロフィール",
+      search: "検索",
+    },
+    search: {
+      title: "検索",
+      lead: "チーム・試合・選手名で探す。",
+      placeholder: "チーム、試合、選手…",
+      hint: "2文字以上。同期済み NBA・サッカーが対象。",
+      matches: "試合",
+      players: "選手",
+      empty: "該当なし。別のキーワードか同期を試してください。",
     },
     profile: {
       title: "プロフィール",
@@ -833,6 +887,7 @@ export const messages: Record<Locale, Dict> = {
         "ポジションごとに五つの軸。総合はその役割の重み付け合計（単純平均ではない）。",
       empty: "該当する試合はありません。",
       backHome: "すべての板",
+      allLeagues: "全リーグ",
     },
     event: {
       ratePlayer: "採点する",

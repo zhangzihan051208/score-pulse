@@ -15,14 +15,25 @@ import {
 import { resolveAthlete } from "@/lib/event-resolve";
 import { BOARD_POSITIONS, dimensionIds } from "@/lib/position-ratings";
 import { SPORT_ACCENT } from "@/lib/sports";
+import { LeagueTabs } from "@/components/league-tabs";
+import { leagueLabel } from "@/i18n/league-labels";
+import { getLeagueBySlug } from "@/lib/leagues";
 import type { Sport } from "@/lib/types";
 
-export function BoardPage({ sport }: { sport: Sport }) {
+export function BoardPage({
+  sport,
+  leagueSlug,
+}: {
+  sport: Sport;
+  leagueSlug?: string;
+}) {
   const { locale, t } = useI18n();
   const isLive = sport === "nba" || sport === "soccer";
+  const league = leagueSlug ? getLeagueBySlug(leagueSlug) : undefined;
   const { events: liveList, syncedAt } = useLiveEvents(
     isLive ? sport : "nba",
     isLive,
+    leagueSlug,
   );
   const list = isLive ? liveList : eventsBySport(sport);
   const positions = BOARD_POSITIONS[sport];
@@ -34,10 +45,17 @@ export function BoardPage({ sport }: { sport: Sport }) {
           <Link href="/" className="text-xs text-white/80 hover:underline">
             ← {t.board.backHome}
           </Link>
-          <h1 className="mt-2 text-3xl font-bold">{t.sports[sport]}</h1>
+          <h1 className="mt-2 text-3xl font-bold">
+            {league ? leagueLabel(locale, league.slug) : t.sports[sport]}
+          </h1>
           <p className="mt-2 max-w-2xl text-sm text-white/85">
             {isLive ? t.home.liveBoardLead : t.sportBlurb[sport]}
           </p>
+          {isLive && (
+            <div className="mt-4">
+              <LeagueTabs sport={sport} activeSlug={leagueSlug} />
+            </div>
+          )}
           {isLive && syncedAt && (
             <p className="mt-2 text-xs text-white/60">{t.home.liveSyncHint}</p>
           )}
@@ -65,7 +83,10 @@ export function BoardPage({ sport }: { sport: Sport }) {
                     <h3 className="font-semibold">{tx(event.title, locale)}</h3>
                   </div>
                   <p className="mt-1 text-sm text-muted-foreground">
-                    {tx(event.subtitle, locale)} · {formatWhen(event.startAt, locale)}
+                    {event.leagueSlug
+                      ? leagueLabel(locale, event.leagueSlug)
+                      : tx(event.subtitle, locale)}{" "}
+                    · {formatWhen(event.startAt, locale)}
                     {event.live
                       ? ` · ${event.performances.length} ${t.home.players}`
                       : ""}
