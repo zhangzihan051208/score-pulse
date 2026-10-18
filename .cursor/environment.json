@@ -1,0 +1,5 @@
+{
+  "name": "Sideline",
+  "install": "npm ci",
+  "start": "bash .cursor/start.sh"
+}

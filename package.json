@@ -7,6 +7,7 @@
     "dev:turbo": "next dev --port 43147 --turbo",
     "preview": "next build && next start --port 43147",
     "smoke": "node scripts/smoke.mjs",
+    "verify-env": "node scripts/verify-env.mjs",
     "build": "next build",
     "start": "next start --port 43147",
     "lint": "eslint"

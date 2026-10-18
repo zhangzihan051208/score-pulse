@@ -20,6 +20,7 @@ Open `http://127.0.0.1:43147` or use Cursor **Preview** (Desktop). Styling needs
 3. **Authentication → URL Configuration**: Site URL `http://127.0.0.1:43147`, redirect `http://127.0.0.1:43147/**`.
 4. Sign in at `/login`. Ratings/comments post to Supabase when configured.
 5. Sync NBA/EPL fixtures: `curl http://127.0.0.1:43147/api/sync/fixtures` (needs `SUPABASE_SERVICE_ROLE_KEY`). Home shows **From TheSportsDB** when rows exist.
+6. Cloud Agents: add the same keys under **Environment → Secrets**, run `node scripts/verify-env.mjs` in a **new** agent after Save. Local dev uses `.env.local`.
 
 ## What you get
 
