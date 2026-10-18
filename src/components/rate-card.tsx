@@ -45,14 +45,24 @@ export function RateCard({
   const comments = commentsFor(event.id, athlete.id, state);
 
   const [draft, setDraft] = useState<ScoreMap | null>(null);
-  const scores: ScoreMap = Object.fromEntries(
-    dims.map((id) => [id, draft?.[id] ?? mine?.scores[id] ?? emptyScores(event.sport)[id]]),
-  );
+  const baseScores = {
+    ...emptyScores(event.sport),
+    ...(mine?.scores ?? {}),
+  };
+  const scores = draft ?? baseScores;
   const [body, setBody] = useState("");
   const [nameDraft, setNameDraft] = useState<string | null>(null);
   const name = nameDraft ?? state.nickname;
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  function patchScore(id: string, next: number) {
+    setDraft((prev) => {
+      const base = prev ?? baseScores;
+      return { ...base, [id]: next };
+    });
+    setSaved(false);
+  }
 
   return (
     <div className="mx-auto max-w-xl px-3 py-6">
@@ -111,6 +121,7 @@ export function RateCard({
             return;
           }
           postTake(event.id, athlete.id, scores, body, name);
+          setDraft(null);
           setBody("");
           setError(null);
           setSaved(true);
@@ -135,10 +146,7 @@ export function RateCard({
                 key={id}
                 label={t.dims[event.sport][id]}
                 value={scores[id] ?? 7}
-                onChange={(next) => {
-                  setDraft({ ...scores, [id]: next });
-                  setSaved(false);
-                }}
+                onChange={(next) => patchScore(id, next)}
               />
             ))}
           </div>

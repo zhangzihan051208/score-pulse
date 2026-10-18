@@ -4,10 +4,10 @@ import {
   createContext,
   useCallback,
   useContext,
-  useEffect,
   useMemo,
   useSyncExternalStore,
 } from "react";
+import { useRouter } from "next/navigation";
 import { messages } from "./messages";
 import { LOCALES, type Locale } from "@/lib/types";
 
@@ -24,26 +24,10 @@ const I18nContext = createContext<I18nValue | null>(null);
 
 const listeners = new Set<() => void>();
 let current: Locale = "en";
+let booted = false;
 
 function isLocale(value: string | null | undefined): value is Locale {
   return LOCALES.includes(value as Locale);
-}
-
-function emit() {
-  listeners.forEach((listener) => listener());
-}
-
-function getSnapshot(): Locale {
-  return current;
-}
-
-function getServerSnapshot(): Locale {
-  return "en";
-}
-
-function subscribe(listener: () => void) {
-  listeners.add(listener);
-  return () => listeners.delete(listener);
 }
 
 function detectLocale(): Locale {
@@ -67,26 +51,50 @@ function persist(next: Locale) {
   document.documentElement.lang = next === "zh" ? "zh-CN" : next;
 }
 
+function emit() {
+  listeners.forEach((listener) => listener());
+}
+
+function bootClientLocale() {
+  if (booted) return;
+  current = detectLocale();
+  booted = true;
+  persist(current);
+}
+
+function getSnapshot(): Locale {
+  if (typeof window !== "undefined") bootClientLocale();
+  return current;
+}
+
+function getServerSnapshot(): Locale {
+  return "en";
+}
+
+function subscribe(listener: () => void) {
+  listeners.add(listener);
+  return () => listeners.delete(listener);
+}
+
 function writeLocale(next: Locale) {
-  if (current === next) {
-    persist(next);
-    return;
-  }
+  if (!isLocale(next)) return;
   current = next;
+  booted = true;
   persist(next);
   emit();
 }
 
 export function LocaleProvider({ children }: { children: React.ReactNode }) {
+  const router = useRouter();
   const locale = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
 
-  useEffect(() => {
-    writeLocale(detectLocale());
-  }, []);
-
-  const setLocale = useCallback((next: Locale) => {
-    writeLocale(next);
-  }, []);
+  const setLocale = useCallback(
+    (next: Locale) => {
+      writeLocale(next);
+      router.refresh();
+    },
+    [router],
+  );
 
   const value = useMemo<I18nValue>(
     () => ({

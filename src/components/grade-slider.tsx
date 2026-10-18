@@ -1,6 +1,5 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
 import { Minus, Plus } from "lucide-react";
 import { clampScore } from "@/lib/store";
 
@@ -13,122 +12,54 @@ export function GradeSlider({
   value: number;
   onChange: (value: number) => void;
 }) {
-  const trackRef = useRef<HTMLDivElement>(null);
-  const dragging = useRef(false);
-  const onChangeRef = useRef(onChange);
-  const [live, setLive] = useState(value);
+  const safe = clampScore(value);
+  const pct = (safe / 10) * 100;
 
-  useEffect(() => {
-    onChangeRef.current = onChange;
-  }, [onChange]);
-
-  useEffect(() => {
-    if (!dragging.current) setLive(value);
-  }, [value]);
-
-  useEffect(() => {
-    function onMove(e: PointerEvent) {
-      if (!dragging.current) return;
-      const track = trackRef.current;
-      if (!track) return;
-      const { left, width } = track.getBoundingClientRect();
-      if (width <= 0) return;
-      const ratio = Math.min(1, Math.max(0, (e.clientX - left) / width));
-      const next = clampScore(ratio * 10);
-      setLive(next);
-      onChangeRef.current(next);
-    }
-    function onUp() {
-      dragging.current = false;
-    }
-    window.addEventListener("pointermove", onMove);
-    window.addEventListener("pointerup", onUp);
-    window.addEventListener("pointercancel", onUp);
-    return () => {
-      window.removeEventListener("pointermove", onMove);
-      window.removeEventListener("pointerup", onUp);
-      window.removeEventListener("pointercancel", onUp);
-    };
-  }, []);
-
-  function nudge(delta: number) {
-    const next = clampScore(live + delta);
-    setLive(next);
-    onChangeRef.current(next);
+  function set(next: number) {
+    onChange(clampScore(next));
   }
-
-  function startDrag(clientX: number) {
-    const track = trackRef.current;
-    if (!track) return;
-    dragging.current = true;
-    const { left, width } = track.getBoundingClientRect();
-    if (width <= 0) return;
-    const ratio = Math.min(1, Math.max(0, (clientX - left) / width));
-    const next = clampScore(ratio * 10);
-    setLive(next);
-    onChangeRef.current(next);
-  }
-
-  const pct = (live / 10) * 100;
 
   return (
     <div className="space-y-1.5">
       <div className="flex items-center justify-between gap-2">
         <span className="text-sm font-medium">{label}</span>
-        <span className="text-sm font-semibold tabular-nums">{live.toFixed(1)}</span>
+        <span className="text-sm font-semibold tabular-nums">{safe.toFixed(1)}</span>
       </div>
       <div className="flex items-center gap-2">
         <button
           type="button"
           aria-label={`${label} -0.5`}
-          className="flex size-8 shrink-0 items-center justify-center rounded-md border bg-background hover:bg-muted"
-          onClick={() => nudge(-0.5)}
+          className="flex size-8 shrink-0 items-center justify-center rounded-md border bg-background hover:bg-muted active:scale-95"
+          onClick={() => set(safe - 0.5)}
         >
-          <Minus className="size-3.5" />
+          <Minus className="size-3.5 pointer-events-none" />
         </button>
-        <div
-          ref={trackRef}
-          role="slider"
-          tabIndex={0}
-          aria-label={label}
-          aria-valuemin={0}
-          aria-valuemax={10}
-          aria-valuenow={live}
-          aria-valuetext={live.toFixed(1)}
-          className="relative h-8 min-w-0 flex-1 cursor-pointer touch-none select-none"
-          onPointerDown={(e) => {
-            if (e.button !== 0) return;
-            e.preventDefault();
-            startDrag(e.clientX);
-          }}
-          onKeyDown={(e) => {
-            if (e.key === "ArrowLeft" || e.key === "ArrowDown") {
-              e.preventDefault();
-              nudge(-0.5);
-            }
-            if (e.key === "ArrowRight" || e.key === "ArrowUp") {
-              e.preventDefault();
-              nudge(0.5);
-            }
-          }}
-        >
-          <div className="pointer-events-none absolute inset-y-0 left-0 right-0 m-auto h-2 rounded-full bg-muted" />
+        <div className="relative min-w-0 flex-1 py-1">
           <div
-            className="pointer-events-none absolute inset-y-0 left-0 m-auto h-2 rounded-full bg-primary"
-            style={{ width: `${pct}%` }}
+            className="pointer-events-none absolute inset-x-0 top-1/2 h-2 -translate-y-1/2 rounded-full"
+            style={{
+              background: `linear-gradient(to right, var(--primary) 0%, var(--primary) ${pct}%, var(--muted) ${pct}%, var(--muted) 100%)`,
+            }}
           />
-          <div
-            className="pointer-events-none absolute top-1/2 size-5 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white bg-primary shadow-md"
-            style={{ left: `${pct}%` }}
+          <input
+            type="range"
+            min={0}
+            max={10}
+            step={0.5}
+            value={safe}
+            aria-label={label}
+            className="relative z-10 block h-8 w-full cursor-pointer appearance-none bg-transparent [&::-moz-range-thumb]:size-5 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:border-0 [&::-moz-range-thumb]:bg-primary [&::-moz-range-track]:bg-transparent [&::-webkit-slider-runnable-track]:h-2 [&::-webkit-slider-runnable-track]:bg-transparent [&::-webkit-slider-thumb]:size-5 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-primary [&::-webkit-slider-thumb]:shadow-md"
+            onInput={(e) => set(Number(e.currentTarget.value))}
+            onChange={(e) => set(Number(e.currentTarget.value))}
           />
         </div>
         <button
           type="button"
           aria-label={`${label} +0.5`}
-          className="flex size-8 shrink-0 items-center justify-center rounded-md border bg-background hover:bg-muted"
-          onClick={() => nudge(0.5)}
+          className="flex size-8 shrink-0 items-center justify-center rounded-md border bg-background hover:bg-muted active:scale-95"
+          onClick={() => set(safe + 0.5)}
         >
-          <Plus className="size-3.5" />
+          <Plus className="size-3.5 pointer-events-none" />
         </button>
       </div>
     </div>
