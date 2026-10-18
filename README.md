@@ -18,7 +18,7 @@ Open `http://127.0.0.1:43147` or use Cursor **Preview** (Desktop). Styling needs
 1. Copy `.env.example` → `.env.local` and fill keys.
 2. In Supabase **SQL Editor**, run `supabase/schema.sql`. Existing projects: also run `supabase/migrate-profile-fields.sql` for avatar/bio columns.
 3. **Authentication → URL Configuration**: Site URL `http://127.0.0.1:43147`, redirect `http://127.0.0.1:43147/**`.
-4. Sign in at `/login`. Ratings/comments post to Supabase when configured.
+4. Sign in at `/login`. Edit nickname, avatar URL, and signature at `/profile`. Ratings/comments post to Supabase when configured.
 5. Sync NBA/EPL fixtures: `curl http://127.0.0.1:43147/api/sync/fixtures` (needs `SUPABASE_SERVICE_ROLE_KEY`). Home shows **From TheSportsDB** when rows exist.
 6. Cloud Agents: add the same keys under **Environment → Secrets**, run `node scripts/verify-env.mjs` in a **new** agent after Save. Local dev uses `.env.local`.
 
