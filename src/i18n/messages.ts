@@ -53,6 +53,8 @@ type Dict = {
     nickname: string;
     saveName: string;
     noComments: string;
+    takes: string;
+    you: string;
   };
   feed: {
     title: string;
@@ -130,6 +132,8 @@ export const messages: Record<Locale, Dict> = {
       nickname: "Handle",
       saveName: "Save",
       noComments: "No takes yet. Be the first.",
+      takes: "Takes",
+      you: "You",
     },
     feed: {
       title: "Feed",
@@ -274,6 +278,8 @@ export const messages: Record<Locale, Dict> = {
       nickname: "昵称",
       saveName: "保存",
       noComments: "还没有短评。",
+      takes: "短评",
+      you: "我",
     },
     feed: {
       title: "动态",
@@ -418,6 +424,8 @@ export const messages: Record<Locale, Dict> = {
       nickname: "Nick",
       saveName: "Guardar",
       noComments: "Aún no hay comentarios.",
+      takes: "Comentarios",
+      you: "Tú",
     },
     feed: {
       title: "Feed",
@@ -562,6 +570,8 @@ export const messages: Record<Locale, Dict> = {
       nickname: "ハンドル",
       saveName: "保存",
       noComments: "まだ一言がありません。",
+      takes: "一言",
+      you: "自分",
     },
     feed: {
       title: "フィード",

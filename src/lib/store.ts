@@ -130,14 +130,19 @@ export function allFeedItems(state: CommunityState) {
     at: c.createdAt,
     ...c,
   }));
-  const ratings = Object.values(state.ratings).map((r) => ({
-    kind: "rating" as const,
-    at: r.updatedAt,
-    eventId: r.eventId,
-    athleteId: r.athleteId,
-    author: state.nickname,
-    scores: r.scores,
-  }));
+  const commented = new Set(
+    state.comments.map((c) => `${c.eventId}:${c.athleteId}`),
+  );
+  const ratings = Object.values(state.ratings)
+    .filter((r) => !commented.has(`${r.eventId}:${r.athleteId}`))
+    .map((r) => ({
+      kind: "rating" as const,
+      at: r.updatedAt,
+      eventId: r.eventId,
+      athleteId: r.athleteId,
+      author: state.nickname,
+      scores: r.scores,
+    }));
   return [...comments, ...ratings].sort(
     (a, b) => +new Date(b.at) - +new Date(a.at),
   );

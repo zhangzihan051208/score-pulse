@@ -102,6 +102,12 @@ export function RateCard({
           setBody("");
           setError(null);
           setSaved(true);
+          queueMicrotask(() => {
+            document.getElementById("takes")?.scrollIntoView({
+              behavior: "smooth",
+              block: "start",
+            });
+          });
         }}
       >
         <div>
@@ -167,23 +173,35 @@ export function RateCard({
         {saved && <p className="text-center text-sm text-primary">{t.rate.posted}</p>}
       </form>
 
-      <ul className="mt-8 space-y-3">
+      <h2 id="takes" className="mt-8 text-sm font-semibold">
+        {t.rate.takes}
+      </h2>
+      <ul className="mt-3 space-y-3">
         {comments.length === 0 ? (
           <li className="rounded-lg border border-dashed px-3 py-8 text-center text-sm text-muted-foreground">
             {t.rate.noComments}
           </li>
         ) : (
-          comments.map((comment) => (
-            <li key={comment.id} className="rounded-lg border bg-card p-3">
-              <div className="flex justify-between text-xs text-muted-foreground">
-                <span className="font-medium text-foreground">{comment.author}</span>
-                <time>{formatWhen(comment.createdAt, locale)}</time>
-              </div>
-              <p className="mt-2 text-sm leading-6">
-                {commentBody(comment, locale)}
-              </p>
-            </li>
-          ))
+          comments.map((comment) => {
+            const minePost = "local" in comment && comment.local;
+            return (
+              <li
+                key={comment.id}
+                className={`rounded-lg border bg-card p-3 ${minePost ? "border-primary/40" : ""}`}
+              >
+                <div className="flex justify-between text-xs text-muted-foreground">
+                  <span className="font-medium text-foreground">
+                    {comment.author}
+                    {minePost ? ` · ${t.rate.you}` : ""}
+                  </span>
+                  <time>{formatWhen(comment.createdAt, locale)}</time>
+                </div>
+                <p className="mt-2 text-sm leading-6">
+                  {commentBody(comment, locale)}
+                </p>
+              </li>
+            );
+          })
         )}
       </ul>
     </div>
