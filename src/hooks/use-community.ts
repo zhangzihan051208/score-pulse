@@ -17,22 +17,16 @@ export function useCommunity() {
     getServerCommunitySnapshot,
   );
 
-  const setNickname = useCallback((nickname: string) => {
-    const current = getCommunitySnapshot();
-    saveState({
-      ...current,
-      nickname: nickname.trim() || "Row 12",
-    });
-  }, []);
-
   const postTake = useCallback(
     (
       eventId: string,
       athleteId: string,
       scores: ScoreMap,
       body?: string,
+      nickname?: string,
     ) => {
       const current = getCommunitySnapshot();
+      const author = (nickname ?? current.nickname).trim() || "Row 12";
       const rating: UserRating = {
         eventId,
         athleteId,
@@ -45,7 +39,7 @@ export function useCommunity() {
               id: `local-${crypto.randomUUID()}`,
               eventId,
               athleteId,
-              author: current.nickname,
+              author,
               body: body.trim(),
               createdAt: new Date().toISOString(),
               scores,
@@ -56,6 +50,7 @@ export function useCommunity() {
         : current.comments;
       saveState({
         ...current,
+        nickname: author,
         ratings: {
           ...current.ratings,
           [performanceKey(eventId, athleteId)]: rating,
@@ -66,5 +61,5 @@ export function useCommunity() {
     [],
   );
 
-  return { state, setNickname, postTake };
+  return { state, postTake };
 }

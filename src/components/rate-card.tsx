@@ -2,17 +2,15 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { GradeSlider } from "@/components/grade-slider";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Slider } from "@/components/ui/slider";
 import { Textarea } from "@/components/ui/textarea";
-import { Overall, ScoreRows } from "@/components/score-rows";
+import { Overall } from "@/components/score-rows";
 import { useCommunity } from "@/hooks/use-community";
 import { useI18n } from "@/i18n/use-i18n";
 import { tx } from "@/lib/copy";
 import { formatWhen, meanScore } from "@/lib/data";
 import {
-  clampScore,
   commentsFor,
   emptyScores,
   getUserRating,
@@ -40,16 +38,19 @@ export function RateCard({
   performance: Performance;
 }) {
   const { locale, t } = useI18n();
-  const { state, setNickname, postTake } = useCommunity();
+  const { state, postTake } = useCommunity();
   const dims = SPORT_DIMENSIONS[event.sport];
   const mine = getUserRating(state, event.id, athlete.id);
   const merged = mergedAverages(event, athlete.id, state);
   const comments = commentsFor(event.id, athlete.id, state);
 
   const [draft, setDraft] = useState<ScoreMap | null>(null);
-  const scores = draft ?? mine?.scores ?? emptyScores(event.sport);
+  const scores: ScoreMap = Object.fromEntries(
+    dims.map((id) => [id, draft?.[id] ?? mine?.scores[id] ?? emptyScores(event.sport)[id]]),
+  );
   const [body, setBody] = useState("");
-  const [name, setName] = useState(state.nickname);
+  const [nameDraft, setNameDraft] = useState<string | null>(null);
+  const name = nameDraft ?? state.nickname;
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -85,7 +86,19 @@ export function RateCard({
 
       {merged && (
         <div className="mt-4 rounded-lg bg-muted/60 p-3">
-          <ScoreRows sport={event.sport} scores={merged.avg} compact />
+          <p className="mb-2 text-[11px] font-medium tracking-wide text-muted-foreground uppercase">
+            {t.rate.community}
+          </p>
+          <div className="flex flex-wrap gap-1.5">
+            {dims.map((id) => (
+              <span key={id} className="rounded-md bg-background px-2 py-1 text-xs">
+                {t.dims[event.sport][id]}{" "}
+                <span className="font-semibold tabular-nums">
+                  {(merged.avg[id] ?? 0).toFixed(1)}
+                </span>
+              </span>
+            ))}
+          </div>
         </div>
       )}
 
@@ -97,8 +110,7 @@ export function RateCard({
             setError(t.rate.needComment);
             return;
           }
-          setNickname(name);
-          postTake(event.id, athlete.id, scores, body);
+          postTake(event.id, athlete.id, scores, body, name);
           setBody("");
           setError(null);
           setSaved(true);
@@ -117,25 +129,17 @@ export function RateCard({
               {meanScore(scores).toFixed(1)}
             </span>
           </div>
-          <div className="space-y-4">
+          <div className="space-y-3">
             {dims.map((id) => (
-              <div key={id} className="grid grid-cols-[6rem_1fr_2.5rem] items-center gap-3">
-                <label className="text-sm font-medium">{t.dims[event.sport][id]}</label>
-                <Slider
-                  min={0}
-                  max={10}
-                  step={0.5}
-                  value={[scores[id] ?? 7]}
-                  onValueChange={(v) => {
-                    const n = Array.isArray(v) ? v[0] : Number(v);
-                    setDraft({ ...scores, [id]: clampScore(n) });
-                    setSaved(false);
-                  }}
-                />
-                <span className="text-right text-sm font-semibold tabular-nums">
-                  {(scores[id] ?? 7).toFixed(1)}
-                </span>
-              </div>
+              <GradeSlider
+                key={id}
+                label={t.dims[event.sport][id]}
+                value={scores[id] ?? 7}
+                onChange={(next) => {
+                  setDraft({ ...scores, [id]: next });
+                  setSaved(false);
+                }}
+              />
             ))}
           </div>
         </div>
@@ -157,11 +161,12 @@ export function RateCard({
             <label className="text-xs text-muted-foreground" htmlFor="handle">
               {t.rate.nickname}
             </label>
-            <Input
+            <input
               id="handle"
               value={name}
               maxLength={16}
-              onChange={(e) => setName(e.target.value)}
+              onChange={(e) => setNameDraft(e.target.value)}
+              className="h-8 w-full rounded-lg border border-input bg-transparent px-2.5 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
             />
           </div>
         </div>
