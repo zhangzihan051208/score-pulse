@@ -86,6 +86,20 @@ function hydrateFixtureRow(row: Record<string, unknown>): LiveFixtureRow {
   };
 }
 
+function enrichPlayer(
+  base: StoredLineupPlayer,
+  extra: TsdbLineupPlayer,
+): StoredLineupPlayer {
+  return {
+    ...base,
+    strPosition: base.strPosition?.trim() ? base.strPosition : extra.strPosition,
+    intSquadNumber: base.intSquadNumber ?? extra.intSquadNumber,
+    strNumber: base.strNumber ?? extra.strNumber,
+    strThumb: base.strThumb ?? extra.strThumb,
+    strCutout: base.strCutout ?? extra.strCutout,
+  };
+}
+
 function mergePlayers(
   lineup: TsdbLineupPlayer[],
   rosters: TsdbLineupPlayer[][],
@@ -96,11 +110,16 @@ function mergePlayers(
   }
   for (const list of rosters) {
     for (const p of list) {
-      if (!p.idPlayer || !p.strPlayer || byId.has(p.idPlayer)) continue;
-      byId.set(p.idPlayer, {
-        ...p,
-        strSubstitute: p.strSubstitute ?? "Yes",
-      });
+      if (!p.idPlayer || !p.strPlayer) continue;
+      const existing = byId.get(p.idPlayer);
+      if (existing) {
+        byId.set(p.idPlayer, enrichPlayer(existing, p));
+      } else {
+        byId.set(p.idPlayer, {
+          ...p,
+          strSubstitute: p.strSubstitute ?? "Yes",
+        });
+      }
     }
   }
   return [...byId.values()];

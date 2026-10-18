@@ -53,6 +53,7 @@ export type TsdbLineupPlayer = {
   strHome?: string;
   strSubstitute?: string;
   intSquadNumber?: string | null;
+  strNumber?: string | null;
   strThumb?: string | null;
   strCutout?: string | null;
 };

@@ -61,7 +61,8 @@ export function playersToPerformances(
     const team = p.strTeam?.slice(0, 3).toUpperCase();
     const photoUrl =
       p.strCutout?.trim() || p.strThumb?.trim() || undefined;
-    const jerseyNumber = p.intSquadNumber?.trim() || undefined;
+    const jerseyNumber =
+      p.intSquadNumber?.trim() || p.strNumber?.trim() || undefined;
     roster[p.idPlayer] = {
       id: p.idPlayer,
       name: p.strPlayer,
