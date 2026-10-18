@@ -1,5 +1,6 @@
 "use client";
 
+import { useRef } from "react";
 import { Minus, Plus } from "lucide-react";
 import { clampScore } from "@/lib/store";
 
@@ -12,26 +13,66 @@ export function GradeSlider({
   value: number;
   onChange: (value: number) => void;
 }) {
+  const trackRef = useRef<HTMLDivElement>(null);
   const pct = (value / 10) * 100;
+
+  function setFromClientX(clientX: number) {
+    const track = trackRef.current;
+    if (!track) return;
+    const { left, width } = track.getBoundingClientRect();
+    if (width <= 0) return;
+    const ratio = Math.min(1, Math.max(0, (clientX - left) / width));
+    onChange(clampScore(ratio * 10));
+  }
 
   return (
     <div className="grid grid-cols-[6rem_1fr_2.5rem] items-center gap-2 sm:grid-cols-[6.5rem_1fr_auto_2.5rem]">
       <span className="text-sm font-medium">{label}</span>
-      <div className="relative flex h-8 items-center">
-        <div className="pointer-events-none absolute inset-x-0 h-1.5 rounded-full bg-muted" />
+      <div
+        ref={trackRef}
+        role="slider"
+        tabIndex={0}
+        aria-label={label}
+        aria-valuemin={0}
+        aria-valuemax={10}
+        aria-valuenow={value}
+        aria-valuetext={value.toFixed(1)}
+        className="relative flex h-8 touch-none items-center select-none"
+        onPointerDown={(e) => {
+          if (e.button !== 0) return;
+          e.preventDefault();
+          e.currentTarget.focus();
+          e.currentTarget.setPointerCapture(e.pointerId);
+          setFromClientX(e.clientX);
+        }}
+        onPointerMove={(e) => {
+          if (!e.currentTarget.hasPointerCapture(e.pointerId)) return;
+          setFromClientX(e.clientX);
+        }}
+        onPointerUp={(e) => {
+          if (e.currentTarget.hasPointerCapture(e.pointerId)) {
+            e.currentTarget.releasePointerCapture(e.pointerId);
+          }
+        }}
+        onKeyDown={(e) => {
+          if (e.key === "ArrowLeft" || e.key === "ArrowDown") {
+            e.preventDefault();
+            onChange(clampScore(value - 0.5));
+          }
+          if (e.key === "ArrowRight" || e.key === "ArrowUp") {
+            e.preventDefault();
+            onChange(clampScore(value + 0.5));
+          }
+        }}
+      >
+        <div className="h-2 w-full rounded-full bg-muted" />
         <div
-          className="pointer-events-none absolute left-0 h-1.5 rounded-full bg-primary"
+          className="absolute h-2 rounded-full bg-primary"
           style={{ width: `${pct}%` }}
         />
-        <input
-          type="range"
-          min={0}
-          max={10}
-          step={0.5}
-          value={value}
-          aria-label={label}
-          onChange={(e) => onChange(clampScore(Number(e.target.value)))}
-          className="relative z-10 h-8 w-full touch-none cursor-grab appearance-none bg-transparent active:cursor-grabbing [&::-moz-range-thumb]:size-5 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:border-0 [&::-moz-range-thumb]:bg-primary [&::-moz-range-track]:h-1.5 [&::-moz-range-track]:bg-transparent [&::-webkit-slider-runnable-track]:h-1.5 [&::-webkit-slider-runnable-track]:bg-transparent [&::-webkit-slider-thumb]:-mt-[7px] [&::-webkit-slider-thumb]:size-5 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-primary [&::-webkit-slider-thumb]:shadow-md"
+        <div
+          className="absolute top-1/2 size-5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary shadow-md ring-2 ring-background"
+          style={{ left: `${pct}%` }}
         />
       </div>
       <div className="hidden items-center gap-1 sm:flex">
