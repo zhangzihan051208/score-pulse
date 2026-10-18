@@ -1,40 +1,23 @@
-# 赛评台
+# Sideline
 
-体育社区的第一版：**给赛事里的选手表现打分，并围绕具体回合写评论**。
+A Hupu-style sports forum for **overseas leagues**. Home opens into boards (NBA, Soccer, NFL, F1, Tennis, UFC). Every board uses the **same rating card**; only the five axes change. English is the default. Chinese, Spanish, and Japanese ship in the language strip.
 
-这不是比分直播，也不是球员百科。首页选出一场球，点进选手表现卡，用技术 / 战术 / 体能 / 心态 / 整体五维打分，再写评论。分数和评论存在浏览器本地，用来走通产品，不需要账号。
-
-更完整的立项说明在站内 [立项手册](/playbook)。
-
-## 本地运行
+## Run
 
 ```bash
 npm install
 npm run dev
 ```
 
-浏览器打开提示的地址（默认 `http://127.0.0.1:43147`）。
+Open `http://127.0.0.1:43147`.
 
-```bash
-npm run build
-npm start -- --port 43147
-```
+## What you get
 
-## 怎么做、要准备什么
+- Boards on the home page, not a mixed match pile
+- One rate screen: five sliders + optional take + post
+- Sport-specific grades (NBA scoring/defense/playmaking/hustle/clutch, F1 pace/racecraft/tyres/…)
+- Ratings stored in the browser
 
-1. **产品**：写清用户是谁、在赛中还是赛后用、评的是本场表现而不是名气。先做一个运动项目。
-2. **规则**：固定评分维度和 0–10 尺度；规定评论要写具体回合；未开赛可打预期分、赛后可改。
-3. **数据**：赛程、名单、一句话高光、少量官方技术统计。第一版用编辑后台手录即可。
-4. **合规**：社区规范、人身攻击与赌博内容审核、肖像/队徽版权、青少年选手评论策略。
-5. **技术**：先做 Web 闭环（本仓库），再账号与数据库，最后才是原生 App、直播和推送。
+## Languages
 
-## 仓库结构
-
-- `src/lib/data.ts` 演示赛事与种子评论
-- `src/lib/store.ts` 本机评分 / 评论
-- `src/app/events/...` 赛事与选手表现页
-- `src/app/playbook/page.tsx` 立项手册
-
-## 刻意没做
-
-登录、数据库、支付、推送、直播。那些是核心环验证之后的事。
+EN / 中文 / ES / 日本語. Player names stay in international form.

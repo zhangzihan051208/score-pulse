@@ -21,12 +21,17 @@ export function useCommunity() {
     const current = getCommunitySnapshot();
     saveState({
       ...current,
-      nickname: nickname.trim() || "看台席位 07",
+      nickname: nickname.trim() || "Row 12",
     });
   }, []);
 
-  const saveRating = useCallback(
-    (eventId: string, athleteId: string, scores: ScoreMap) => {
+  const postTake = useCallback(
+    (
+      eventId: string,
+      athleteId: string,
+      scores: ScoreMap,
+      body?: string,
+    ) => {
       const current = getCommunitySnapshot();
       const rating: UserRating = {
         eventId,
@@ -34,39 +39,32 @@ export function useCommunity() {
         scores,
         updatedAt: new Date().toISOString(),
       };
+      const comments = body?.trim()
+        ? ([
+            {
+              id: `local-${crypto.randomUUID()}`,
+              eventId,
+              athleteId,
+              author: current.nickname,
+              body: body.trim(),
+              createdAt: new Date().toISOString(),
+              scores,
+              local: true as const,
+            } satisfies UserComment,
+            ...current.comments,
+          ] as UserComment[])
+        : current.comments;
       saveState({
         ...current,
         ratings: {
           ...current.ratings,
           [performanceKey(eventId, athleteId)]: rating,
         },
+        comments,
       });
     },
     [],
   );
 
-  const addComment = useCallback(
-    (
-      eventId: string,
-      athleteId: string,
-      body: string,
-      scores?: Partial<ScoreMap>,
-    ) => {
-      const current = getCommunitySnapshot();
-      const comment: UserComment = {
-        id: `local-${crypto.randomUUID()}`,
-        eventId,
-        athleteId,
-        author: current.nickname,
-        body: body.trim(),
-        createdAt: new Date().toISOString(),
-        scores,
-        local: true,
-      };
-      saveState({ ...current, comments: [comment, ...current.comments] });
-    },
-    [],
-  );
-
-  return { state, ready: true, setNickname, saveRating, addComment };
+  return { state, setNickname, postTake };
 }

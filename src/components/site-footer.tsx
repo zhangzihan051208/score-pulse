@@ -1,10 +1,12 @@
+"use client";
+
+import { useI18n } from "@/i18n/use-i18n";
+
 export function SiteFooter() {
+  const { t } = useI18n();
   return (
-    <footer className="mt-auto border-t bg-[#0d1f18] text-white/70">
-      <div className="mx-auto flex max-w-6xl flex-col gap-2 px-4 py-8 text-sm sm:flex-row sm:items-center sm:justify-between">
-        <p>赛评台 · 体育社区评分原型。评分和评论保存在本机浏览器，无需登录。</p>
-        <p>下一阶段再接账号、赛事数据源和审核后台。</p>
-      </div>
+    <footer className="mt-auto border-t bg-[#141414] text-sm text-white/55">
+      <div className="mx-auto max-w-6xl px-3 py-6">{t.footer}</div>
     </footer>
   );
 }

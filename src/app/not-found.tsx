@@ -1,16 +1,17 @@
+"use client";
+
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
+import { useI18n } from "@/i18n/use-i18n";
 
 export default function NotFound() {
+  const { t } = useI18n();
   return (
-    <div className="mx-auto flex max-w-lg flex-col items-center px-4 py-24 text-center">
-      <h1 className="text-2xl font-semibold">这场不在赛程里</h1>
-      <p className="mt-2 text-muted-foreground">
-        链接可能写错了，或者这名选手没有本场表现卡。
-      </p>
-      <Button className="mt-6" render={<Link href="/" />}>
-        回到赛程
-      </Button>
+    <div className="mx-auto max-w-md px-4 py-24 text-center">
+      <h1 className="text-2xl font-bold">{t.notFound.title}</h1>
+      <p className="mt-2 text-muted-foreground">{t.notFound.body}</p>
+      <Link href="/" className="mt-6 inline-block text-sm font-medium text-primary">
+        {t.notFound.back}
+      </Link>
     </div>
   );
 }

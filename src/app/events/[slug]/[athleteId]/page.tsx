@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { PerformanceStudio } from "@/components/performance-studio";
+import { RateCard } from "@/components/rate-card";
 import { athletes, events } from "@/lib/data";
 
 export function generateStaticParams() {
@@ -20,11 +20,11 @@ export async function generateMetadata({
   const event = events.find((item) => item.slug === slug);
   const athlete = athletes[athleteId];
   return {
-    title: event && athlete ? `${athlete.name} · ${event.title}` : "表现评分",
+    title: event && athlete ? `${athlete.name}` : "Rate",
   };
 }
 
-export default async function PerformancePage({
+export default async function RatePage({
   params,
 }: {
   params: Promise<{ slug: string; athleteId: string }>;
@@ -34,14 +34,7 @@ export default async function PerformancePage({
   const athlete = athletes[athleteId];
   const performance = event?.performances.find((p) => p.athleteId === athleteId);
   if (!event || !athlete || !performance) notFound();
-
   return (
-    <div className="mx-auto max-w-6xl px-4 py-8">
-      <PerformanceStudio
-        event={event}
-        athlete={athlete}
-        performance={performance}
-      />
-    </div>
+    <RateCard event={event} athlete={athlete} performance={performance} />
   );
 }

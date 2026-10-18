@@ -1,16 +1,17 @@
 "use client";
 
-import { DIMENSIONS, performanceKey, seedComments } from "./data";
+import { performanceKey, seedComments } from "./data";
+import { SPORT_DIMENSIONS } from "./sports";
 import type {
-  DimensionId,
   MatchEvent,
   ScoreMap,
   SeedComment,
+  Sport,
   UserComment,
   UserRating,
 } from "./types";
 
-const STORAGE_KEY = "saiping-community-v1";
+const STORAGE_KEY = "sideline-community-v2";
 
 export type CommunityState = {
   nickname: string;
@@ -19,7 +20,7 @@ export type CommunityState = {
 };
 
 export const defaultState: CommunityState = {
-  nickname: "看台席位 07",
+  nickname: "Row 12",
   ratings: {},
   comments: [],
 };
@@ -29,14 +30,8 @@ let snapshot: CommunityState = defaultState;
 let snapshotRaw: string | null = null;
 let hydrated = false;
 
-function emptyScores(): ScoreMap {
-  return {
-    technique: 7,
-    tactics: 7,
-    fitness: 7,
-    mentality: 7,
-    overall: 7,
-  };
+export function emptyScores(sport: Sport): ScoreMap {
+  return Object.fromEntries(SPORT_DIMENSIONS[sport].map((id) => [id, 7]));
 }
 
 function parseState(raw: string | null): CommunityState {
@@ -63,10 +58,6 @@ function readFromStorage(): CommunityState {
   return snapshot;
 }
 
-function emit() {
-  listeners.forEach((listener) => listener());
-}
-
 export function subscribeCommunity(listener: () => void) {
   listeners.add(listener);
   return () => listeners.delete(listener);
@@ -86,7 +77,7 @@ export function saveState(state: CommunityState) {
   snapshot = state;
   snapshotRaw = raw;
   hydrated = true;
-  emit();
+  listeners.forEach((listener) => listener());
 }
 
 export function getUserRating(
@@ -104,6 +95,7 @@ export function mergedAverages(
 ) {
   const performance = event.performances.find((p) => p.athleteId === athleteId);
   if (!performance) return null;
+  const dims = SPORT_DIMENSIONS[event.sport];
   const mine = getUserRating(state, event.id, athleteId);
   if (!mine) {
     return {
@@ -113,12 +105,12 @@ export function mergedAverages(
     };
   }
   const count = performance.ratingCount + 1;
-  const avg = Object.fromEntries(
-    DIMENSIONS.map((d) => {
-      const seedTotal = performance.communityAvg[d.id] * performance.ratingCount;
-      return [d.id, Number(((seedTotal + mine.scores[d.id]) / count).toFixed(1))];
-    }),
-  ) as ScoreMap;
+  const avg: ScoreMap = {};
+  for (const id of dims) {
+    const seed = performance.communityAvg[id] ?? 0;
+    const you = mine.scores[id] ?? seed;
+    avg[id] = Number(((seed * performance.ratingCount + you) / count).toFixed(1));
+  }
   return { avg, count, mine: mine.scores };
 }
 
@@ -126,7 +118,7 @@ export function commentsFor(
   eventId: string,
   athleteId: string,
   state: CommunityState,
-): SeedComment[] {
+): Array<SeedComment | UserComment> {
   return [...seedComments, ...state.comments]
     .filter((c) => c.eventId === eventId && c.athleteId === athleteId)
     .sort((a, b) => +new Date(b.createdAt) - +new Date(a.createdAt));
@@ -146,17 +138,11 @@ export function allFeedItems(state: CommunityState) {
     author: state.nickname,
     scores: r.scores,
   }));
-  return [...comments, ...ratings].sort((a, b) => +new Date(b.at) - +new Date(a.at));
+  return [...comments, ...ratings].sort(
+    (a, b) => +new Date(b.at) - +new Date(a.at),
+  );
 }
-
-export { emptyScores };
 
 export function clampScore(n: number) {
   return Math.min(10, Math.max(0, Math.round(n * 2) / 2));
-}
-
-export function overallFromRest(scores: ScoreMap): number {
-  const rest: DimensionId[] = ["technique", "tactics", "fitness", "mentality"];
-  const avg = rest.reduce((sum, id) => sum + scores[id], 0) / rest.length;
-  return clampScore(avg);
 }

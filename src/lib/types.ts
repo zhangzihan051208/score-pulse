@@ -1,39 +1,29 @@
-export const SPORTS = [
-  "badminton",
-  "basketball",
-  "football",
-  "table-tennis",
-  "athletics",
-] as const;
+export const LOCALES = ["en", "zh", "es", "ja"] as const;
+export type Locale = (typeof LOCALES)[number];
 
+export type Localized = Record<Locale, string>;
+
+export const SPORTS = ["nba", "soccer", "nfl", "f1", "tennis", "ufc"] as const;
 export type Sport = (typeof SPORTS)[number];
 
 export type EventStatus = "live" | "upcoming" | "ended";
 
-export type DimensionId =
-  | "technique"
-  | "tactics"
-  | "fitness"
-  | "mentality"
-  | "overall";
-
-export type ScoreMap = Record<DimensionId, number>;
+export type ScoreMap = Record<string, number>;
 
 export type Athlete = {
   id: string;
   name: string;
   shortName: string;
-  country: string;
+  country: Localized;
   team?: string;
 };
 
 export type Performance = {
   athleteId: string;
-  role: string;
-  seed?: number;
-  result?: string;
-  highlight: string;
-  stats: { label: string; value: string }[];
+  role: Localized;
+  result?: Localized;
+  highlight: Localized;
+  stats: { label: Localized; value: string }[];
   communityAvg: ScoreMap;
   ratingCount: number;
 };
@@ -41,13 +31,13 @@ export type Performance = {
 export type MatchEvent = {
   id: string;
   slug: string;
-  title: string;
-  subtitle: string;
   sport: Sport;
-  venue: string;
+  title: Localized;
+  subtitle: Localized;
+  venue: Localized;
   startAt: string;
   status: EventStatus;
-  summary: string;
+  summary: Localized;
   cover: string;
   performances: Performance[];
 };
@@ -57,12 +47,21 @@ export type SeedComment = {
   eventId: string;
   athleteId: string;
   author: string;
-  body: string;
+  body: Localized;
   createdAt: string;
-  scores?: Partial<ScoreMap>;
+  scores?: ScoreMap;
 };
 
-export type UserComment = SeedComment & { local: true };
+export type UserComment = {
+  id: string;
+  eventId: string;
+  athleteId: string;
+  author: string;
+  body: string;
+  createdAt: string;
+  scores?: ScoreMap;
+  local: true;
+};
 
 export type UserRating = {
   eventId: string;
