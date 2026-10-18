@@ -61,6 +61,15 @@ function rowFromEvent(sport: "nba" | "soccer", leagueId: string, ev: TsdbEvent) 
   };
 }
 
+function rowHasLineup(row: LiveFixtureRow): boolean {
+  const raw = row.raw as Record<string, unknown> | null | undefined;
+  const lineup =
+    row.lineup ??
+    (raw?.lineup as StoredLineupPlayer[] | undefined) ??
+    [];
+  return lineup.length > 0;
+}
+
 function isLiveLeagueRow(row: {
   sport: string;
   league_id?: string | null;
@@ -83,6 +92,18 @@ function hydrateFixtureRow(row: Record<string, unknown>): LiveFixtureRow {
     ...(row as LiveFixtureRow),
     slug,
     lineup,
+    league_id:
+      (row.league_id as string | null | undefined) ??
+      (raw.league_id as string | undefined) ??
+      null,
+    id_home_team:
+      (row.id_home_team as string | null | undefined) ??
+      (raw.idHomeTeam as string | undefined) ??
+      null,
+    id_away_team:
+      (row.id_away_team as string | null | undefined) ??
+      (raw.idAwayTeam as string | undefined) ??
+      null,
   };
 }
 
@@ -269,7 +290,13 @@ export async function syncSportsDbFixtures(force = false) {
         .from("sportsdb_fixtures")
         .update(patch)
         .eq("id_event", row.id_event);
-      if (upErr?.message?.includes("schema cache")) {
+      if (
+        upErr?.message?.includes("schema cache") ||
+        upErr?.message?.includes("id_home_team") ||
+        upErr?.message?.includes("id_away_team") ||
+        upErr?.message?.includes("lineup") ||
+        upErr?.message?.includes("slug")
+      ) {
         await admin
           .from("sportsdb_fixtures")
           .update({ raw: enrichedRaw, synced_at: patch.synced_at })
@@ -288,8 +315,34 @@ export type FixtureRow = LiveFixtureRow;
 const FIXTURE_SELECT =
   "id_event,sport,str_event,str_league,str_home_team,str_away_team,int_home_score,int_away_score,str_status,date_event,str_time,str_thumb,slug,lineup,raw,synced_at";
 
-const FIXTURE_SELECT_MIN =
-  "id_event,sport,league_id,str_event,str_league,str_home_team,str_away_team,id_home_team,id_away_team,int_home_score,int_away_score,str_status,date_event,str_time,str_thumb,raw,synced_at";
+/** Columns that exist on all deployed schemas (team ids live in raw when columns absent). */
+const FIXTURE_SELECT_CORE =
+  "id_event,sport,str_event,str_league,str_home_team,str_away_team,int_home_score,int_away_score,str_status,date_event,str_time,str_thumb,raw,synced_at";
+
+const FIXTURE_SELECT_WITH_LEAGUE = `${FIXTURE_SELECT_CORE.replace("sport,", "sport,league_id,")}`;
+
+const FIXTURE_SELECT_WITH_TEAM_COLS = `${FIXTURE_SELECT_WITH_LEAGUE.replace("str_home_team,", "str_home_team,id_home_team,id_away_team,")}`;
+
+type FixtureQueryResult = {
+  data: unknown[] | null;
+  error: { message: string } | null;
+};
+
+async function fetchFixtureRows(
+  run: (select: string) => PromiseLike<FixtureQueryResult>,
+): Promise<Record<string, unknown>[]> {
+  for (const select of [
+    FIXTURE_SELECT_WITH_TEAM_COLS,
+    FIXTURE_SELECT_WITH_LEAGUE,
+    FIXTURE_SELECT_CORE,
+  ]) {
+    const res = await run(select);
+    if (!res.error && res.data) {
+      return res.data as Record<string, unknown>[];
+    }
+  }
+  return [];
+}
 
 export async function listFixtures(
   sports: string[],
@@ -301,21 +354,21 @@ export async function listFixtures(
 
   const leagueFilter = leagueSlug ? getLeagueBySlug(leagueSlug) : undefined;
 
-  let res = await admin
-    .from("sportsdb_fixtures")
-    .select(FIXTURE_SELECT_MIN)
-    .in("sport", sports)
-    .order("date_event", { ascending: false })
-    .order("synced_at", { ascending: false })
-    .limit(Math.max(limit * 12, 80));
-  if (res.error) {
-    return [];
-  }
-  const data = (res.data as Record<string, unknown>[] | null) ?? null;
-  if (!data) return [];
+  const data = await fetchFixtureRows((select) =>
+    admin
+      .from("sportsdb_fixtures")
+      .select(select)
+      .in("sport", sports)
+      .order("date_event", { ascending: false })
+      .order("synced_at", { ascending: false })
+      .limit(Math.max(limit * 12, 80))
+      .then((r) => ({ data: r.data, error: r.error })),
+  );
+  if (!data.length) return [];
   return data
     .map((row) => hydrateFixtureRow(row))
     .filter((row) => isLiveLeagueRow(row))
+    .filter((row) => rowHasLineup(row))
     .filter((row) => {
       if (!leagueFilter) return true;
       return (
@@ -341,21 +394,34 @@ export async function getLiveMatchBySlug(slug: string) {
   const admin = createServiceClient();
   if (!admin) return null;
 
-  let res = await admin
-    .from("sportsdb_fixtures")
-    .select(FIXTURE_SELECT_MIN)
-    .eq("slug", slug)
-    .maybeSingle();
-  let rowData = res.data;
-  if (!rowData) {
-    const wide = await admin
+  let rowData: Record<string, unknown> | null = null;
+  for (const select of [
+    FIXTURE_SELECT_WITH_TEAM_COLS,
+    FIXTURE_SELECT_WITH_LEAGUE,
+    FIXTURE_SELECT_CORE,
+  ]) {
+    const res = await admin
       .from("sportsdb_fixtures")
-      .select(FIXTURE_SELECT_MIN)
-      .in("sport", ["nba", "soccer"])
-      .order("date_event", { ascending: false })
-      .limit(200);
+      .select(select)
+      .eq("slug", slug)
+      .maybeSingle();
+    if (!res.error && res.data) {
+      rowData = res.data as unknown as Record<string, unknown>;
+      break;
+    }
+  }
+  if (!rowData) {
+    const wide = await fetchFixtureRows((select) =>
+      admin
+        .from("sportsdb_fixtures")
+        .select(select)
+        .in("sport", ["nba", "soccer"])
+        .order("date_event", { ascending: false })
+        .limit(200)
+        .then((r) => ({ data: r.data, error: r.error })),
+    );
     rowData =
-      (wide.data ?? []).find((row) => {
+      wide.find((row) => {
         const raw = row.raw as Record<string, unknown> | null;
         return raw?.sideline_slug === slug;
       }) ?? null;
@@ -389,31 +455,47 @@ export async function searchFixtures(query: string, limit = 20) {
   }
 
   const safe = q.replace(/[%_]/g, "");
-  let res = await admin
-    .from("sportsdb_fixtures")
-    .select(FIXTURE_SELECT_MIN)
-    .in("sport", ["nba", "soccer"])
-    .or(
-      `str_event.ilike.%${safe}%,str_home_team.ilike.%${safe}%,str_away_team.ilike.%${safe}%,str_league.ilike.%${safe}%`,
-    )
-    .order("date_event", { ascending: false })
-    .limit(80);
-
-  if (res.error) {
-    res = await admin
+  let ilikeRows: Record<string, unknown>[] = [];
+  for (const select of [
+    FIXTURE_SELECT_WITH_TEAM_COLS,
+    FIXTURE_SELECT_WITH_LEAGUE,
+    FIXTURE_SELECT_CORE,
+  ]) {
+    const res = await admin
       .from("sportsdb_fixtures")
-      .select(FIXTURE_SELECT_MIN)
+      .select(select)
       .in("sport", ["nba", "soccer"])
+      .or(
+        `str_event.ilike.%${safe}%,str_home_team.ilike.%${safe}%,str_away_team.ilike.%${safe}%,str_league.ilike.%${safe}%`,
+      )
       .order("date_event", { ascending: false })
-      .limit(150);
+      .limit(80);
+    if (!res.error && res.data?.length) {
+      ilikeRows = res.data as unknown as Record<string, unknown>[];
+      break;
+    }
   }
 
+  const usedFallback = ilikeRows.length === 0;
+  const rawRows =
+    ilikeRows.length > 0
+      ? ilikeRows
+      : await fetchFixtureRows((select) =>
+          admin
+            .from("sportsdb_fixtures")
+            .select(select)
+            .in("sport", ["nba", "soccer"])
+            .order("date_event", { ascending: false })
+            .limit(150)
+            .then((r) => ({ data: r.data, error: r.error })),
+        );
+
   const qLower = q.toLowerCase();
-  const rows = (res.data ?? [])
+  const rows = rawRows
     .map((row) => hydrateFixtureRow(row as Record<string, unknown>))
     .filter((row) => isTrackedFixture(row))
     .filter((row) => {
-      if (!res.error) return true;
+      if (!usedFallback) return true;
       const blob = [
         row.str_event,
         row.str_home_team,
@@ -503,17 +585,18 @@ export async function searchTeamsInFixtures(
   const q = query.trim().toLowerCase();
   if (!admin || q.length < 2) return [];
 
-  let db = admin
-    .from("sportsdb_fixtures")
-    .select(FIXTURE_SELECT_MIN)
-    .in("sport", sport ? [sport] : ["nba", "soccer"])
-    .order("date_event", { ascending: false })
-    .limit(200);
-
-  const res = await db;
+  const data = await fetchFixtureRows((select) =>
+    admin
+      .from("sportsdb_fixtures")
+      .select(select)
+      .in("sport", sport ? [sport] : ["nba", "soccer"])
+      .order("date_event", { ascending: false })
+      .limit(200)
+      .then((r) => ({ data: r.data, error: r.error })),
+  );
   const byId = new Map<string, TeamSearchHit>();
 
-  for (const row of res.data ?? []) {
+  for (const row of data) {
     const hydrated = hydrateFixtureRow(row as Record<string, unknown>);
     if (!isTrackedFixture(hydrated)) continue;
     if (leagueId && hydrated.league_id !== leagueId) continue;
@@ -549,15 +632,18 @@ export async function listFixturesForTeam(
   const admin = createServiceClient();
   if (!admin) return [];
 
-  const res = await admin
-    .from("sportsdb_fixtures")
-    .select(FIXTURE_SELECT_MIN)
-    .eq("sport", sport)
-    .order("date_event", { ascending: false })
-    .limit(250);
+  const data = await fetchFixtureRows((select) =>
+    admin
+      .from("sportsdb_fixtures")
+      .select(select)
+      .eq("sport", sport)
+      .order("date_event", { ascending: false })
+      .limit(250)
+      .then((r) => ({ data: r.data, error: r.error })),
+  );
 
   const nameLower = teamName?.toLowerCase();
-  const rows = (res.data ?? [])
+  const rows = data
     .map((row) => hydrateFixtureRow(row as Record<string, unknown>))
     .filter((row) => isTrackedFixture(row))
     .filter((row) => {
@@ -583,11 +669,21 @@ export async function listFixturesForTeam(
 export async function getLiveMatchById(idEvent: string) {
   const admin = createServiceClient();
   if (!admin) return null;
-  let res = await admin
-    .from("sportsdb_fixtures")
-    .select(FIXTURE_SELECT_MIN)
-    .eq("id_event", idEvent)
-    .maybeSingle();
-  if (!res.data) return null;
-  return fixtureToMatchEvent(hydrateFixtureRow(res.data as Record<string, unknown>));
+  for (const select of [
+    FIXTURE_SELECT_WITH_TEAM_COLS,
+    FIXTURE_SELECT_WITH_LEAGUE,
+    FIXTURE_SELECT_CORE,
+  ]) {
+    const res = await admin
+      .from("sportsdb_fixtures")
+      .select(select)
+      .eq("id_event", idEvent)
+      .maybeSingle();
+    if (!res.error && res.data) {
+      return fixtureToMatchEvent(
+        hydrateFixtureRow(res.data as unknown as Record<string, unknown>),
+      );
+    }
+  }
+  return null;
 }

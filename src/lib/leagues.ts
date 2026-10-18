@@ -44,7 +44,7 @@ export const SIDELINE_LEAGUES: LeagueConfig[] = [
     slug: "serie-a",
     sport: "soccer",
     label: "Serie A",
-    nameHints: ["Serie A", "Italian Serie A"],
+    nameHints: ["Italian Serie A"],
   },
   {
     tsdbId: "4334",
@@ -82,21 +82,29 @@ export function leaguesForSport(sport: Sport): LeagueConfig[] {
   return [];
 }
 
+function leagueNameMatches(league: LeagueConfig, leagueName: string): boolean {
+  if (!leagueName.trim()) return false;
+  if (league.sport === "soccer" && leagueName.includes("Brazilian")) return false;
+  return league.nameHints.some((h) => leagueName.includes(h));
+}
+
 export function leagueMatchesRow(row: {
   sport: string;
   league_id?: string | null;
   str_league?: string | null;
 }): LeagueConfig | undefined {
+  const name = row.str_league ?? "";
   if (row.league_id) {
     const hit = byTsdbId.get(row.league_id);
-    if (hit && hit.sport === row.sport) return hit;
+    if (hit && hit.sport === row.sport) {
+      if (!name || leagueNameMatches(hit, name)) return hit;
+    }
   }
-  const name = row.str_league ?? "";
   for (const league of SIDELINE_LEAGUES) {
     if (league.sport !== row.sport) continue;
-    if (league.nameHints.some((h) => name.includes(h))) return league;
+    if (leagueNameMatches(league, name)) return league;
   }
-  if (row.sport === "nba" && name.includes("NBA")) {
+  if (row.sport === "nba" && (name === "NBA" || name.startsWith("NBA "))) {
     return byTsdbId.get("4387");
   }
   return undefined;
@@ -115,7 +123,10 @@ export function tsdbEventBelongsToLeague(ev: {
   strLeague?: string;
   strSport?: string;
 }, league: LeagueConfig): boolean {
-  if (ev.idLeague === league.tsdbId) return true;
   const name = ev.strLeague ?? "";
-  return league.nameHints.some((h) => name.includes(h));
+  if (ev.idLeague === league.tsdbId) {
+    if (!name) return true;
+    return leagueNameMatches(league, name);
+  }
+  return leagueNameMatches(league, name);
 }
