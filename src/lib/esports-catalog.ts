@@ -10,7 +10,27 @@ import {
   fetchEsportsMatches,
   isPandaScoreConfigured,
 } from "@/lib/pandascore";
+import type { PsMatch } from "@/lib/pandascore";
 import type { MatchEvent } from "@/lib/types";
+
+function rawStatusRank(status?: string): number {
+  if (status === "running") return 0;
+  if (status === "not_started") return 1;
+  return 2;
+}
+
+/** Trim before roster hydration so we do not fan out hundreds of `/teams` calls. */
+function prioritizeRawMatches(matches: PsMatch[], cap: number): PsMatch[] {
+  return [...matches]
+    .sort((a, b) => {
+      const sr = rawStatusRank(a.status) - rawStatusRank(b.status);
+      if (sr !== 0) return sr;
+      const ta = a.begin_at ?? a.scheduled_at ?? "";
+      const tb = b.begin_at ?? b.scheduled_at ?? "";
+      return tb.localeCompare(ta);
+    })
+    .slice(0, cap);
+}
 
 function sortEvents(list: MatchEvent[]) {
   const rank = { live: 0, upcoming: 1, ended: 2 } as const;
@@ -31,10 +51,16 @@ export async function listEsportsMatchEvents(
     ? ESPORTS_GAMES.filter((g) => g.slug === gameSlug)
     : ESPORTS_GAMES;
 
+  const perGameCap = gameSlug ? Math.max(limit, 24) : Math.max(Math.ceil(limit / games.length) + 8, 16);
+
   const buckets = await Promise.all(
     games.map(async (game) => {
       const raw = await fetchEsportsMatches(game.apiPrefix);
-      const withRosters = await enrichMatchesWithTeamRosters(raw);
+      const picked = prioritizeRawMatches(raw, perGameCap);
+      const withRosters = await enrichMatchesWithTeamRosters(picked, {
+        apiPrefixFallback: game.apiPrefix,
+        concurrency: 3,
+      });
       return withRosters
         .map((m) => pandaMatchToEvent(game, m))
         .filter((e): e is MatchEvent => Boolean(e));
@@ -61,7 +87,7 @@ export async function getEsportsMatchBySlug(slug: string): Promise<MatchEvent | 
         const detail = await fetchEsportsMatchById(g.apiPrefix, raw.id);
         if (detail) match = detail;
       }
-      match = await enrichMatchWithTeamRosters(match);
+      match = await enrichMatchWithTeamRosters(match, g.apiPrefix);
       return pandaMatchToEvent(g, match);
     }
   }
@@ -70,7 +96,7 @@ export async function getEsportsMatchBySlug(slug: string): Promise<MatchEvent | 
   if (!Number.isNaN(numeric)) {
     const detail = await fetchEsportsMatchById(game.apiPrefix, numeric);
     if (detail) {
-      const enriched = await enrichMatchWithTeamRosters(detail);
+      const enriched = await enrichMatchWithTeamRosters(detail, game.apiPrefix);
       return pandaMatchToEvent(game, enriched);
     }
   }

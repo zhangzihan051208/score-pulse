@@ -53,7 +53,7 @@ type ListResponse = PsMatch[];
 async function psFetch(path: string): Promise<ListResponse> {
   if (!isPandaScoreConfigured()) return [];
   const sep = path.includes("?") ? "&" : "?";
-  const url = `${BASE}${path}${sep}per_page=50&page=1`;
+  const url = `${BASE}${path}${sep}per_page=36&page=1`;
   const res = await fetch(url, {
     headers: {
       Accept: "application/json",
@@ -99,18 +99,9 @@ export async function fetchEsportsMatchById(
   return data as PsMatch;
 }
 
+/** @deprecated Use fetchPandaTeamPlayersResolved from pandascore-teams.ts */
 export async function fetchPandaTeamPlayers(teamId: number): Promise<PsPlayer[]> {
-  if (!isPandaScoreConfigured() || !teamId) return [];
-  const res = await fetch(`${BASE}/teams/${teamId}`, {
-    headers: {
-      Accept: "application/json",
-      Authorization: `Bearer ${token()}`,
-    },
-    next: { revalidate: 600 },
-  });
-  if (!res.ok) return [];
-  const data = (await res.json()) as { players?: PsPlayer[] };
-  const players = data.players ?? [];
-  const active = players.filter((p) => p.active !== false);
-  return active.length > 0 ? active : players;
+  const { fetchPandaTeamPlayersResolved } = await import("@/lib/pandascore-teams");
+  const players = await fetchPandaTeamPlayersResolved(teamId);
+  return players ?? [];
 }
