@@ -16,10 +16,11 @@ export const POLL = {
   seedGraceMs: 20_000,
 } as const;
 
-export function listPollIntervalMs(events: MatchEvent[], tabVisible: boolean): number {
-  if (!tabVisible) return POLL.backgroundMs;
+export function listPollIntervalMs(events: MatchEvent[], tabVisible: boolean): number | null {
   const hasLive = events.some((e) => e.status === "live");
-  return hasLive ? POLL.listLiveMs : POLL.listIdleMs;
+  if (!hasLive) return null;
+  if (!tabVisible) return POLL.backgroundMs;
+  return POLL.listLiveMs;
 }
 
 export function detailPollIntervalMs(
@@ -29,6 +30,5 @@ export function detailPollIntervalMs(
   if (!event) return null;
   if (!tabVisible) return POLL.backgroundMs;
   if (event.status === "live") return POLL.detailLiveMs;
-  if (event.status === "upcoming") return POLL.detailUpcomingMs;
   return null;
 }

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import { LocaleBody } from "@/components/locale-body";
+import { DegradedBanner } from "@/components/degraded-banner";
 import { NavigationProgress } from "@/components/navigation-progress";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
@@ -27,6 +28,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       <body className="flex min-h-full flex-col bg-background text-foreground">
         <LocaleProvider>
           <NavigationProgress />
+          <DegradedBanner />
           <SiteHeader />
           <main className="flex-1">
             <LocaleBody>{children}</LocaleBody>

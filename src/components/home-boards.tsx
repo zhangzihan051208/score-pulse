@@ -19,6 +19,10 @@ import { pickEventSpotlights } from "@/lib/event-spotlight";
 import { SPORT_CHIP } from "@/lib/sports";
 import { LeagueTabs } from "@/components/league-tabs";
 import { leagueLabel } from "@/i18n/league-labels";
+import {
+  HOME_LIVE_CHIP_PER_SPORT,
+  HOME_MATCH_ROWS_PER_SPORT,
+} from "@/lib/display-limits";
 import { SPORTS, type MatchEvent, type Sport } from "@/lib/types";
 
 const LIVE_SPORTS: Sport[] = ["nba", "soccer"];
@@ -38,6 +42,17 @@ export function HomeBoards({ initialEvents = [] }: { initialEvents?: MatchEvent[
     [favorites, hydrated, liveAll],
   );
   const live = sortedAll.filter((e) => e.status === "live");
+  const liveChips = useMemo(() => {
+    const caps: Partial<Record<Sport, number>> = {};
+    const out: MatchEvent[] = [];
+    for (const event of live) {
+      const n = caps[event.sport] ?? 0;
+      if (n >= HOME_LIVE_CHIP_PER_SPORT) continue;
+      caps[event.sport] = n + 1;
+      out.push(event);
+    }
+    return out;
+  }, [live]);
 
   return (
     <div className="mx-auto max-w-6xl px-3 py-6">
@@ -58,13 +73,13 @@ export function HomeBoards({ initialEvents = [] }: { initialEvents?: MatchEvent[
 
       <HomeMyTeams events={sortedAll} />
 
-      {live.length > 0 && (
+      {liveChips.length > 0 && (
         <section className="mt-5">
           <h2 className="mb-2 text-xs font-semibold tracking-widest text-muted-foreground uppercase">
             {t.home.liveNow}
           </h2>
           <div className="flex gap-2 overflow-x-auto pb-1">
-            {live.map((event) => (
+            {liveChips.map((event) => (
               <Link
                 key={event.id}
                 href={`/events/${event.slug}`}
@@ -191,7 +206,7 @@ function LiveSportBlock({
           <LeagueTabs sport="soccer" />
         </div>
       )}
-      {list.slice(0, sport === "soccer" ? 4 : 1).map((event) => (
+      {list.slice(0, HOME_MATCH_ROWS_PER_SPORT).map((event) => (
         <FeaturedEventRow key={event.id} event={event} locale={locale} t={t} />
       ))}
       <div className="border-t px-3 py-3">

@@ -7,6 +7,7 @@ type Dict = {
     loadingPage: string;
     loadingSearch: string;
     loadingTeamSearch: string;
+    degradedBanner: string;
   };
   nav: {
     home: string;
@@ -200,6 +201,8 @@ export const messages: Record<Locale, Dict> = {
       loadingPage: "Loading…",
       loadingSearch: "Searching…",
       loadingTeamSearch: "Finding teams…",
+      degradedBanner:
+        "Data sources are slow — showing cached scores only. Lineups and remote search are temporarily limited.",
     },
     nav: {
       home: "Home",
@@ -475,6 +478,8 @@ export const messages: Record<Locale, Dict> = {
       loadingPage: "加载中…",
       loadingSearch: "正在搜索…",
       loadingTeamSearch: "正在查找球队…",
+      degradedBanner:
+        "数据源响应较慢，当前仅显示缓存比分；阵容与远程搜索已暂时关闭。",
     },
     nav: {
       home: "首页",
@@ -745,6 +750,8 @@ export const messages: Record<Locale, Dict> = {
       loadingPage: "Cargando…",
       loadingSearch: "Buscando…",
       loadingTeamSearch: "Buscando equipos…",
+      degradedBanner:
+        "Fuentes lentas: solo marcadores en caché. Alineaciones y búsqueda remota limitadas.",
     },
     nav: {
       home: "Inicio",
@@ -1016,6 +1023,8 @@ export const messages: Record<Locale, Dict> = {
       loadingPage: "読み込み中…",
       loadingSearch: "検索中…",
       loadingTeamSearch: "チームを検索中…",
+      degradedBanner:
+        "データソースが不安定なため、キャッシュのスコアのみ表示しています。メンバーとリモート検索は一時制限中です。",
     },
     nav: {
       home: "ホーム",

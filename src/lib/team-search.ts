@@ -11,6 +11,7 @@ import {
   rankTeamSearchHits,
   teamQueryRelevance,
 } from "@/lib/team-popularity";
+import { getDegradedMode } from "@/lib/service-degraded";
 import { searchTeamsByName } from "@/lib/thesportsdb";
 
 function inferSport(league: string): "nba" | "soccer" {
@@ -87,11 +88,17 @@ export async function intelligentTeamSearch(
     }
   };
 
-  if (!strictLeague || pool.size < limit) {
-    await addRemote(await searchTeamsByName(q));
+  const remoteOk = !getDegradedMode().noRemoteSearch;
+
+  if (remoteOk && (!strictLeague || pool.size < limit)) {
+    try {
+      await addRemote(await searchTeamsByName(q));
+    } catch {
+      /* fixtures-only search */
+    }
   }
 
-  if (!strictLeague) {
+  if (remoteOk && !strictLeague) {
     const popMatches = popularTeamsMatchingQuery(q, 10);
     for (const pop of popMatches.slice(0, 4)) {
       if (opts?.sport && pop.sport !== opts.sport) continue;
@@ -100,7 +107,11 @@ export async function intelligentTeamSearch(
       );
       if (already) continue;
 
-      await addRemote(await searchTeamsByName(pop.canonical));
+      try {
+        await addRemote(await searchTeamsByName(pop.canonical));
+      } catch {
+        /* skip */
+      }
     }
   }
 

@@ -71,8 +71,10 @@ export function RateCard({
     null,
   );
 
+  const cloudReads = isSupabaseConfigured();
+
   const loadRemote = useCallback(async () => {
-    if (!authEnabled) return;
+    if (!cloudReads) return;
     const qs = new URLSearchParams({ positionKey });
     const res = await fetch(
       `/api/community/${encodeURIComponent(event.id)}/${encodeURIComponent(athlete.id)}?${qs}`,
@@ -91,19 +93,21 @@ export function RateCard({
       setBody(data.mineComment ?? "");
       commentPrefilled.current = true;
     }
-  }, [athlete.id, authEnabled, event.id, positionKey]);
+  }, [athlete.id, cloudReads, event.id, positionKey]);
 
   useEffect(() => {
     loadRemote();
   }, [loadRemote]);
 
   const mine =
-    authEnabled && remoteMine
+    user && remoteMine
       ? { eventId: event.id, athleteId: athlete.id, scores: remoteMine, updatedAt: "" }
-      : localMine;
+      : !cloudReads
+        ? localMine
+        : undefined;
 
   const panelTakes = useMemo((): CommunityTake[] => {
-    if (authEnabled) return remoteTakes;
+    if (cloudReads) return remoteTakes;
     const entry = getUserRating(state, event.id, athlete.id);
     const ratingRows = entry
       ? [
@@ -139,8 +143,8 @@ export function RateCard({
       isYou: t.isYou,
     }));
   }, [
-    authEnabled,
     athlete.id,
+    cloudReads,
     event.id,
     localComments,
     locale,
@@ -149,7 +153,7 @@ export function RateCard({
   ]);
 
   const displayMerged = useMemo(() => {
-    if (authEnabled && remoteCommunityAvg && remoteTakes.length > 0) {
+    if (cloudReads && remoteCommunityAvg && remoteTakes.length > 0) {
       return {
         avg: remoteCommunityAvg,
         count: remoteTakes.length,
@@ -157,9 +161,9 @@ export function RateCard({
       };
     }
     return merged;
-  }, [authEnabled, merged, remoteCommunityAvg, remoteMine, remoteTakes.length]);
+  }, [cloudReads, merged, remoteCommunityAvg, remoteMine, remoteTakes.length]);
 
-  const cloudPost = authEnabled && isSupabaseConfigured();
+  const cloudPost = isSupabaseConfigured();
   const mustSignIn = cloudPost && !user;
 
   const baseScores = {
@@ -232,7 +236,7 @@ export function RateCard({
         <div className="mt-3 rounded-lg bg-muted/50 px-3 py-2">
           <p className="mb-1.5 text-[11px] font-medium text-muted-foreground">
             {t.rate.community}
-            {authEnabled && remoteTakes.length > 0 ? (
+            {cloudReads && remoteTakes.length > 0 ? (
               <span className="ml-1 font-normal">({remoteTakes.length})</span>
             ) : null}
           </p>
@@ -272,7 +276,7 @@ export function RateCard({
               return;
             }
             await loadRemote();
-          } else {
+          } else if (!cloudPost) {
             postTake(event.id, athlete.id, scores, body, name);
             if (!body.trim()) setBody("");
           }

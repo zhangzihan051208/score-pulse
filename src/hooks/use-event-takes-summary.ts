@@ -2,18 +2,16 @@
 
 import { useCallback, useEffect, useState } from "react";
 import type { CommunityTake } from "@/components/community-ratings-panel";
-import { useAuth } from "@/hooks/use-auth";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 
 type SummaryTake = CommunityTake;
 
 export function useEventTakesSummary(eventId: string) {
-  const { enabled: authEnabled } = useAuth();
   const [byAthlete, setByAthlete] = useState<Record<string, SummaryTake[]>>({});
   const [loaded, setLoaded] = useState(false);
 
   const load = useCallback(async () => {
-    if (!authEnabled || !isSupabaseConfigured()) {
+    if (!isSupabaseConfigured()) {
       setLoaded(true);
       return;
     }
@@ -30,7 +28,7 @@ export function useEventTakesSummary(eventId: string) {
     };
     setByAthlete(data.takesByAthlete ?? {});
     setLoaded(true);
-  }, [authEnabled, eventId]);
+  }, [eventId]);
 
   useEffect(() => {
     load();

@@ -47,8 +47,10 @@ export function usePlayerCommunity({
   );
   const [mineComment, setMineComment] = useState("");
 
+  const cloudReads = isSupabaseConfigured();
+
   const loadRemote = useCallback(async () => {
-    if (!authEnabled) return;
+    if (!cloudReads) return;
     const qs = new URLSearchParams({ positionKey });
     const res = await fetch(
       `/api/community/${encodeURIComponent(event.id)}/${encodeURIComponent(athlete.id)}?${qs}`,
@@ -65,19 +67,21 @@ export function usePlayerCommunity({
     setRemoteCommunityAvg(data.communityAvg ?? null);
     setMineComment(data.mineComment ?? "");
     return data;
-  }, [athlete.id, authEnabled, event.id, positionKey]);
+  }, [athlete.id, cloudReads, event.id, positionKey]);
 
   useEffect(() => {
     loadRemote();
   }, [loadRemote]);
 
   const mine =
-    authEnabled && remoteMine
+    user && remoteMine
       ? { eventId: event.id, athleteId: athlete.id, scores: remoteMine, updatedAt: "" }
-      : localMine;
+      : !cloudReads
+        ? localMine
+        : undefined;
 
   const panelTakes = useMemo((): CommunityTake[] => {
-    if (authEnabled) return remoteTakes;
+    if (cloudReads) return remoteTakes;
     const entry = getUserRating(state, event.id, athlete.id);
     const ratingRows = entry
       ? [
@@ -113,8 +117,8 @@ export function usePlayerCommunity({
       isYou: t.isYou,
     }));
   }, [
-    authEnabled,
     athlete.id,
+    cloudReads,
     event.id,
     localComments,
     locale,
@@ -123,7 +127,7 @@ export function usePlayerCommunity({
   ]);
 
   const displayMerged = useMemo(() => {
-    if (authEnabled && remoteCommunityAvg && remoteTakes.length > 0) {
+    if (cloudReads && remoteCommunityAvg && remoteTakes.length > 0) {
       return {
         avg: remoteCommunityAvg,
         count: remoteTakes.length,
@@ -133,7 +137,7 @@ export function usePlayerCommunity({
     }
     return merged;
   }, [
-    authEnabled,
+    cloudReads,
     merged,
     positionKey,
     remoteCommunityAvg,
@@ -141,7 +145,7 @@ export function usePlayerCommunity({
     remoteTakes.length,
   ]);
 
-  const cloudPost = authEnabled && isSupabaseConfigured();
+  const cloudPost = isSupabaseConfigured();
   const mustSignIn = cloudPost && !user;
 
   return {

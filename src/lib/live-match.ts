@@ -103,7 +103,10 @@ export function playersToPerformances(
   return { performances, roster };
 }
 
-export function fixtureToMatchEvent(row: LiveFixtureRow): MatchEvent | null {
+export function fixtureToMatchEvent(
+  row: LiveFixtureRow,
+  opts?: { scoreOnly?: boolean },
+): MatchEvent | null {
   if (row.sport !== "nba" && row.sport !== "soccer") return null;
   const sport = row.sport as Sport;
   const home = row.str_home_team ?? "Home";
@@ -118,7 +121,8 @@ export function fixtureToMatchEvent(row: LiveFixtureRow): MatchEvent | null {
     players,
     scoreLine(row),
   );
-  if (performances.length === 0) return null;
+  const scoreOnly = opts?.scoreOnly ?? false;
+  if (performances.length === 0 && !scoreOnly) return null;
 
   const status = mapTsdbStatus(row.str_status ?? undefined);
   const score =
@@ -160,13 +164,17 @@ export function fixtureToMatchEvent(row: LiveFixtureRow): MatchEvent | null {
     startAt: startIso(row.date_event, row.str_time),
     status,
     summary: S(
-      score
-        ? `Final or in-progress: ${score}. ${performances.length} players on the board.`
-        : `${performances.length} players on the board — synced from TheSportsDB.`,
+      scoreOnly || performances.length === 0
+        ? score
+          ? `Score from cache: ${score}. Lineup temporarily unavailable.`
+          : "Scoreboard from cache — lineup temporarily unavailable."
+        : score
+          ? `Final or in-progress: ${score}. ${performances.length} players on the board.`
+          : `${performances.length} players on the board — synced from TheSportsDB.`,
     ),
     cover: SPORT_ACCENT[sport],
-    performances,
-    roster,
+    performances: scoreOnly && performances.length === 0 ? [] : performances,
+    roster: scoreOnly && performances.length === 0 ? {} : roster,
     live: true,
   };
 }

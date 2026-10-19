@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { useIntervalWhen } from "@/hooks/use-interval-when";
 import { useTabVisible } from "@/hooks/use-tab-visible";
 import { POLL, detailPollIntervalMs, listPollIntervalMs } from "@/lib/poll-policy";
@@ -19,6 +19,8 @@ export function useLiveEvents(
   );
   const [syncedAt, setSyncedAt] = useState<string | null>(null);
   const hasSeed = Boolean(initialEvents && initialEvents.length > 0);
+  const eventsRef = useRef(events);
+  eventsRef.current = events;
 
   const load = useCallback(
     async (refresh: boolean) => {
@@ -27,8 +29,9 @@ export function useLiveEvents(
       if (sport) params.set("sport", sport);
       if (leagueSlug) params.set("league", leagueSlug);
       params.set("limit", sport ? "32" : "48");
+      const hasLive = eventsRef.current.some((e) => e.status === "live");
       if (refresh) params.set("sync", "1");
-      else params.set("live", "1");
+      else if (hasLive) params.set("live", "1");
       const res = await fetch(`/api/events?${params}`);
       if (!res.ok) return;
       const data = (await res.json()) as {
@@ -58,11 +61,15 @@ export function useLiveEvent(slug: string, seed?: MatchEvent | null) {
   const [event, setEvent] = useState<MatchEvent | null>(seed ?? null);
   const [loading, setLoading] = useState(!seed);
   const [syncedAt, setSyncedAt] = useState<string | null>(null);
+  const currentRef = useRef<MatchEvent | null>(seed ?? null);
+  currentRef.current = event ?? seed ?? null;
 
   const load = useCallback(
     async (sync: boolean) => {
-      const q = sync ? "?sync=1" : "?live=1";
-      const res = await fetch(`/api/events/${encodeURIComponent(slug)}${q}`);
+      const current = currentRef.current;
+      const liveQ =
+        sync || current?.status === "live" ? (sync ? "?sync=1" : "?live=1") : "";
+      const res = await fetch(`/api/events/${encodeURIComponent(slug)}${liveQ}`);
       if (res.status === 404) {
         setEvent(null);
         setLoading(false);

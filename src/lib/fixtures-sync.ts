@@ -30,9 +30,24 @@ import {
 } from "@/lib/leagues";
 import { enrichTeamSearchHit } from "@/lib/team-league";
 import { matchSearchBoost } from "@/lib/team-popularity";
+import {
+  getDegradedMode,
+  markSupabaseUnavailable,
+  markTsdbUnavailable,
+  UPSTREAM_TIMEOUT_MS,
+  withUpstreamTimeout,
+} from "@/lib/service-degraded";
+import { applyDegradedToMatchEvent } from "@/lib/match-event-display";
 import type { MatchEvent } from "./types";
 
 const LIVE_SYNC_MS = 3 * 60 * 1000;
+
+function fixtureRowToMatchEvent(row: LiveFixtureRow): MatchEvent | null {
+  const degraded = getDegradedMode();
+  const event = fixtureToMatchEvent(row, { scoreOnly: degraded.hideLineups });
+  if (!event) return null;
+  return applyDegradedToMatchEvent(event, degraded);
+}
 const ENRICH_PER_LEAGUE = 6;
 const EVENTS_FETCH_PER_LEAGUE = 35;
 
@@ -197,23 +212,53 @@ export async function syncSportsDbFixtures(force = false) {
   const now = new Date();
   const days = dateRange(now, 7, 14);
 
-  const leagueBuckets = await Promise.all(
-    SIDELINE_LEAGUES.map(async (league) => {
-      const [next, past, last] = await Promise.all([
-        fetchNextLeagueEvents(league.tsdbId, EVENTS_FETCH_PER_LEAGUE),
-        fetchPastLeagueEvents(league.tsdbId, EVENTS_FETCH_PER_LEAGUE),
-        fetchLastLeagueEvents(league.tsdbId, 20),
-      ]);
-      return { league, events: [...next, ...past, ...last] };
-    }),
-  );
+  let leagueBuckets: {
+    league: LeagueConfig;
+    events: TsdbEvent[];
+  }[];
+  let dayBuckets: TsdbEvent[][];
+  try {
+    leagueBuckets = await Promise.all(
+      SIDELINE_LEAGUES.map(async (league) => {
+        const [next, past, last] = await Promise.all([
+          withUpstreamTimeout(
+            fetchNextLeagueEvents(league.tsdbId, EVENTS_FETCH_PER_LEAGUE),
+            UPSTREAM_TIMEOUT_MS,
+            markTsdbUnavailable,
+          ),
+          withUpstreamTimeout(
+            fetchPastLeagueEvents(league.tsdbId, EVENTS_FETCH_PER_LEAGUE),
+            UPSTREAM_TIMEOUT_MS,
+            markTsdbUnavailable,
+          ),
+          withUpstreamTimeout(
+            fetchLastLeagueEvents(league.tsdbId, 20),
+            UPSTREAM_TIMEOUT_MS,
+            markTsdbUnavailable,
+          ),
+        ]);
+        return { league, events: [...next, ...past, ...last] };
+      }),
+    );
 
-  const dayBuckets = await Promise.all(
-    days.flatMap((d) => [
-      fetchEventsOnDay(d, "Soccer"),
-      fetchEventsOnDay(d, "Basketball"),
-    ]),
-  );
+    dayBuckets = await Promise.all(
+      days.flatMap((d) => [
+        withUpstreamTimeout(
+          fetchEventsOnDay(d, "Soccer"),
+          UPSTREAM_TIMEOUT_MS,
+          markTsdbUnavailable,
+        ),
+        withUpstreamTimeout(
+          fetchEventsOnDay(d, "Basketball"),
+          UPSTREAM_TIMEOUT_MS,
+          markTsdbUnavailable,
+        ),
+      ]),
+    );
+  } catch {
+    markTsdbUnavailable();
+    return { ok: false as const, error: "TheSportsDB unavailable — serving cache." };
+  }
 
   const byId = new Map<string, ReturnType<typeof rowFromEvent>>();
 
@@ -344,6 +389,7 @@ async function fetchFixtureRows(
     if (!res.error && res.data) {
       return res.data as Record<string, unknown>[];
     }
+    if (res.error) markSupabaseUnavailable();
   }
   return [];
 }
@@ -358,6 +404,7 @@ export async function listFixtures(
 
   const leagueFilter = leagueSlug ? getLeagueBySlug(leagueSlug) : undefined;
 
+  const degraded = getDegradedMode();
   const data = await fetchFixtureRows((select) =>
     admin
       .from("sportsdb_fixtures")
@@ -372,7 +419,7 @@ export async function listFixtures(
   return data
     .map((row) => hydrateFixtureRow(row))
     .filter((row) => isLiveLeagueRow(row))
-    .filter((row) => rowHasLineup(row))
+    .filter((row) => degraded.hideLineups || rowHasLineup(row))
     .filter((row) => {
       if (!leagueFilter) return true;
       return (
@@ -390,7 +437,7 @@ export async function listLiveMatchEvents(
 ): Promise<MatchEvent[]> {
   const rows = await listFixtures(sports, limit, leagueSlug);
   return rows
-    .map((r) => fixtureToMatchEvent(r))
+    .map((r) => fixtureRowToMatchEvent(r))
     .filter((e): e is MatchEvent => Boolean(e));
 }
 
@@ -434,11 +481,11 @@ export async function getLiveMatchBySlug(slug: string) {
     const batch = await listFixtures(["nba", "soccer"], 120);
     const row = batch.find((r) => r.slug === slug);
     if (!row) return null;
-    return fixtureToMatchEvent(row);
+    return fixtureRowToMatchEvent(row);
   }
   const row = hydrateFixtureRow(rowData as Record<string, unknown>);
   if (!isLiveLeagueRow(row)) return null;
-  return fixtureToMatchEvent(row);
+  return fixtureRowToMatchEvent(row);
 }
 
 export type SearchPlayerHit = {
@@ -523,8 +570,10 @@ export async function searchFixtures(query: string, limit = 20) {
   const players: SearchPlayerHit[] = [];
   const seenPlayer = new Set<string>();
 
+  const degraded = getDegradedMode();
+
   for (const row of rows) {
-    const event = fixtureToMatchEvent(row);
+    const event = fixtureRowToMatchEvent(row);
     if (!event) continue;
 
     const titleHit =
@@ -536,6 +585,8 @@ export async function searchFixtures(query: string, limit = 20) {
     if (titleHit && matches.length < limit) {
       matches.push(event);
     }
+
+    if (degraded.hideLineups) continue;
 
     const lineup =
       row.lineup ??
@@ -564,7 +615,7 @@ export async function searchFixtures(query: string, limit = 20) {
   if (matches.length < limit) {
     for (const row of rows) {
       if (matches.some((m) => m.id === row.id_event)) continue;
-      const event = fixtureToMatchEvent(row);
+      const event = fixtureRowToMatchEvent(row);
       if (event && matches.length < limit) matches.push(event);
     }
   }
@@ -680,7 +731,7 @@ export async function listFixturesForTeam(
     .slice(0, limit);
 
   return rows
-    .map((r) => fixtureToMatchEvent(r))
+    .map((r) => fixtureRowToMatchEvent(r))
     .filter((e): e is MatchEvent => Boolean(e))
     .sort((a, b) => {
       const sr = statusRank(a.status) - statusRank(b.status);
@@ -690,7 +741,20 @@ export async function listFixturesForTeam(
 }
 
 export async function refreshFixtureFromTsdb(idEvent: string): Promise<MatchEvent | null> {
-  const ev = await fetchEventById(idEvent);
+  if (getDegradedMode().cacheOnly) {
+    return getLiveMatchById(idEvent);
+  }
+  let ev: TsdbEvent | null = null;
+  try {
+    ev = await withUpstreamTimeout(
+      fetchEventById(idEvent),
+      UPSTREAM_TIMEOUT_MS,
+      markTsdbUnavailable,
+    );
+  } catch {
+    markTsdbUnavailable();
+    return getLiveMatchById(idEvent);
+  }
   const admin = createServiceClient();
 
   if (ev && admin) {
@@ -730,6 +794,7 @@ export async function refreshFixtureFromTsdb(idEvent: string): Promise<MatchEven
 }
 
 export async function refreshLiveFixturesFromTsdb(limit = 10) {
+  if (getDegradedMode().cacheOnly) return;
   const admin = createServiceClient();
   if (!admin) return;
 
@@ -772,7 +837,7 @@ export async function getLiveMatchById(idEvent: string) {
       .eq("id_event", idEvent)
       .maybeSingle();
     if (!res.error && res.data) {
-      return fixtureToMatchEvent(
+      return fixtureRowToMatchEvent(
         hydrateFixtureRow(res.data as unknown as Record<string, unknown>),
       );
     }

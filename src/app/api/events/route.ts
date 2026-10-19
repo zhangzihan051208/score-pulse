@@ -4,6 +4,7 @@ import {
   syncSportsDbFixtures,
 } from "@/lib/fixtures-sync";
 import { cachedLiveMatchEvents } from "@/lib/live-data-cache";
+import { getDegradedMode } from "@/lib/service-degraded";
 import { maybeRefreshLiveFixturesFromTsdb } from "@/lib/sync-throttle";
 import { NextResponse } from "next/server";
 
@@ -14,15 +15,18 @@ export async function GET(request: Request) {
   const refresh = searchParams.get("refresh") === "1";
   const sync = searchParams.get("sync") === "1";
   const liveTick = searchParams.get("live") === "1";
+  const degraded = getDegradedMode();
 
   let liveRefreshed = false;
-  if (sync || refresh) {
-    await syncSportsDbFixtures(refresh || sync);
-  } else if (liveTick) {
-    liveRefreshed = await maybeRefreshLiveFixturesFromTsdb(
-      refreshLiveFixturesFromTsdb,
-      8,
-    );
+  if (!degraded.cacheOnly) {
+    if (sync || refresh) {
+      await syncSportsDbFixtures(refresh || sync);
+    } else if (liveTick) {
+      liveRefreshed = await maybeRefreshLiveFixturesFromTsdb(
+        refreshLiveFixturesFromTsdb,
+        8,
+      );
+    }
   }
 
   const sports =
@@ -44,6 +48,7 @@ export async function GET(request: Request) {
     {
       events,
       syncedAt: new Date().toISOString(),
+      degraded,
     },
     {
       headers: {
