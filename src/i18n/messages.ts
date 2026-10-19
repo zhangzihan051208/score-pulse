@@ -20,6 +20,7 @@ type Dict = {
     players: string;
     clubs: string;
     clubPage: string;
+    popularTag: string;
     empty: string;
   };
   team: {
@@ -207,6 +208,7 @@ export const messages: Record<Locale, Dict> = {
       players: "Players",
       clubs: "Clubs",
       clubPage: "Team page",
+      popularTag: "Hot",
       empty: "No matches or players for that query. Try another spelling or sync fixtures.",
     },
     team: {
@@ -476,6 +478,7 @@ export const messages: Record<Locale, Dict> = {
       players: "球员",
       clubs: "球队",
       clubPage: "球队主页",
+      popularTag: "热门",
       empty: "没有结果，换个关键词或先同步赛程。",
     },
     team: {
@@ -740,6 +743,7 @@ export const messages: Record<Locale, Dict> = {
       players: "Jugadores",
       clubs: "Clubes",
       clubPage: "Ficha del club",
+      popularTag: "Top",
       empty: "Sin resultados. Prueba otra búsqueda o sincroniza.",
     },
     team: {
@@ -1005,6 +1009,7 @@ export const messages: Record<Locale, Dict> = {
       players: "選手",
       clubs: "クラブ",
       clubPage: "チームページ",
+      popularTag: "人気",
       empty: "該当なし。別のキーワードか同期を試してください。",
     },
     team: {

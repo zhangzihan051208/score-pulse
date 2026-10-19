@@ -16,6 +16,7 @@ type TeamHit = {
   name: string;
   league?: string;
   sport: "nba" | "soccer";
+  hotWeight?: number;
 };
 
 type PlayerHit = {
@@ -119,8 +120,15 @@ export function SearchPageInner() {
                   href={`/teams/${team.id}?sport=${team.sport}&name=${encodeURIComponent(team.name)}`}
                   className="block rounded-xl border bg-card px-4 py-3 hover:bg-muted/40"
                 >
-                  <p className="font-semibold">{team.name}</p>
-                  <p className="text-xs text-muted-foreground">
+                  <div className="flex items-start justify-between gap-2">
+                    <p className="font-semibold">{team.name}</p>
+                    {(team.hotWeight ?? 0) >= 85 && (
+                      <span className="shrink-0 rounded-md bg-primary/15 px-1.5 py-0.5 text-[10px] font-semibold text-primary">
+                        {t.search.popularTag}
+                      </span>
+                    )}
+                  </div>
+                  <p className="mt-1 text-xs text-muted-foreground">
                     {team.league ?? t.sports[team.sport]} · {t.search.clubPage}
                   </p>
                 </Link>

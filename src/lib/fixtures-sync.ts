@@ -27,6 +27,7 @@ import {
   tsdbEventBelongsToLeague,
   type LeagueConfig,
 } from "@/lib/leagues";
+import { matchSearchBoost } from "@/lib/team-popularity";
 import type { MatchEvent } from "./types";
 
 const LIVE_SYNC_MS = 3 * 60 * 1000;
@@ -565,6 +566,13 @@ export async function searchFixtures(query: string, limit = 20) {
       if (event && matches.length < limit) matches.push(event);
     }
   }
+
+  matches.sort((a, b) => {
+    const boostB = matchSearchBoost(q, b.sport as "nba" | "soccer", b.homeTeamName, b.awayTeamName);
+    const boostA = matchSearchBoost(q, a.sport as "nba" | "soccer", a.homeTeamName, a.awayTeamName);
+    if (boostB !== boostA) return boostB - boostA;
+    return b.startAt.localeCompare(a.startAt);
+  });
 
   return { matches: matches.slice(0, limit), players: players.slice(0, limit) };
 }
