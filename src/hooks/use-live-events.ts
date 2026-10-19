@@ -3,7 +3,8 @@
 import { useCallback, useEffect, useState } from "react";
 import type { MatchEvent } from "@/lib/types";
 
-const POLL_MS = 90_000;
+const POLL_MS = 45_000;
+const POLL_LIVE_MS = 25_000;
 
 export function useLiveEvents(
   sport?: "nba" | "soccer",
@@ -21,6 +22,7 @@ export function useLiveEvents(
     if (leagueSlug) params.set("league", leagueSlug);
     params.set("limit", sport ? "32" : "48");
     if (refresh) params.set("sync", "1");
+    else params.set("live", "1");
     const res = await fetch(`/api/events?${params}`);
     if (!res.ok) return;
     const data = (await res.json()) as {
@@ -38,7 +40,7 @@ export function useLiveEvents(
       setLoading(false);
       return;
     }
-    load(true);
+    load(false);
     const id = setInterval(() => load(false), POLL_MS);
     return () => clearInterval(id);
   }, [enabled, load]);
@@ -53,7 +55,7 @@ export function useLiveEvent(slug: string) {
 
   const load = useCallback(
     async (sync: boolean) => {
-      const q = sync ? "?sync=1" : "";
+      const q = sync ? "?sync=1" : "?live=1";
       const res = await fetch(`/api/events/${encodeURIComponent(slug)}${q}`);
       if (res.status === 404) {
         setEvent(null);
@@ -74,7 +76,7 @@ export function useLiveEvent(slug: string) {
 
   useEffect(() => {
     load(true);
-    const id = setInterval(() => load(false), POLL_MS);
+    const id = setInterval(() => load(false), POLL_LIVE_MS);
     return () => clearInterval(id);
   }, [load]);
 

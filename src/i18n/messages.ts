@@ -18,7 +18,20 @@ type Dict = {
     hint: string;
     matches: string;
     players: string;
+    clubs: string;
+    clubPage: string;
     empty: string;
+  };
+  team: {
+    notFound: string;
+    roster: string;
+    rosterEmpty: string;
+    recent: string;
+    upcoming: string;
+    honors: string;
+    honorsEmpty: string;
+    since: string;
+    openMatch: string;
   };
   teams: {
     title: string;
@@ -177,7 +190,20 @@ export const messages: Record<Locale, Dict> = {
       hint: "At least 2 characters. Searches synced NBA and football fixtures.",
       matches: "Matches",
       players: "Players",
+      clubs: "Clubs",
+      clubPage: "Team page",
       empty: "No matches or players for that query. Try another spelling or sync fixtures.",
+    },
+    team: {
+      notFound: "We could not load this club. Try search or sync fixtures.",
+      roster: "Squad",
+      rosterEmpty: "Roster not available from the API for this club yet.",
+      recent: "Recent matches",
+      upcoming: "Upcoming",
+      honors: "Honours & trophies",
+      honorsEmpty: "No honours returned for this club (API tier may omit trophies).",
+      since: "Since",
+      openMatch: "Open match thread",
     },
     teams: {
       title: "My teams",
@@ -418,7 +444,20 @@ export const messages: Record<Locale, Dict> = {
       hint: "至少 2 个字。搜索已同步的 NBA 与足球赛程。",
       matches: "比赛",
       players: "球员",
+      clubs: "球队",
+      clubPage: "球队主页",
       empty: "没有结果，换个关键词或先同步赛程。",
+    },
+    team: {
+      notFound: "无法加载该球队，请搜索或同步赛程。",
+      roster: "阵容",
+      rosterEmpty: "API 暂未返回该队阵容。",
+      recent: "最近比赛",
+      upcoming: "即将开赛",
+      honors: "历史荣誉",
+      honorsEmpty: "暂无荣誉数据（可能与 API 套餐有关）。",
+      since: "成立于",
+      openMatch: "进入比赛帖",
     },
     teams: {
       title: "我的主队",
@@ -654,7 +693,20 @@ export const messages: Record<Locale, Dict> = {
       hint: "Mínimo 2 caracteres. NBA y fútbol sincronizados.",
       matches: "Partidos",
       players: "Jugadores",
+      clubs: "Clubes",
+      clubPage: "Ficha del club",
       empty: "Sin resultados. Prueba otra búsqueda o sincroniza.",
+    },
+    team: {
+      notFound: "No pudimos cargar este club.",
+      roster: "Plantilla",
+      rosterEmpty: "Plantilla no disponible en la API.",
+      recent: "Partidos recientes",
+      upcoming: "Próximos",
+      honors: "Palmarés",
+      honorsEmpty: "Sin trofeos en la API para este club.",
+      since: "Desde",
+      openMatch: "Ver hilo del partido",
     },
     teams: {
       title: "Mis equipos",
@@ -891,7 +943,20 @@ export const messages: Record<Locale, Dict> = {
       hint: "2文字以上。同期済み NBA・サッカーが対象。",
       matches: "試合",
       players: "選手",
+      clubs: "クラブ",
+      clubPage: "チームページ",
       empty: "該当なし。別のキーワードか同期を試してください。",
+    },
+    team: {
+      notFound: "このクラブを読み込めませんでした。",
+      roster: "メンバー",
+      rosterEmpty: "API からメンバー情報がありません。",
+      recent: "最近の試合",
+      upcoming: "これから",
+      honors: "タイトル・荣誉",
+      honorsEmpty: "荣誉データがありません。",
+      since: "創設",
+      openMatch: "試合スレッドへ",
     },
     teams: {
       title: "マイチーム",

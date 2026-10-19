@@ -67,6 +67,10 @@ export type MatchEvent = {
   awayTeamId?: string;
   homeTeamName?: string;
   awayTeamName?: string;
+  homeScore?: number | null;
+  awayScore?: number | null;
+  /** Raw status from TheSportsDB e.g. FT, NS, 1H */
+  statusDetail?: string;
   title: Localized;
   subtitle: Localized;
   venue: Localized;

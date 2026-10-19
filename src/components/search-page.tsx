@@ -2,12 +2,20 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
+import { MatchScoreboard } from "@/components/match-scoreboard";
 import { StatusPill } from "@/components/status-pill";
 import { Input } from "@/components/ui/input";
 import { useI18n } from "@/i18n/use-i18n";
 import { leagueLabel } from "@/i18n/league-labels";
 import { tx } from "@/lib/copy";
 import type { MatchEvent } from "@/lib/types";
+
+type TeamHit = {
+  id: string;
+  name: string;
+  league?: string;
+  sport: "nba" | "soccer";
+};
 
 type PlayerHit = {
   athleteId: string;
@@ -24,6 +32,7 @@ export function SearchPageInner() {
   const [q, setQ] = useState("");
   const [debounced, setDebounced] = useState("");
   const [matches, setMatches] = useState<MatchEvent[]>([]);
+  const [teams, setTeams] = useState<TeamHit[]>([]);
   const [players, setPlayers] = useState<PlayerHit[]>([]);
   const [loading, setLoading] = useState(false);
 
@@ -35,6 +44,7 @@ export function SearchPageInner() {
   const runSearch = useCallback(async (term: string) => {
     if (term.length < 2) {
       setMatches([]);
+      setTeams([]);
       setPlayers([]);
       return;
     }
@@ -45,9 +55,11 @@ export function SearchPageInner() {
       if (!res.ok) return;
       const data = (await res.json()) as {
         matches?: MatchEvent[];
+        teams?: TeamHit[];
         players?: PlayerHit[];
       };
       setMatches(data.matches ?? []);
+      setTeams(data.teams ?? []);
       setPlayers(data.players ?? []);
     } finally {
       setLoading(false);
@@ -81,8 +93,35 @@ export function SearchPageInner() {
         <p className="mt-6 text-sm text-muted-foreground">{t.auth.loading}</p>
       )}
 
-      {!loading && debounced.length >= 2 && matches.length === 0 && players.length === 0 && (
+      {!loading &&
+        debounced.length >= 2 &&
+        matches.length === 0 &&
+        teams.length === 0 &&
+        players.length === 0 && (
         <p className="mt-8 text-sm text-muted-foreground">{t.search.empty}</p>
+      )}
+
+      {teams.length > 0 && (
+        <section className="mt-8">
+          <h2 className="text-xs font-semibold tracking-widest text-muted-foreground uppercase">
+            {t.search.clubs}
+          </h2>
+          <ul className="mt-3 grid gap-2 sm:grid-cols-2">
+            {teams.map((team) => (
+              <li key={team.id}>
+                <Link
+                  href={`/teams/${team.id}?sport=${team.sport}&name=${encodeURIComponent(team.name)}`}
+                  className="block rounded-xl border bg-card px-4 py-3 hover:bg-muted/40"
+                >
+                  <p className="font-semibold">{team.name}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {team.league ?? t.sports[team.sport]} · {t.search.clubPage}
+                  </p>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </section>
       )}
 
       {matches.length > 0 && (
@@ -97,11 +136,15 @@ export function SearchPageInner() {
                   href={`/events/${event.slug}`}
                   className="block rounded-xl border bg-card px-4 py-3 hover:bg-muted/40"
                 >
-                  <div className="flex flex-wrap items-center gap-2">
+                  <div className="mb-2 flex flex-wrap items-center gap-2">
                     <StatusPill status={event.status} />
-                    <span className="font-semibold">{tx(event.title, locale)}</span>
                   </div>
-                  <p className="mt-1 text-xs text-muted-foreground">
+                  {event.live && event.homeTeamName ? (
+                    <MatchScoreboard event={event} size="sm" />
+                  ) : (
+                    <span className="font-semibold">{tx(event.title, locale)}</span>
+                  )}
+                  <p className="mt-2 text-xs text-muted-foreground">
                     {event.leagueSlug
                       ? leagueLabel(locale, event.leagueSlug)
                       : tx(event.subtitle, locale)}{" "}

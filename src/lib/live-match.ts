@@ -148,6 +148,9 @@ export function fixtureToMatchEvent(row: LiveFixtureRow): MatchEvent | null {
     awayTeamId,
     homeTeamName: row.str_home_team ?? undefined,
     awayTeamName: row.str_away_team ?? undefined,
+    homeScore: row.int_home_score,
+    awayScore: row.int_away_score,
+    statusDetail: row.str_status ?? undefined,
     title: S(title),
     subtitle: S(
       row.str_league ?? league?.label ?? (sport === "nba" ? "NBA" : "Football"),

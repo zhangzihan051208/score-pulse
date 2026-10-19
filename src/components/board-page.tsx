@@ -16,6 +16,7 @@ import { resolveAthlete } from "@/lib/event-resolve";
 import { BOARD_POSITIONS, dimensionIds } from "@/lib/position-ratings";
 import { SPORT_ACCENT } from "@/lib/sports";
 import { LeagueTabs } from "@/components/league-tabs";
+import { MatchScoreboard } from "@/components/match-scoreboard";
 import { leagueLabel } from "@/i18n/league-labels";
 import { getLeagueBySlug } from "@/lib/leagues";
 import type { Sport } from "@/lib/types";
@@ -78,15 +79,21 @@ export function BoardPage({
                   href={`/events/${event.slug}`}
                   className="block border-b px-4 py-3 hover:bg-muted/40"
                 >
-                  <div className="flex flex-wrap items-center gap-2">
+                  <div className="mb-2 flex flex-wrap items-center gap-2">
                     <StatusPill status={event.status} />
-                    <h3 className="font-semibold">{tx(event.title, locale)}</h3>
+                    <span className="text-xs text-muted-foreground">
+                      {formatWhen(event.startAt, locale)}
+                    </span>
                   </div>
-                  <p className="mt-1 text-sm text-muted-foreground">
+                  {event.live ? (
+                    <MatchScoreboard event={event} size="sm" />
+                  ) : (
+                    <h3 className="font-semibold">{tx(event.title, locale)}</h3>
+                  )}
+                  <p className="mt-2 text-sm text-muted-foreground">
                     {event.leagueSlug
                       ? leagueLabel(locale, event.leagueSlug)
-                      : tx(event.subtitle, locale)}{" "}
-                    · {formatWhen(event.startAt, locale)}
+                      : tx(event.subtitle, locale)}
                     {event.live
                       ? ` · ${event.performances.length} ${t.home.players}`
                       : ""}

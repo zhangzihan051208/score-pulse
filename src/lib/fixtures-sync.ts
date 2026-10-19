@@ -14,6 +14,7 @@ import {
   fetchNextLeagueEvents,
   fetchPastLeagueEvents,
   fetchTeamRoster,
+  mapTsdbStatus,
   type TsdbEvent,
   type TsdbLineupPlayer,
 } from "@/lib/thesportsdb";
@@ -664,6 +665,75 @@ export async function listFixturesForTeam(
       if (sr !== 0) return sr;
       return b.startAt.localeCompare(a.startAt);
     });
+}
+
+export async function refreshFixtureFromTsdb(idEvent: string): Promise<MatchEvent | null> {
+  const ev = await fetchEventById(idEvent);
+  const admin = createServiceClient();
+
+  if (ev && admin) {
+    const existing = await admin
+      .from("sportsdb_fixtures")
+      .select("raw")
+      .eq("id_event", idEvent)
+      .maybeSingle();
+    const prevRaw = (existing.data?.raw as Record<string, unknown> | null) ?? {};
+    const mergedRaw = {
+      ...prevRaw,
+      ...(ev as unknown as Record<string, unknown>),
+      idHomeTeam: ev.idHomeTeam ?? prevRaw.idHomeTeam,
+      idAwayTeam: ev.idAwayTeam ?? prevRaw.idAwayTeam,
+    };
+    await admin
+      .from("sportsdb_fixtures")
+      .update({
+        int_home_score:
+          ev.intHomeScore != null && ev.intHomeScore !== ""
+            ? Number(ev.intHomeScore)
+            : null,
+        int_away_score:
+          ev.intAwayScore != null && ev.intAwayScore !== ""
+            ? Number(ev.intAwayScore)
+            : null,
+        str_status: ev.strStatus ?? null,
+        str_home_team: ev.strHomeTeam ?? null,
+        str_away_team: ev.strAwayTeam ?? null,
+        synced_at: new Date().toISOString(),
+        raw: mergedRaw,
+      })
+      .eq("id_event", idEvent);
+  }
+
+  return getLiveMatchById(idEvent);
+}
+
+export async function refreshLiveFixturesFromTsdb(limit = 10) {
+  const admin = createServiceClient();
+  if (!admin) return;
+
+  const data = await fetchFixtureRows((select) =>
+    admin
+      .from("sportsdb_fixtures")
+      .select(select)
+      .in("sport", ["nba", "soccer"])
+      .order("date_event", { ascending: false })
+      .limit(80)
+      .then((r) => ({ data: r.data, error: r.error })),
+  );
+
+  const liveIds = data
+    .map((row) => hydrateFixtureRow(row))
+    .filter((row) => mapTsdbStatus(row.str_status ?? undefined) === "live")
+    .slice(0, limit)
+    .map((r) => r.id_event);
+
+  for (const id of liveIds) {
+    try {
+      await refreshFixtureFromTsdb(id);
+    } catch {
+      /* one failure */
+    }
+  }
 }
 
 export async function getLiveMatchById(idEvent: string) {

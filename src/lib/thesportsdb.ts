@@ -139,6 +139,70 @@ export async function searchTeamsByName(query: string) {
   return data?.teams ?? [];
 }
 
+export type TsdbTeam = {
+  idTeam: string;
+  strTeam: string;
+  strLeague?: string;
+  strTeamBadge?: string;
+  strStadium?: string;
+  strDescriptionEN?: string;
+  strSport?: string;
+  intFormed?: string;
+  strCountry?: string;
+};
+
+type TeamLookupResponse = { teams: TsdbTeam[] | null };
+
+export async function fetchTeamById(idTeam: string) {
+  const data = await tsdb<TeamLookupResponse>(
+    `lookupteam.php?id=${encodeURIComponent(idTeam)}`,
+    { optional: true },
+  );
+  return data?.teams?.[0] ?? null;
+}
+
+type TeamEventsLastResponse = {
+  results?: TsdbEvent[] | null;
+  events?: TsdbEvent[] | null;
+};
+
+export async function fetchTeamEventsLast(idTeam: string, limit = 8) {
+  const data = await tsdb<TeamEventsLastResponse>(
+    `eventslast.php?id=${encodeURIComponent(idTeam)}`,
+    { optional: true },
+  );
+  return (data?.results ?? data?.events ?? []).slice(0, limit);
+}
+
+export async function fetchTeamEventsNext(idTeam: string, limit = 8) {
+  const data = await tsdb<EventsResponse>(
+    `eventsnext.php?id=${encodeURIComponent(idTeam)}`,
+    { optional: true },
+  );
+  return (data?.events ?? []).slice(0, limit);
+}
+
+type TrophiesResponse = {
+  trophies?: {
+    strTrophy?: string;
+    strSeason?: string;
+    strLeague?: string;
+  }[] | null;
+};
+
+export async function fetchTeamHonours(idTeam: string) {
+  const data = await tsdb<TrophiesResponse>(
+    `lookup_all_honours.php?id=${encodeURIComponent(idTeam)}`,
+    { optional: true },
+  );
+  if (data?.trophies?.length) return data.trophies;
+  const alt = await tsdb<TrophiesResponse>(
+    `lookuphonours.php?id=${encodeURIComponent(idTeam)}`,
+    { optional: true },
+  );
+  return alt?.trophies ?? [];
+}
+
 export async function fetchTeamRoster(idTeam: string) {
   const data = await tsdb<PlayersResponse>(
     `lookup_all_players.php?id=${encodeURIComponent(idTeam)}`,

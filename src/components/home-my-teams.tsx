@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { MatchScoreboard } from "@/components/match-scoreboard";
 import { StatusPill } from "@/components/status-pill";
 import { useFavoriteTeams } from "@/hooks/use-favorite-teams";
 import { useI18n } from "@/i18n/use-i18n";

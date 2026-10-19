@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { PlayerAvatar } from "@/components/player-avatar";
 import { DimensionChips } from "@/components/rating-guide-panel";
+import { MatchScoreboard } from "@/components/match-scoreboard";
 import { Overall } from "@/components/score-rows";
 import { StatusPill } from "@/components/status-pill";
 import { useCommunity } from "@/hooks/use-community";
@@ -31,8 +32,10 @@ export function EventThread({ event }: { event: MatchEvent }) {
             <StatusPill status={event.status} />
             <span className="text-sm text-white/80">{tx(event.subtitle, locale)}</span>
           </div>
-          <h1 className="mt-2 text-3xl font-bold">{tx(event.title, locale)}</h1>
-          <p className="mt-2 text-sm text-white/85">{tx(event.summary, locale)}</p>
+          <div className="mt-4 rounded-xl bg-black/25 px-4 py-4 backdrop-blur-sm">
+            <MatchScoreboard event={event} size="lg" inverted />
+          </div>
+          <p className="mt-3 text-sm text-white/85">{tx(event.summary, locale)}</p>
           <p className="mt-2 text-xs text-white/70">
             {tx(event.venue, locale)} · {formatWhen(event.startAt, locale)}
           </p>

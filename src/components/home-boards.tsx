@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useMemo } from "react";
 import { HomeMyTeams } from "@/components/home-my-teams";
+import { MatchScoreboard } from "@/components/match-scoreboard";
 import { StatusPill } from "@/components/status-pill";
 import { useFavoriteTeams } from "@/hooks/use-favorite-teams";
 import { useLiveEvents } from "@/hooks/use-live-events";
@@ -217,8 +218,17 @@ function FeaturedEventRow({
     >
       <div className="flex items-center gap-2">
         <StatusPill status={event.status} />
-        <span className="font-medium">{tx(event.title, locale as "en")}</span>
+        <span className="text-xs text-muted-foreground">
+          {formatWhen(event.startAt, locale as "en")}
+        </span>
       </div>
+      {event.live ? (
+        <div className="mt-2">
+          <MatchScoreboard event={event} size="sm" />
+        </div>
+      ) : (
+        <p className="mt-1 font-medium">{tx(event.title, locale as "en")}</p>
+      )}
       <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">
         {event.leagueSlug
           ? leagueLabel(locale as "en", event.leagueSlug)
