@@ -1,8 +1,4 @@
-import {
-  getLiveMatchBySlug,
-  refreshFixtureFromTsdb,
-  syncSportsDbFixtures,
-} from "@/lib/fixtures-sync";
+import { getLiveMatchBySlug, refreshFixtureFromTsdb } from "@/lib/fixtures-sync";
 import { getDegradedMode } from "@/lib/service-degraded";
 import { maybeRefreshFixtureFromTsdb } from "@/lib/sync-throttle";
 import { NextResponse } from "next/server";
@@ -15,10 +11,6 @@ export async function GET(
   const { searchParams } = new URL(request.url);
   const liveRefresh = searchParams.get("live") === "1";
   const degraded = getDegradedMode();
-  if (!degraded.cacheOnly && searchParams.get("sync") === "1") {
-    await syncSportsDbFixtures(true);
-  }
-
   let event = await getLiveMatchBySlug(slug);
   if (!event && /^\d+$/.test(slug)) {
     const { getLiveMatchById } = await import("@/lib/fixtures-sync");

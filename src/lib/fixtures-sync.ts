@@ -6,9 +6,7 @@ import {
   type StoredLineupPlayer,
 } from "@/lib/live-match";
 import {
-  dateRange,
   fetchEventById,
-  fetchEventsOnDay,
   fetchLastLeagueEvents,
   fetchLineup,
   fetchNextLeagueEvents,
@@ -42,6 +40,12 @@ import {
 import type { MatchEvent } from "./types";
 
 const LIVE_SYNC_MS = 3 * 60 * 1000;
+const ENRICH_SYNC_MS = 4 * 60 * 1000;
+const ENRICH_CONCURRENCY = 5;
+/** Upcoming fixtures within this many days may get roster enrichment. */
+const ENRICH_UPCOMING_DAYS = 3;
+/** Recently ended fixtures within this many days may still get rosters. */
+const ENRICH_ENDED_DAYS = 1;
 
 function fixtureRowToMatchEvent(row: LiveFixtureRow): MatchEvent | null {
   const hasLineup = rowHasLineup(row);
@@ -165,6 +169,94 @@ function mergePlayers(
   return [...byId.values()];
 }
 
+function parseFixtureDate(date: string | null | undefined): number | null {
+  if (!date) return null;
+  return new Date(`${date}T12:00:00Z`).getTime();
+}
+
+/** Whether this row should receive a background roster fetch. */
+export function shouldEnrichFixtureRow(row: LiveFixtureRow): boolean {
+  if (rowHasLineup(row)) return false;
+  const status = mapTsdbStatus(row.str_status ?? undefined);
+  if (status === "live") return true;
+  const t = parseFixtureDate(row.date_event);
+  if (t == null) return false;
+  const now = Date.now();
+  const dayMs = 86_400_000;
+  if (status === "upcoming") {
+    return t >= now - dayMs && t <= now + ENRICH_UPCOMING_DAYS * dayMs;
+  }
+  if (status === "ended") {
+    return t >= now - ENRICH_ENDED_DAYS * dayMs && t <= now + dayMs;
+  }
+  return false;
+}
+
+async function mapWithConcurrency<T, R>(
+  items: T[],
+  concurrency: number,
+  fn: (item: T) => Promise<R>,
+): Promise<R[]> {
+  if (items.length === 0) return [];
+  const results: R[] = new Array(items.length);
+  let index = 0;
+  const workers = Array.from(
+    { length: Math.min(concurrency, items.length) },
+    async () => {
+      while (index < items.length) {
+        const i = index++;
+        results[i] = await fn(items[i]);
+      }
+    },
+  );
+  await Promise.all(workers);
+  return results;
+}
+
+async function fetchLeagueEventBuckets(): Promise<
+  { league: LeagueConfig; events: TsdbEvent[] }[]
+> {
+  return Promise.all(
+    SIDELINE_LEAGUES.map(async (league) => {
+      const [next, past, last] = await Promise.all([
+        withUpstreamTimeout(
+          fetchNextLeagueEvents(league.tsdbId, EVENTS_FETCH_PER_LEAGUE),
+          UPSTREAM_TIMEOUT_MS,
+          markTsdbUnavailable,
+        ),
+        withUpstreamTimeout(
+          fetchPastLeagueEvents(league.tsdbId, EVENTS_FETCH_PER_LEAGUE),
+          UPSTREAM_TIMEOUT_MS,
+          markTsdbUnavailable,
+        ),
+        withUpstreamTimeout(
+          fetchLastLeagueEvents(league.tsdbId, 20),
+          UPSTREAM_TIMEOUT_MS,
+          markTsdbUnavailable,
+        ),
+      ]);
+      return { league, events: [...next, ...past, ...last] };
+    }),
+  );
+}
+
+function mergeLeagueBucketsIntoRows(
+  leagueBuckets: { league: LeagueConfig; events: TsdbEvent[] }[],
+): ReturnType<typeof rowFromEvent>[] {
+  const byId = new Map<string, ReturnType<typeof rowFromEvent>>();
+
+  const addEvent = (ev: TsdbEvent, league: LeagueConfig) => {
+    if (!tsdbEventBelongsToLeague(ev, league)) return;
+    byId.set(ev.idEvent, rowFromEvent(league.sport, league.tsdbId, ev));
+  };
+
+  for (const { league, events: evs } of leagueBuckets) {
+    for (const ev of evs) addEvent(ev, league);
+  }
+
+  return [...byId.values()];
+}
+
 async function resolvePlayersForEvent(
   ev: TsdbEvent,
   sport: "nba" | "soccer",
@@ -188,7 +280,65 @@ async function resolvePlayersForEvent(
   return lineup;
 }
 
-export async function syncSportsDbFixtures(force = false) {
+let lastEnrichFinished = 0;
+
+async function applyLineupEnrichToRow(
+  admin: NonNullable<ReturnType<typeof createServiceClient>>,
+  row: LiveFixtureRow,
+): Promise<boolean> {
+  const ev = row.raw as unknown as TsdbEvent;
+  const sport = row.sport as "nba" | "soccer";
+  try {
+    const lineup = await resolvePlayersForEvent(
+      { ...ev, idEvent: row.id_event },
+      sport,
+    );
+    if (lineup.length === 0) return false;
+    const enrichedRaw = {
+      ...(row.raw as Record<string, unknown>),
+      lineup,
+      sideline_slug:
+        (row.raw as Record<string, unknown> | undefined)?.sideline_slug ??
+        fixtureSlug(
+          row.str_home_team ?? "Home",
+          row.str_away_team ?? "Away",
+          row.date_event,
+        ),
+      idHomeTeam: ev.idHomeTeam,
+      idAwayTeam: ev.idAwayTeam,
+    };
+    const patch = {
+      raw: enrichedRaw,
+      synced_at: new Date().toISOString(),
+      lineup,
+      slug: enrichedRaw.sideline_slug as string,
+      id_home_team: ev.idHomeTeam ?? null,
+      id_away_team: ev.idAwayTeam ?? null,
+    };
+    let { error: upErr } = await admin
+      .from("sportsdb_fixtures")
+      .update(patch)
+      .eq("id_event", row.id_event);
+    if (
+      upErr?.message?.includes("schema cache") ||
+      upErr?.message?.includes("id_home_team") ||
+      upErr?.message?.includes("id_away_team") ||
+      upErr?.message?.includes("lineup") ||
+      upErr?.message?.includes("slug")
+    ) {
+      await admin
+        .from("sportsdb_fixtures")
+        .update({ raw: enrichedRaw, synced_at: patch.synced_at })
+        .eq("id_event", row.id_event);
+    }
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/** Fast path: schedules/scores only — no per-match roster calls. */
+export async function syncFixturesFast(force = false) {
   const admin = createServiceClient();
   if (!admin) {
     return { ok: false as const, error: "Missing SUPABASE_SERVICE_ROLE_KEY" };
@@ -209,79 +359,19 @@ export async function syncSportsDbFixtures(force = false) {
     }
   }
 
-  const now = new Date();
-  const days = dateRange(now, 7, 14);
+  if (getDegradedMode().cacheOnly) {
+    return { ok: true as const, count: 0, skipped: true as const };
+  }
 
-  let leagueBuckets: {
-    league: LeagueConfig;
-    events: TsdbEvent[];
-  }[];
-  let dayBuckets: TsdbEvent[][];
+  let leagueBuckets: Awaited<ReturnType<typeof fetchLeagueEventBuckets>>;
   try {
-    leagueBuckets = await Promise.all(
-      SIDELINE_LEAGUES.map(async (league) => {
-        const [next, past, last] = await Promise.all([
-          withUpstreamTimeout(
-            fetchNextLeagueEvents(league.tsdbId, EVENTS_FETCH_PER_LEAGUE),
-            UPSTREAM_TIMEOUT_MS,
-            markTsdbUnavailable,
-          ),
-          withUpstreamTimeout(
-            fetchPastLeagueEvents(league.tsdbId, EVENTS_FETCH_PER_LEAGUE),
-            UPSTREAM_TIMEOUT_MS,
-            markTsdbUnavailable,
-          ),
-          withUpstreamTimeout(
-            fetchLastLeagueEvents(league.tsdbId, 20),
-            UPSTREAM_TIMEOUT_MS,
-            markTsdbUnavailable,
-          ),
-        ]);
-        return { league, events: [...next, ...past, ...last] };
-      }),
-    );
-
-    dayBuckets = await Promise.all(
-      days.flatMap((d) => [
-        withUpstreamTimeout(
-          fetchEventsOnDay(d, "Soccer"),
-          UPSTREAM_TIMEOUT_MS,
-          markTsdbUnavailable,
-        ),
-        withUpstreamTimeout(
-          fetchEventsOnDay(d, "Basketball"),
-          UPSTREAM_TIMEOUT_MS,
-          markTsdbUnavailable,
-        ),
-      ]),
-    );
+    leagueBuckets = await fetchLeagueEventBuckets();
   } catch {
     markTsdbUnavailable();
     return { ok: false as const, error: "TheSportsDB unavailable — serving cache." };
   }
 
-  const byId = new Map<string, ReturnType<typeof rowFromEvent>>();
-
-  const addEvent = (ev: TsdbEvent, league: LeagueConfig) => {
-    if (!tsdbEventBelongsToLeague(ev, league)) return;
-    byId.set(ev.idEvent, rowFromEvent(league.sport, league.tsdbId, ev));
-  };
-
-  for (const { league, events: evs } of leagueBuckets) {
-    for (const ev of evs) addEvent(ev, league);
-  }
-
-  for (const bucket of dayBuckets) {
-    for (const ev of bucket) {
-      for (const league of SIDELINE_LEAGUES) {
-        if (league.sport === "nba" && ev.strSport !== "Basketball") continue;
-        if (league.sport === "soccer" && ev.strSport !== "Soccer") continue;
-        addEvent(ev, league);
-      }
-    }
-  }
-
-  const rows = [...byId.values()];
+  const rows = mergeLeagueBucketsIntoRows(leagueBuckets);
   if (rows.length === 0) {
     return { ok: true as const, count: 0 };
   }
@@ -291,72 +381,61 @@ export async function syncSportsDbFixtures(force = false) {
   });
   if (error) return { ok: false as const, error: error.message };
 
-  const sorted = [...rows].sort((a, b) =>
-    (b.date_event ?? "").localeCompare(a.date_event ?? ""),
-  );
-  const enrichIds: typeof sorted = [];
-  for (const league of SIDELINE_LEAGUES) {
-    const slice = sorted
-      .filter(
-        (r) =>
-          isLiveLeagueRow(r) &&
-          (r.league_id === league.tsdbId ||
-            leagueMatchesRow(r)?.tsdbId === league.tsdbId),
-      )
-      .slice(0, ENRICH_PER_LEAGUE);
-    enrichIds.push(...slice);
-  }
-
-  for (const row of enrichIds) {
-    const ev = row.raw as unknown as TsdbEvent;
-    const sport = row.sport as "nba" | "soccer";
-    try {
-      const lineup = await resolvePlayersForEvent(
-        { ...ev, idEvent: row.id_event },
-        sport,
-      );
-      const enrichedRaw = {
-        ...(row.raw as Record<string, unknown>),
-        lineup,
-        sideline_slug: (row.raw as Record<string, unknown> | undefined)
-          ?.sideline_slug ?? fixtureSlug(
-          row.str_home_team ?? "Home",
-          row.str_away_team ?? "Away",
-          row.date_event,
-        ),
-        idHomeTeam: ev.idHomeTeam,
-        idAwayTeam: ev.idAwayTeam,
-      };
-      const patch = {
-        raw: enrichedRaw,
-        synced_at: new Date().toISOString(),
-        lineup,
-        slug: enrichedRaw.sideline_slug as string,
-        id_home_team: ev.idHomeTeam ?? null,
-        id_away_team: ev.idAwayTeam ?? null,
-      };
-      let { error: upErr } = await admin
-        .from("sportsdb_fixtures")
-        .update(patch)
-        .eq("id_event", row.id_event);
-      if (
-        upErr?.message?.includes("schema cache") ||
-        upErr?.message?.includes("id_home_team") ||
-        upErr?.message?.includes("id_away_team") ||
-        upErr?.message?.includes("lineup") ||
-        upErr?.message?.includes("slug")
-      ) {
-        await admin
-          .from("sportsdb_fixtures")
-          .update({ raw: enrichedRaw, synced_at: patch.synced_at })
-          .eq("id_event", row.id_event);
-      }
-    } catch {
-      /* skip enrich failure for one event */
-    }
-  }
-
   return { ok: true as const, count: rows.length };
+}
+
+/** Background roster fetch for matches that need lineups (run on a schedule). */
+export async function enrichFixturesBatch(force = false) {
+  const admin = createServiceClient();
+  if (!admin) {
+    return { ok: false as const, error: "Missing SUPABASE_SERVICE_ROLE_KEY" };
+  }
+
+  if (!force && Date.now() - lastEnrichFinished < ENRICH_SYNC_MS) {
+    return { ok: true as const, enriched: 0, skipped: true as const };
+  }
+
+  if (getDegradedMode().cacheOnly) {
+    return { ok: true as const, enriched: 0, skipped: true as const };
+  }
+
+  const data = await fetchFixtureRows((select) =>
+    admin
+      .from("sportsdb_fixtures")
+      .select(select)
+      .in("sport", ["nba", "soccer"])
+      .order("date_event", { ascending: false })
+      .limit(400)
+      .then((r) => ({ data: r.data, error: r.error })),
+  );
+
+  const candidates: LiveFixtureRow[] = [];
+  for (const league of SIDELINE_LEAGUES) {
+    const slice = data
+      .map((row) => hydrateFixtureRow(row))
+      .filter((row) => isLiveLeagueRow(row))
+      .filter(
+        (row) =>
+          row.league_id === league.tsdbId ||
+          leagueMatchesRow(row)?.tsdbId === league.tsdbId,
+      )
+      .filter(shouldEnrichFixtureRow)
+      .slice(0, ENRICH_PER_LEAGUE);
+    candidates.push(...slice);
+  }
+
+  const outcomes = await mapWithConcurrency(candidates, ENRICH_CONCURRENCY, (row) =>
+    applyLineupEnrichToRow(admin, row),
+  );
+  const enriched = outcomes.filter(Boolean).length;
+
+  lastEnrichFinished = Date.now();
+  return { ok: true as const, enriched, candidates: candidates.length };
+}
+
+/** @deprecated Use syncFixturesFast — kept for imports; no inline enrich. */
+export async function syncSportsDbFixtures(force = false) {
+  return syncFixturesFast(force);
 }
 
 export type FixtureRow = LiveFixtureRow;
