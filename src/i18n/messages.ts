@@ -131,8 +131,10 @@ type Dict = {
     spotlightHint: string;
     squadRatings: string;
     squadRatingsLead: string;
+    squadRatingsLeadCompact: string;
     squadPlayers: string;
     squadEmpty: string;
+    viewPlayer: string;
   };
   rate: {
     title: string;
@@ -162,6 +164,9 @@ type Dict = {
     ratingGuide: string;
     ratingGuideLead: string;
     yourScores: string;
+    postComment: string;
+    backToPlayer: string;
+    detailScores: string;
   };
   feed: {
     title: string;
@@ -327,8 +332,10 @@ export const messages: Record<Locale, Dict> = {
       spotlightHint: "Spotlight picks for this thread · {n} players on the card",
       squadRatings: "Squad ratings",
       squadRatingsLead: "Community averages by player — home and away.",
+      squadRatingsLeadCompact: "Tap a player for full grades and every take. Switch teams below.",
       squadPlayers: "players",
       squadEmpty: "No lineup for this side yet.",
+      viewPlayer: "View card",
     },
     rate: {
       title: "Player card",
@@ -359,6 +366,9 @@ export const messages: Record<Locale, Dict> = {
       ratingGuideLead:
         "Five axes for {role} — weighted into the overall score:",
       yourScores: "Your five axes",
+      postComment: "Post rating & comment",
+      backToPlayer: "Back to player card",
+      detailScores: "Community breakdown",
     },
     feed: {
       title: "Feed",
@@ -587,8 +597,10 @@ export const messages: Record<Locale, Dict> = {
       spotlightHint: "本场各队代表 · 阵容共 {n} 人可评",
       squadRatings: "全员评分",
       squadRatingsLead: "主客队分栏展示社区均分与五维分布。",
+      squadRatingsLeadCompact: "点球员看详细评分与全部短评；下方切换主客队。",
       squadPlayers: "人",
       squadEmpty: "该队暂无阵容数据。",
+      viewPlayer: "查看球员卡",
     },
     rate: {
       title: "球员卡",
@@ -618,6 +630,9 @@ export const messages: Record<Locale, Dict> = {
       ratingGuideLead: "本场按「{role}」五个维度打分，权重合成总分：",
       yourScores: "你的五维打分",
       scoreOnly: "仅评分，未写短评。",
+      postComment: "发布评分与短评",
+      backToPlayer: "返回球员卡",
+      detailScores: "社区均分明细",
     },
     feed: {
       title: "动态",
@@ -847,8 +862,10 @@ export const messages: Record<Locale, Dict> = {
       spotlightHint: "Destacados del partido · {n} jugadores en la ficha",
       squadRatings: "Notas del plantel",
       squadRatingsLead: "Medias de la comunidad, local y visitante.",
+      squadRatingsLeadCompact: "Toca un jugador para ver notas y comentarios. Cambia de equipo abajo.",
       squadPlayers: "jugadores",
       squadEmpty: "Sin alineación para este bando.",
+      viewPlayer: "Ver ficha",
     },
     rate: {
       title: "Carta",
@@ -878,6 +895,9 @@ export const messages: Record<Locale, Dict> = {
       ratingGuideLead: "Cinco ejes para {role}, ponderados en la nota global:",
       yourScores: "Tus cinco ejes",
       scoreOnly: "Solo nota numérica, sin texto.",
+      postComment: "Publicar nota y comentario",
+      backToPlayer: "Volver a la ficha",
+      detailScores: "Desglose de la comunidad",
     },
     feed: {
       title: "Feed",
@@ -1107,8 +1127,10 @@ export const messages: Record<Locale, Dict> = {
       spotlightHint: "この試合の代表 · 採点対象 {n} 人",
       squadRatings: "全員採点",
       squadRatingsLead: "ホームとアウェイに分けてコミュニティ平均を表示。",
+      squadRatingsLeadCompact: "選手をタップで詳細採点と全コメント。下でチーム切替。",
       squadPlayers: "人",
       squadEmpty: "この側のメンバーはまだありません。",
+      viewPlayer: "カードを見る",
     },
     rate: {
       title: "選手カード",
@@ -1138,6 +1160,9 @@ export const messages: Record<Locale, Dict> = {
       ratingGuideLead: "「{role}」の五軸を重み付けして総合点にします：",
       yourScores: "あなたの五軸",
       scoreOnly: "採点のみ（コメントなし）。",
+      postComment: "採点・コメントを投稿",
+      backToPlayer: "選手カードに戻る",
+      detailScores: "コミュニティ内訳",
     },
     feed: {
       title: "フィード",

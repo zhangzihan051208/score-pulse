@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { LiveRatePage } from "@/components/live-rate-page";
+import { LivePlayerDetail } from "@/components/live-player-detail";
 import { resolveEventBySlug } from "@/lib/events-catalog";
 import { resolveAthlete } from "@/lib/event-resolve";
 
@@ -29,7 +29,7 @@ export default async function RatePage({
 
   if (event.live) {
     return (
-      <LiveRatePage
+      <LivePlayerDetail
         slug={slug}
         athleteId={athleteId}
         initialEvent={event}
@@ -39,8 +39,8 @@ export default async function RatePage({
     );
   }
 
-  const { RateCard } = await import("@/components/rate-card");
+  const { PlayerDetailCard } = await import("@/components/player-detail-card");
   return (
-    <RateCard event={event} athlete={athlete} performance={performance} />
+    <PlayerDetailCard event={event} athlete={athlete} performance={performance} />
   );
 }

@@ -123,9 +123,9 @@ export function EventSpotlightCard({
 
       <Link
         href={`/events/${event.slug}/${pick.athlete.id}`}
-        className="mt-4 inline-flex h-8 items-center rounded-lg bg-primary px-3 text-sm font-medium text-primary-foreground"
+        className="mt-4 inline-flex h-8 items-center rounded-lg border px-3 text-sm font-medium hover:bg-muted"
       >
-        {t.event.ratePlayer}
+        {t.event.viewPlayer}
       </Link>
     </article>
   );
