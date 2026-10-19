@@ -246,6 +246,7 @@ function mergeLeagueBucketsIntoRows(
   const byId = new Map<string, ReturnType<typeof rowFromEvent>>();
 
   const addEvent = (ev: TsdbEvent, league: LeagueConfig) => {
+    if (league.sport !== "nba" && league.sport !== "soccer") return;
     if (!tsdbEventBelongsToLeague(ev, league)) return;
     byId.set(ev.idEvent, rowFromEvent(league.sport, league.tsdbId, ev));
   };

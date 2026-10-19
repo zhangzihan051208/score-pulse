@@ -15,6 +15,7 @@ export type PositionKey =
   | "nfl.receiver"
   | "f1.driver"
   | "tennis.player"
+  | "esports.player"
   | "ufc.striker"
   | "ufc.grappler";
 
@@ -178,6 +179,17 @@ export const POSITION_PROFILES: Record<PositionKey, PositionProfile> = {
       mental: 0.15,
     },
   ),
+  "esports.player": profile(
+    "esports",
+    ["mechanics", "macro", "impact", "consistency", "clutch"],
+    {
+      mechanics: 0.25,
+      macro: 0.2,
+      impact: 0.25,
+      consistency: 0.15,
+      clutch: 0.15,
+    },
+  ),
   "ufc.striker": profile(
     "ufc",
     ["striking", "power", "defense", "cardio", "composure"],
@@ -215,6 +227,7 @@ export const BOARD_POSITIONS: Record<Sport, PositionKey[]> = {
   nfl: ["nfl.quarterback", "nfl.running_back", "nfl.receiver"],
   f1: ["f1.driver"],
   tennis: ["tennis.player"],
+  esports: ["esports.player"],
   ufc: ["ufc.striker", "ufc.grappler"],
 };
 

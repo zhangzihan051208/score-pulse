@@ -57,7 +57,7 @@ export function MyTeamsPageInner() {
               </div>
               <PartitionEditors
                 pair={pair}
-                sport={league.sport}
+                sport={league.sport === "nba" ? "nba" : "soccer"}
                 leagueSlug={leagueSlug}
                 onChange={async (next) => {
                   await patchPartition(key, next);

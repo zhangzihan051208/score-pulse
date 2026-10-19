@@ -1,9 +1,10 @@
+import { esportsBoardTabs } from "./esports-games";
 import type { Sport } from "./types";
 
 export type LeagueConfig = {
   tsdbId: string;
   slug: string;
-  sport: "nba" | "soccer";
+  sport: "nba" | "soccer" | "esports";
   /** English label (also used for TSDB name matching) */
   label: string;
   /** Substrings that match ev.strLeague from TheSportsDB */
@@ -79,6 +80,15 @@ export function getLeagueByTsdbId(id: string | null | undefined): LeagueConfig |
 export function leaguesForSport(sport: Sport): LeagueConfig[] {
   if (sport === "nba") return SIDELINE_LEAGUES.filter((l) => l.sport === "nba");
   if (sport === "soccer") return SIDELINE_LEAGUES.filter((l) => l.sport === "soccer");
+  if (sport === "esports") {
+    return esportsBoardTabs().map((tab) => ({
+      tsdbId: tab.slug,
+      slug: tab.slug,
+      sport: "esports" as const,
+      label: tab.label,
+      nameHints: [tab.label],
+    }));
+  }
   return [];
 }
 

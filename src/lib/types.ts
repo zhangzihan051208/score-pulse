@@ -3,7 +3,7 @@ export type Locale = (typeof LOCALES)[number];
 
 export type Localized = Record<Locale, string>;
 
-export const SPORTS = ["nba", "soccer", "nfl", "f1", "tennis", "ufc"] as const;
+export const SPORTS = ["nba", "soccer", "esports", "nfl", "f1", "tennis", "ufc"] as const;
 export type Sport = (typeof SPORTS)[number];
 
 export type EventStatus = "live" | "upcoming" | "ended";

@@ -14,6 +14,8 @@ export function inferPositionKey(
     return "nba.forward";
   }
 
+  if (sport === "esports") return "esports.player";
+
   if (sport === "soccer") {
     if (p.includes("goal")) return "soccer.keeper";
     if (p.includes("wing") || p.includes("wide")) return "soccer.winger";

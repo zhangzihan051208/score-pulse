@@ -35,7 +35,9 @@ export function LeagueTabs({
         const href =
           league.sport === "nba"
             ? `/boards/nba`
-            : `/boards/soccer/${league.slug}`;
+            : league.sport === "esports"
+              ? `/boards/esports/${league.slug}`
+              : `/boards/soccer/${league.slug}`;
         const active = activeSlug === league.slug;
         return (
           <Link

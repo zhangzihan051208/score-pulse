@@ -116,6 +116,13 @@ const en: DimMap = {
     cardio: "Cardio",
     composure: "Composure",
   },
+  "esports.player": {
+    mechanics: "Mechanics",
+    macro: "Macro",
+    impact: "Impact",
+    consistency: "Consistency",
+    clutch: "Clutch",
+  },
 };
 
 const zh: DimMap = {
@@ -231,6 +238,13 @@ const zh: DimMap = {
     cardio: "体能",
     composure: "冷静",
   },
+  "esports.player": {
+    mechanics: "操作",
+    macro: "大局",
+    impact: "影响力",
+    consistency: "稳定性",
+    clutch: "关键局",
+  },
 };
 
 const es: DimMap = JSON.parse(JSON.stringify(en)) as DimMap;
@@ -259,6 +273,7 @@ export const positionRoleLabels: Record<
     "tennis.player": "Singles",
     "ufc.striker": "Striker",
     "ufc.grappler": "Grappler",
+    "esports.player": "Player",
   },
   zh: {
     "nba.guard": "后卫",
@@ -277,6 +292,7 @@ export const positionRoleLabels: Record<
     "tennis.player": "单打",
     "ufc.striker": "站立",
     "ufc.grappler": "地面",
+    "esports.player": "选手",
   },
   es: {
     "nba.guard": "Base",
@@ -295,6 +311,7 @@ export const positionRoleLabels: Record<
     "tennis.player": "Individual",
     "ufc.striker": "Striking",
     "ufc.grappler": "Grappling",
+    "esports.player": "Jugador",
   },
   ja: {
     "nba.guard": "ガード",
@@ -313,6 +330,7 @@ export const positionRoleLabels: Record<
     "tennis.player": "シングルス",
     "ufc.striker": "ストライキング",
     "ufc.grappler": "グラップリング",
+    "esports.player": "選手",
   },
 };
 

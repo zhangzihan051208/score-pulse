@@ -125,6 +125,10 @@ type Dict = {
     backHome: string;
     allLeagues: string;
   };
+  esports: {
+    empty: string;
+    dataHint: string;
+  };
   event: {
     ratePlayer: string;
     community: string;
@@ -289,6 +293,7 @@ export const messages: Record<Locale, Dict> = {
     sports: {
       nba: "NBA",
       soccer: "Soccer",
+      esports: "Esports",
       nfl: "NFL",
       f1: "F1",
       tennis: "Tennis",
@@ -297,6 +302,8 @@ export const messages: Record<Locale, Dict> = {
     sportBlurb: {
       nba: "Box score is a start. Grade scoring, defense, playmaking, hustle, clutch.",
       soccer: "Grade the 90: attack, chance creation, defending, work rate, composure.",
+      esports:
+        "LoL, CS2, Dota 2, Valorant — grade mechanics, macro, impact, consistency, clutch.",
       nfl: "One drive can swing a grade. Execution, physicality, awareness, consistency, clutch.",
       f1: "Lap time is not the whole story. Pace, racecraft, tyres, consistency, composure.",
       tennis: "Hold, break, and the rallies in between. Serve, return, rally, movement, clutch.",
@@ -333,6 +340,11 @@ export const messages: Record<Locale, Dict> = {
       empty: "No matches in this filter.",
       backHome: "All boards",
       allLeagues: "All leagues",
+    },
+    esports: {
+      empty:
+        "No PandaScore matches for this title yet. Check your API token or try another game tab.",
+      dataHint: "Schedules from PandaScore · cached ~45s · live threads poll faster.",
     },
     event: {
       ratePlayer: "Grade",
@@ -440,6 +452,13 @@ export const messages: Record<Locale, Dict> = {
         defending: "Defending",
         workrate: "Work rate",
         composure: "Composure",
+      },
+      esports: {
+        mechanics: "Mechanics",
+        macro: "Macro",
+        impact: "Impact",
+        consistency: "Consistency",
+        clutch: "Clutch",
       },
       nfl: {
         execution: "Execution",
@@ -566,6 +585,7 @@ export const messages: Record<Locale, Dict> = {
     sports: {
       nba: "NBA",
       soccer: "足球",
+      esports: "电竞",
       nfl: "NFL",
       f1: "F1",
       tennis: "网球",
@@ -574,6 +594,7 @@ export const messages: Record<Locale, Dict> = {
     sportBlurb: {
       nba: "得分、防守、组织、拼劲、关键球。数据只是起点。",
       soccer: "进攻、做戏、防守、跑动、心态。给满 90 分钟。",
+      esports: "英雄联盟、CS2、Dota 2、无畏契约 — 操作、大局、影响力、稳定性、关键局。",
       nfl: "执行、身体对抗、阅读、稳定性、关键回合。",
       f1: "圈速、车轮战、轮胎、稳定性、心态。",
       tennis: "发球、接发、相持、移动、关键分。",
@@ -606,6 +627,10 @@ export const messages: Record<Locale, Dict> = {
       empty: "没有符合筛选的比赛。",
       backHome: "全部分区",
       allLeagues: "全部联赛",
+    },
+    esports: {
+      empty: "该游戏暂无 PandaScore 赛程。请检查 API Token 或切换游戏标签。",
+      dataHint: "赛程来自 PandaScore · 约 45 秒缓存 · 进行中比赛刷新更快。",
     },
     event: {
       ratePlayer: "去打分",
@@ -712,6 +737,13 @@ export const messages: Record<Locale, Dict> = {
         defending: "防守",
         workrate: "跑动",
         composure: "心态",
+      },
+      esports: {
+        mechanics: "操作",
+        macro: "大局",
+        impact: "影响力",
+        consistency: "稳定性",
+        clutch: "关键局",
       },
       nfl: {
         execution: "执行",
@@ -838,6 +870,7 @@ export const messages: Record<Locale, Dict> = {
     sports: {
       nba: "NBA",
       soccer: "Fútbol",
+      esports: "Esports",
       nfl: "NFL",
       f1: "F1",
       tennis: "Tenis",
@@ -846,6 +879,7 @@ export const messages: Record<Locale, Dict> = {
     sportBlurb: {
       nba: "Anota, defiende, crea, pelea, clutch. El box score es el inicio.",
       soccer: "Ataque, creación, defensa, trabajo, temple. Los 90 minutos.",
+      esports: "LoL, CS2, Dota 2, Valorant — mecánica, macro, impacto, consistencia, clutch.",
       nfl: "Ejecución, físico, lectura, consistencia, clutch.",
       f1: "Ritmo, batalla, neumáticos, consistencia, temple.",
       tennis: "Saque, resto, peloteo, movimiento, puntos clave.",
@@ -879,6 +913,11 @@ export const messages: Record<Locale, Dict> = {
       empty: "No hay partidos en este filtro.",
       backHome: "Todos",
       allLeagues: "Todas las ligas",
+    },
+    esports: {
+      empty:
+        "Sin partidos de PandaScore para este título. Revisa el token o prueba otra pestaña.",
+      dataHint: "Calendario de PandaScore · caché ~45 s · en vivo se actualiza más rápido.",
     },
     event: {
       ratePlayer: "Puntuar",
@@ -985,6 +1024,13 @@ export const messages: Record<Locale, Dict> = {
         defending: "Defensa",
         workrate: "Trabajo",
         composure: "Temple",
+      },
+      esports: {
+        mechanics: "Mecánica",
+        macro: "Macro",
+        impact: "Impacto",
+        consistency: "Consistencia",
+        clutch: "Clutch",
       },
       nfl: {
         execution: "Ejecución",
@@ -1111,6 +1157,7 @@ export const messages: Record<Locale, Dict> = {
     sports: {
       nba: "NBA",
       soccer: "サッカー",
+      esports: "eスポーツ",
       nfl: "NFL",
       f1: "F1",
       tennis: "テニス",
@@ -1119,6 +1166,7 @@ export const messages: Record<Locale, Dict> = {
     sportBlurb: {
       nba: "得点・守備・組み立て・ハッスル・クラッチ。",
       soccer: "攻撃・創造・守備・運動量・冷静さ。",
+      esports: "LoL・CS2・Dota2・Valorant — 操作・マクロ・インパクト・安定・クラッチ。",
       nfl: "遂行・フィジカル・判断・安定・クラッチ。",
       f1: "ペース・レースクラフト・タイヤ・安定・冷静さ。",
       tennis: "サーブ・リターン・ラリー・ムーブ・クラッチ。",
@@ -1152,6 +1200,11 @@ export const messages: Record<Locale, Dict> = {
       empty: "該当する試合はありません。",
       backHome: "すべての板",
       allLeagues: "全リーグ",
+    },
+    esports: {
+      empty:
+        "このタイトルの PandaScore 試合がありません。API トークンを確認するか別タブを試してください。",
+      dataHint: "PandaScore の日程 · 約45秒キャッシュ · ライブは高頻度更新。",
     },
     event: {
       ratePlayer: "採点する",
@@ -1258,6 +1311,13 @@ export const messages: Record<Locale, Dict> = {
         defending: "守備",
         workrate: "運動量",
         composure: "冷静さ",
+      },
+      esports: {
+        mechanics: "操作",
+        macro: "マクロ",
+        impact: "インパクト",
+        consistency: "安定",
+        clutch: "クラッチ",
       },
       nfl: {
         execution: "遂行",
