@@ -8,6 +8,16 @@ function token() {
   return process.env.PANDASCORE_API_TOKEN?.trim() ?? "";
 }
 
+export type PsPlayer = {
+  id?: number;
+  name?: string;
+  first_name?: string;
+  last_name?: string;
+  image_url?: string;
+  role?: string;
+  active?: boolean;
+};
+
 export type PsOpponent = {
   type?: string;
   opponent?: {
@@ -15,14 +25,7 @@ export type PsOpponent = {
     name?: string;
     acronym?: string;
     image_url?: string;
-    players?: {
-      id?: number;
-      name?: string;
-      first_name?: string;
-      last_name?: string;
-      image_url?: string;
-      role?: string;
-    }[];
+    players?: PsPlayer[];
   };
 };
 
@@ -77,12 +80,13 @@ export async function fetchEsportsMatches(apiPrefix: string): Promise<PsMatch[]>
   return [...byId.values()];
 }
 
+/** Match detail — generic path works on fixtures-tier tokens (`/{game}/matches/{id}` often 403). */
 export async function fetchEsportsMatchById(
-  apiPrefix: string,
+  _apiPrefix: string,
   id: number,
 ): Promise<PsMatch | null> {
   if (!isPandaScoreConfigured()) return null;
-  const res = await fetch(`${BASE}/${apiPrefix}/matches/${id}`, {
+  const res = await fetch(`${BASE}/matches/${id}`, {
     headers: {
       Accept: "application/json",
       Authorization: `Bearer ${token()}`,
@@ -90,5 +94,23 @@ export async function fetchEsportsMatchById(
     next: { revalidate: 30 },
   });
   if (!res.ok) return null;
-  return (await res.json()) as PsMatch;
+  const data = (await res.json()) as PsMatch | { error?: string };
+  if (!data || typeof data !== "object" || !("id" in data)) return null;
+  return data as PsMatch;
+}
+
+export async function fetchPandaTeamPlayers(teamId: number): Promise<PsPlayer[]> {
+  if (!isPandaScoreConfigured() || !teamId) return [];
+  const res = await fetch(`${BASE}/teams/${teamId}`, {
+    headers: {
+      Accept: "application/json",
+      Authorization: `Bearer ${token()}`,
+    },
+    next: { revalidate: 600 },
+  });
+  if (!res.ok) return [];
+  const data = (await res.json()) as { players?: PsPlayer[] };
+  const players = data.players ?? [];
+  const active = players.filter((p) => p.active !== false);
+  return active.length > 0 ? active : players;
 }

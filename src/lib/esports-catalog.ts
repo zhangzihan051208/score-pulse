@@ -4,6 +4,7 @@ import {
   type EsportsGameSlug,
 } from "@/lib/esports-games";
 import { pandaMatchToEvent, esportsEventSlug } from "@/lib/esports-match";
+import { enrichMatchesWithTeamRosters, enrichMatchWithTeamRosters } from "@/lib/esports-rosters";
 import {
   fetchEsportsMatchById,
   fetchEsportsMatches,
@@ -33,7 +34,8 @@ export async function listEsportsMatchEvents(
   const buckets = await Promise.all(
     games.map(async (game) => {
       const raw = await fetchEsportsMatches(game.apiPrefix);
-      return raw
+      const withRosters = await enrichMatchesWithTeamRosters(raw);
+      return withRosters
         .map((m) => pandaMatchToEvent(game, m))
         .filter((e): e is MatchEvent => Boolean(e));
     }),
@@ -53,21 +55,24 @@ export async function getEsportsMatchBySlug(slug: string): Promise<MatchEvent | 
   for (const g of ESPORTS_GAMES) {
     const list = await fetchEsportsMatches(g.apiPrefix);
     for (const raw of list) {
-      if (esportsEventSlug(g.slug, raw) === slug) {
-        let event = pandaMatchToEvent(g, raw);
-        if (event && event.performances.length === 0 && raw.id) {
-          const detail = await fetchEsportsMatchById(g.apiPrefix, raw.id);
-          if (detail) event = pandaMatchToEvent(g, detail) ?? event;
-        }
-        return event;
+      if (esportsEventSlug(g.slug, raw) !== slug) continue;
+      let match = raw;
+      if (raw.id) {
+        const detail = await fetchEsportsMatchById(g.apiPrefix, raw.id);
+        if (detail) match = detail;
       }
+      match = await enrichMatchWithTeamRosters(match);
+      return pandaMatchToEvent(g, match);
     }
   }
 
   const numeric = /^\d+$/.test(tail) ? Number(tail) : NaN;
   if (!Number.isNaN(numeric)) {
     const detail = await fetchEsportsMatchById(game.apiPrefix, numeric);
-    if (detail) return pandaMatchToEvent(game, detail);
+    if (detail) {
+      const enriched = await enrichMatchWithTeamRosters(detail);
+      return pandaMatchToEvent(game, enriched);
+    }
   }
 
   return null;
