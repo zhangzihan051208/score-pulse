@@ -18,7 +18,7 @@ export function LivePlayerPost({
   initialAthlete: Athlete;
   initialPerformance: Performance;
 }) {
-  const { event } = useLiveEvent(slug);
+  const { event } = useLiveEvent(slug, initialEvent);
   const data = event ?? initialEvent;
   const performance =
     data.performances.find((p) => p.athleteId === athleteId) ?? initialPerformance;

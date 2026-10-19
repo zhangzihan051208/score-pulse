@@ -13,7 +13,7 @@ export function LiveEventPage({
   initial: MatchEvent;
 }) {
   const { t } = useI18n();
-  const { event, syncedAt } = useLiveEvent(slug);
+  const { event, syncedAt } = useLiveEvent(slug, initial);
   const data = event ?? initial;
 
   return (

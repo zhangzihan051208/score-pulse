@@ -22,10 +22,15 @@ import { SPORTS, type MatchEvent, type Sport } from "@/lib/types";
 
 const LIVE_SPORTS: Sport[] = ["nba", "soccer"];
 
-export function HomeBoards() {
+export function HomeBoards({ initialEvents = [] }: { initialEvents?: MatchEvent[] }) {
   const { locale, t } = useI18n();
   const { state } = useCommunity();
-  const { events: liveAll, syncedAt } = useLiveEvents();
+  const { events: liveAll, syncedAt } = useLiveEvents(
+    undefined,
+    true,
+    undefined,
+    initialEvents,
+  );
   const { favorites, hydrated } = useFavoriteTeams();
   const sortedAll = useMemo(
     () => (hydrated ? sortEventsForHome(liveAll, favorites) : liveAll),

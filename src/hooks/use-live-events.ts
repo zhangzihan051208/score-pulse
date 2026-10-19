@@ -10,9 +10,10 @@ export function useLiveEvents(
   sport?: "nba" | "soccer",
   enabled = true,
   leagueSlug?: string,
+  initialEvents?: MatchEvent[],
 ) {
-  const [events, setEvents] = useState<MatchEvent[]>([]);
-  const [loading, setLoading] = useState(enabled);
+  const [events, setEvents] = useState<MatchEvent[]>(initialEvents ?? []);
+  const [loading, setLoading] = useState(enabled && !(initialEvents && initialEvents.length > 0));
   const [syncedAt, setSyncedAt] = useState<string | null>(null);
 
   const load = useCallback(async (refresh: boolean) => {
@@ -48,9 +49,9 @@ export function useLiveEvents(
   return { events, loading, syncedAt, refresh: () => load(true) };
 }
 
-export function useLiveEvent(slug: string) {
-  const [event, setEvent] = useState<MatchEvent | null>(null);
-  const [loading, setLoading] = useState(true);
+export function useLiveEvent(slug: string, seed?: MatchEvent | null) {
+  const [event, setEvent] = useState<MatchEvent | null>(seed ?? null);
+  const [loading, setLoading] = useState(!seed);
   const [syncedAt, setSyncedAt] = useState<string | null>(null);
 
   const load = useCallback(
@@ -75,7 +76,7 @@ export function useLiveEvent(slug: string) {
   );
 
   useEffect(() => {
-    load(true);
+    load(false);
     const id = setInterval(() => load(false), POLL_LIVE_MS);
     return () => clearInterval(id);
   }, [load]);

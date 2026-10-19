@@ -3,6 +3,7 @@ import {
   refreshLiveFixturesFromTsdb,
   syncSportsDbFixtures,
 } from "@/lib/fixtures-sync";
+import { maybeRefreshLiveFixturesFromTsdb } from "@/lib/sync-throttle";
 import { NextResponse } from "next/server";
 
 export async function GET(request: Request) {
@@ -10,15 +11,13 @@ export async function GET(request: Request) {
   const sport = searchParams.get("sport");
   const league = searchParams.get("league") ?? undefined;
   const refresh = searchParams.get("refresh") === "1";
-
+  const sync = searchParams.get("sync") === "1";
   const liveTick = searchParams.get("live") === "1";
-  if (refresh || searchParams.get("sync") === "1") {
-    await syncSportsDbFixtures(refresh);
-  } else {
-    await syncSportsDbFixtures(false);
-    if (liveTick) {
-      await refreshLiveFixturesFromTsdb(12);
-    }
+
+  if (sync || refresh) {
+    await syncSportsDbFixtures(refresh || sync);
+  } else if (liveTick) {
+    await maybeRefreshLiveFixturesFromTsdb(refreshLiveFixturesFromTsdb, 8);
   }
 
   const sports =
@@ -35,8 +34,15 @@ export async function GET(request: Request) {
     league,
   );
 
-  return NextResponse.json({
-    events,
-    syncedAt: new Date().toISOString(),
-  });
+  return NextResponse.json(
+    {
+      events,
+      syncedAt: new Date().toISOString(),
+    },
+    {
+      headers: {
+        "Cache-Control": "public, s-maxage=15, stale-while-revalidate=45",
+      },
+    },
+  );
 }

@@ -3,6 +3,7 @@ import {
   refreshFixtureFromTsdb,
   syncSportsDbFixtures,
 } from "@/lib/fixtures-sync";
+import { maybeRefreshFixtureFromTsdb } from "@/lib/sync-throttle";
 import { NextResponse } from "next/server";
 
 export async function GET(
@@ -14,10 +15,6 @@ export async function GET(
   const liveRefresh = searchParams.get("live") === "1";
   if (searchParams.get("sync") === "1") {
     await syncSportsDbFixtures(true);
-  } else if (liveRefresh) {
-    await syncSportsDbFixtures(false);
-  } else {
-    await syncSportsDbFixtures(false);
   }
 
   let event = await getLiveMatchBySlug(slug);
@@ -30,9 +27,16 @@ export async function GET(
   }
 
   if (liveRefresh) {
-    const refreshed = await refreshFixtureFromTsdb(event.id);
+    const refreshed = await maybeRefreshFixtureFromTsdb(event.id, refreshFixtureFromTsdb);
     if (refreshed) event = refreshed;
   }
 
-  return NextResponse.json({ event, syncedAt: new Date().toISOString() });
+  return NextResponse.json(
+    { event, syncedAt: new Date().toISOString() },
+    {
+      headers: {
+        "Cache-Control": "public, s-maxage=12, stale-while-revalidate=30",
+      },
+    },
+  );
 }

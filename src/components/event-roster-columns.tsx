@@ -4,33 +4,33 @@ import Link from "next/link";
 import { useState } from "react";
 import { PlayerAvatar } from "@/components/player-avatar";
 import { Overall } from "@/components/score-rows";
-import { useAthleteTakes } from "@/hooks/use-athlete-takes";
+import { useEventTakesSummary } from "@/hooks/use-event-takes-summary";
+import { localTakesForAthlete, topEngagementTake } from "@/lib/event-spotlight";
 import { useI18n } from "@/i18n/use-i18n";
 import { tx } from "@/lib/copy";
 import { overallScore } from "@/lib/data";
 import { performancesBySide, type RosterEntry } from "@/lib/event-spotlight";
 import type { CommunityState } from "@/lib/store";
+import type { CommunityTake } from "@/components/community-ratings-panel";
 import type { MatchEvent } from "@/lib/types";
 
 function RosterPlayerCard({
   event,
   entry,
   state,
+  remoteTakes,
 }: {
   event: MatchEvent;
   entry: RosterEntry;
   state: CommunityState;
+  remoteTakes?: CommunityTake[];
 }) {
   const { locale, t } = useI18n();
   const { performance: p, athlete, merged } = entry;
   const overall = overallScore(merged.avg, merged.positionKey);
-  const { topTake } = useAthleteTakes(
-    event,
-    athlete.id,
-    merged.positionKey,
-    state,
-    locale,
-  );
+  const local = localTakesForAthlete(event, athlete.id, state, locale);
+  const takes = remoteTakes && remoteTakes.length > 0 ? remoteTakes : local;
+  const topTake = topEngagementTake(takes, merged.positionKey);
 
   return (
     <li>
@@ -82,6 +82,7 @@ export function EventRosterColumns({
 }) {
   const { locale, t } = useI18n();
   const { home, away } = performancesBySide(event, state, locale);
+  const { byAthlete } = useEventTakesSummary(event.id);
   const homeTitle = event.homeTeamName ?? t.event.homeSpotlight;
   const awayTitle = event.awayTeamName ?? t.event.awaySpotlight;
   const [side, setSide] = useState<"home" | "away">("home");
@@ -142,6 +143,7 @@ export function EventRosterColumns({
                 event={event}
                 entry={entry}
                 state={state}
+                remoteTakes={byAthlete[entry.athlete.id]}
               />
             ))}
           </ul>
