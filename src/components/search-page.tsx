@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
+import { LoadingView } from "@/components/loading-view";
 import { MatchScoreboard } from "@/components/match-scoreboard";
 import { StatusPill } from "@/components/status-pill";
 import { Input } from "@/components/ui/input";
@@ -98,8 +99,10 @@ export function SearchPageInner() {
         <p className="mt-2 text-xs text-muted-foreground">{t.search.hint}</p>
       </div>
 
-      {loading && (
-        <p className="mt-6 text-sm text-muted-foreground">{t.auth.loading}</p>
+      {loading && debounced.length >= 2 && (
+        <div className="mt-8">
+          <LoadingView message="search" variant="section" />
+        </div>
       )}
 
       {!loading &&
@@ -110,7 +113,7 @@ export function SearchPageInner() {
         <p className="mt-8 text-sm text-muted-foreground">{t.search.empty}</p>
       )}
 
-      {teams.length > 0 && (
+      {!loading && teams.length > 0 && (
         <section className="mt-8 space-y-6">
           <h2 className="text-xs font-semibold tracking-widest text-muted-foreground uppercase">
             {t.search.clubs}
@@ -148,7 +151,7 @@ export function SearchPageInner() {
         </section>
       )}
 
-      {matches.length > 0 && (
+      {!loading && matches.length > 0 && (
         <section className="mt-8">
           <h2 className="text-xs font-semibold tracking-widest text-muted-foreground uppercase">
             {t.search.matches}
@@ -181,7 +184,7 @@ export function SearchPageInner() {
         </section>
       )}
 
-      {players.length > 0 && (
+      {!loading && players.length > 0 && (
         <section className="mt-8">
           <h2 className="text-xs font-semibold tracking-widest text-muted-foreground uppercase">
             {t.search.players}

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useMemo } from "react";
 import { HomeMyTeams } from "@/components/home-my-teams";
+import { LoadingView } from "@/components/loading-view";
 import { MatchScoreboard } from "@/components/match-scoreboard";
 import { StatusPill } from "@/components/status-pill";
 import { useFavoriteTeams } from "@/hooks/use-favorite-teams";
@@ -25,7 +26,7 @@ const LIVE_SPORTS: Sport[] = ["nba", "soccer"];
 export function HomeBoards({ initialEvents = [] }: { initialEvents?: MatchEvent[] }) {
   const { locale, t } = useI18n();
   const { state } = useCommunity();
-  const { events: liveAll, syncedAt } = useLiveEvents(
+  const { events: liveAll, loading: liveLoading, syncedAt } = useLiveEvents(
     undefined,
     true,
     undefined,
@@ -83,13 +84,18 @@ export function HomeBoards({ initialEvents = [] }: { initialEvents?: MatchEvent[
           <h2 className="text-xs font-semibold tracking-widest text-muted-foreground uppercase">
             {t.home.boardsTitle}
           </h2>
-          {LIVE_SPORTS.map((sport) => (
-            <LiveSportBlock
-              key={sport}
-              sport={sport as "nba" | "soccer"}
-              list={sortedAll.filter((e) => e.sport === sport)}
-            />
-          ))}
+          {liveLoading && sortedAll.length === 0 ? (
+            <LoadingView message="page" variant="section" />
+          ) : (
+            LIVE_SPORTS.map((sport) => (
+              <LiveSportBlock
+                key={sport}
+                sport={sport as "nba" | "soccer"}
+                list={sortedAll.filter((e) => e.sport === sport)}
+                loading={liveLoading}
+              />
+            ))
+          )}
           {SPORTS.filter((s) => !LIVE_SPORTS.includes(s)).map((sport) => (
             <LegacyBoardBlock key={sport} sport={sport} />
           ))}
@@ -136,15 +142,24 @@ export function HomeBoards({ initialEvents = [] }: { initialEvents?: MatchEvent[
 function LiveSportBlock({
   sport,
   list,
+  loading = false,
 }: {
   sport: "nba" | "soccer";
   list: MatchEvent[];
+  loading?: boolean;
 }) {
   const { locale, t } = useI18n();
   const { state } = useCommunity();
   const featured = list[0];
 
   if (list.length === 0) {
+    if (loading) {
+      return (
+        <section className="rounded-xl border bg-card">
+          <LoadingView message="page" variant="section" />
+        </section>
+      );
+    }
     return (
       <section className="rounded-xl border border-dashed bg-card px-3 py-6 text-sm text-muted-foreground">
         {t.home.liveEmpty}

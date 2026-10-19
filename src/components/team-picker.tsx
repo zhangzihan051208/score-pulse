@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { LoadingView } from "@/components/loading-view";
 import { Input } from "@/components/ui/input";
 import { leagueLabel } from "@/i18n/league-labels";
 import { useI18n } from "@/i18n/use-i18n";
@@ -28,6 +29,7 @@ export function TeamPicker({
     { id: string; name: string; league?: string; leagueSlug?: string }[]
   >([]);
   const [open, setOpen] = useState(false);
+  const [fetching, setFetching] = useState(false);
 
   useEffect(() => {
     const id = setTimeout(() => setDebounced(q.trim()), 260);
@@ -37,19 +39,28 @@ export function TeamPicker({
   useEffect(() => {
     if (debounced.length < 2) {
       setHits([]);
+      setFetching(false);
       return;
     }
     const params = new URLSearchParams({ q: debounced, sport });
     if (leagueSlug) params.set("league", leagueSlug);
+    let cancelled = false;
+    setFetching(true);
     fetch(`/api/teams/search?${params}`)
       .then((r) => r.json())
       .then(
         (d: {
           teams?: { id: string; name: string; league?: string; leagueSlug?: string }[];
         }) => {
-          setHits(d.teams ?? []);
+          if (!cancelled) setHits(d.teams ?? []);
         },
-      );
+      )
+      .finally(() => {
+        if (!cancelled) setFetching(false);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, [debounced, leagueSlug, sport]);
 
   return (
@@ -81,7 +92,12 @@ export function TeamPicker({
               setOpen(true);
             }}
           />
-          {open && hits.length > 0 && (
+          {open && fetching && debounced.length >= 2 && (
+            <div className="absolute z-20 mt-1 w-full rounded-lg border bg-popover px-3 py-3 shadow-md">
+              <LoadingView message="teamSearch" variant="inline" />
+            </div>
+          )}
+          {open && !fetching && hits.length > 0 && (
             <ul className="absolute z-20 mt-1 max-h-48 w-full overflow-auto rounded-lg border bg-popover py-1 shadow-md">
               {hits.map((hit) => (
                 <li key={hit.id}>

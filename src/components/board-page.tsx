@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { LoadingView } from "@/components/loading-view";
 import { StatusPill } from "@/components/status-pill";
 import { useLiveEvents } from "@/hooks/use-live-events";
 import { useI18n } from "@/i18n/use-i18n";
@@ -28,7 +29,7 @@ export function BoardPage({
   const { state } = useCommunity();
   const isLive = sport === "nba" || sport === "soccer";
   const league = leagueSlug ? getLeagueBySlug(leagueSlug) : undefined;
-  const { events: liveList, syncedAt } = useLiveEvents(
+  const { events: liveList, loading, syncedAt } = useLiveEvents(
     isLive ? sport : "nba",
     isLive,
     leagueSlug,
@@ -64,7 +65,9 @@ export function BoardPage({
           <h2 className="text-xs font-semibold tracking-widest text-muted-foreground uppercase">
             {t.board.matches}
           </h2>
-          {list.length === 0 ? (
+          {isLive && loading && list.length === 0 ? (
+            <LoadingView message="page" variant="section" />
+          ) : list.length === 0 ? (
             <p className="rounded-xl border border-dashed px-4 py-12 text-center text-sm text-muted-foreground">
               {isLive ? t.home.liveEmpty : t.board.empty}
             </p>

@@ -79,6 +79,7 @@ export function SiteHeader() {
           onSubmit={(e) => {
             e.preventDefault();
             const term = searchQ.trim();
+            window.dispatchEvent(new Event("sideline:navstart"));
             if (term.length < 1) {
               router.push("/search");
               return;

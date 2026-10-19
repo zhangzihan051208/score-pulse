@@ -3,6 +3,11 @@ import type { Locale, Sport } from "@/lib/types";
 type Dict = {
   brand: string;
   tagline: string;
+  common: {
+    loadingPage: string;
+    loadingSearch: string;
+    loadingTeamSearch: string;
+  };
   nav: {
     home: string;
     boards: string;
@@ -191,6 +196,11 @@ export const messages: Record<Locale, Dict> = {
   en: {
     brand: "Sideline",
     tagline: "Rate the night, not the reputation",
+    common: {
+      loadingPage: "Loading…",
+      loadingSearch: "Searching…",
+      loadingTeamSearch: "Finding teams…",
+    },
     nav: {
       home: "Home",
       boards: "Boards",
@@ -461,6 +471,11 @@ export const messages: Record<Locale, Dict> = {
   zh: {
     brand: "Sideline",
     tagline: "评这场，而不是评名气",
+    common: {
+      loadingPage: "加载中…",
+      loadingSearch: "正在搜索…",
+      loadingTeamSearch: "正在查找球队…",
+    },
     nav: {
       home: "首页",
       boards: "分区",
@@ -726,6 +741,11 @@ export const messages: Record<Locale, Dict> = {
   es: {
     brand: "Sideline",
     tagline: "Nota la noche, no la fama",
+    common: {
+      loadingPage: "Cargando…",
+      loadingSearch: "Buscando…",
+      loadingTeamSearch: "Buscando equipos…",
+    },
     nav: {
       home: "Inicio",
       boards: "Tablones",
@@ -992,6 +1012,11 @@ export const messages: Record<Locale, Dict> = {
   ja: {
     brand: "Sideline",
     tagline: "名声ではなく、この一戦を採点する",
+    common: {
+      loadingPage: "読み込み中…",
+      loadingSearch: "検索中…",
+      loadingTeamSearch: "チームを検索中…",
+    },
     nav: {
       home: "ホーム",
       boards: "板",
