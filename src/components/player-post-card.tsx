@@ -87,7 +87,7 @@ export function PlayerPostCard({
       </Link>
 
       <div className="mt-4 flex gap-3">
-        <PlayerAvatar athlete={athlete} size="lg" />
+        <PlayerAvatar athlete={athlete} size="xl" />
         <div className="min-w-0 flex-1">
           <h1 className="truncate text-xl font-bold">{athlete.name}</h1>
           <p

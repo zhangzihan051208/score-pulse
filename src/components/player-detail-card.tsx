@@ -48,7 +48,7 @@ export function PlayerDetailCard({
       </Link>
 
       <div className="mt-4 flex gap-4">
-        <PlayerAvatar athlete={athlete} size="lg" className="mt-0.5" />
+        <PlayerAvatar athlete={athlete} size="xl" className="mt-0.5" />
         <div className="min-w-0 flex-1">
           <p className="truncate text-xs text-muted-foreground">
             {t.sports[event.sport]} · {tx(event.title, locale)}
