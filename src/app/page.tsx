@@ -1,7 +1,10 @@
 import { HomeBoards } from "@/components/home-boards";
-import { listLiveMatchEvents } from "@/lib/fixtures-sync";
+import { cachedLiveMatchEvents } from "@/lib/live-data-cache";
+
+/** Serve cached HTML; fixture rows refresh on a short interval via client poll. */
+export const revalidate = 30;
 
 export default async function HomePage() {
-  const initialEvents = await listLiveMatchEvents(["nba", "soccer"], 48);
+  const initialEvents = await cachedLiveMatchEvents(["nba", "soccer"], 48);
   return <HomeBoards initialEvents={initialEvents} />;
 }

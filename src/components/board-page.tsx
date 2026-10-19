@@ -13,14 +13,16 @@ import { MatchScoreboard } from "@/components/match-scoreboard";
 import { useCommunity } from "@/hooks/use-community";
 import { leagueLabel } from "@/i18n/league-labels";
 import { getLeagueBySlug } from "@/lib/leagues";
-import type { Sport } from "@/lib/types";
+import type { MatchEvent, Sport } from "@/lib/types";
 
 export function BoardPage({
   sport,
   leagueSlug,
+  initialEvents = [],
 }: {
   sport: Sport;
   leagueSlug?: string;
+  initialEvents?: MatchEvent[];
 }) {
   const { locale, t } = useI18n();
   const { state } = useCommunity();
@@ -30,6 +32,7 @@ export function BoardPage({
     isLive ? sport : "nba",
     isLive,
     leagueSlug,
+    isLive ? initialEvents : undefined,
   );
   const list = isLive ? liveList : eventsBySport(sport);
 

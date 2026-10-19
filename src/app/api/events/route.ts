@@ -3,6 +3,7 @@ import {
   refreshLiveFixturesFromTsdb,
   syncSportsDbFixtures,
 } from "@/lib/fixtures-sync";
+import { cachedLiveMatchEvents } from "@/lib/live-data-cache";
 import { maybeRefreshLiveFixturesFromTsdb } from "@/lib/sync-throttle";
 import { NextResponse } from "next/server";
 
@@ -14,10 +15,14 @@ export async function GET(request: Request) {
   const sync = searchParams.get("sync") === "1";
   const liveTick = searchParams.get("live") === "1";
 
+  let liveRefreshed = false;
   if (sync || refresh) {
     await syncSportsDbFixtures(refresh || sync);
   } else if (liveTick) {
-    await maybeRefreshLiveFixturesFromTsdb(refreshLiveFixturesFromTsdb, 8);
+    liveRefreshed = await maybeRefreshLiveFixturesFromTsdb(
+      refreshLiveFixturesFromTsdb,
+      8,
+    );
   }
 
   const sports =
@@ -28,11 +33,12 @@ export async function GET(request: Request) {
         : (["nba", "soccer"] as const);
 
   const limit = Number(searchParams.get("limit") ?? "12");
-  const events = await listLiveMatchEvents(
-    [...sports],
-    Math.min(limit, 48),
-    league,
-  );
+  const capped = Math.min(limit, 48);
+  const readLive = () => listLiveMatchEvents([...sports], capped, league);
+  const events =
+    sync || refresh || liveRefreshed
+      ? await readLive()
+      : await cachedLiveMatchEvents([...sports], capped, league);
 
   return NextResponse.json(
     {

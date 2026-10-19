@@ -9,11 +9,12 @@ const lastFixtureRefresh = new Map<string, number>();
 export async function maybeRefreshLiveFixturesFromTsdb(
   run: (limit: number) => Promise<void>,
   limit = 8,
-) {
+): Promise<boolean> {
   const now = Date.now();
-  if (now - lastLiveBulkRefresh < LIVE_BULK_REFRESH_MS) return;
+  if (now - lastLiveBulkRefresh < LIVE_BULK_REFRESH_MS) return false;
   lastLiveBulkRefresh = now;
   await run(limit);
+  return true;
 }
 
 export async function maybeRefreshFixtureFromTsdb<T>(

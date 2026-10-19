@@ -301,7 +301,7 @@ export const messages: Record<Locale, Dict> = {
       apiFixtures: "From TheSportsDB",
       apiFixturesHint:
         "Live NBA & Premier League threads refresh from TheSportsDB every ~90s.",
-      liveSyncHint: "Scores & rosters auto-refresh about every 90 seconds.",
+      liveSyncHint: "Live scores refresh faster; background tabs poll less often.",
       liveEmpty:
         "No live threads yet. Set Supabase service key and run sync, or wait for the next poll.",
       liveBoardLead:
@@ -569,7 +569,7 @@ export const messages: Record<Locale, Dict> = {
       liveNow: "进行中",
       apiFixtures: "TheSportsDB 赛程",
       apiFixturesHint: "NBA 与英超真实赛程约每 90 秒自动刷新。",
-      liveSyncHint: "比分与名单约每 90 秒自动同步。",
+      liveSyncHint: "进行中比赛刷新更快；切到后台会降低轮询频率。",
       liveEmpty: "暂无真实赛程。请配置 Supabase 服务端密钥并等待同步。",
       liveBoardLead: "TheSportsDB 最近比赛与阵容，可为名单中任意球员打分。",
       players: "名球员",
@@ -833,7 +833,7 @@ export const messages: Record<Locale, Dict> = {
       liveNow: "En vivo",
       apiFixtures: "TheSportsDB",
       apiFixturesHint: "NBA y Premier League se actualizan cada ~90 s.",
-      liveSyncHint: "Marcadores y plantillas se refrescan cada ~90 s.",
+      liveSyncHint: "Partidos en vivo se actualizan más a menudo; en segundo plano, menos.",
       liveEmpty: "Sin partidos reales aún. Configura Supabase service key.",
       liveBoardLead: "Partidos recientes y plantillas completas desde TheSportsDB.",
       players: "jugadores",
@@ -1098,7 +1098,7 @@ export const messages: Record<Locale, Dict> = {
       liveNow: "進行中",
       apiFixtures: "TheSportsDB",
       apiFixturesHint: "NBA・PL は約90秒ごとに自動更新。",
-      liveSyncHint: "スコアとメンバーは約90秒ごとに同期。",
+      liveSyncHint: "ライブは高頻度更新。バックグラウンドでは間隔を長くします。",
       liveEmpty: "実試合データがありません。service key を設定してください。",
       liveBoardLead: "TheSportsDB の最近の試合とメンバー全員が採点対象。",
       players: "選手",

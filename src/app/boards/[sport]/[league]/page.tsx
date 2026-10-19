@@ -1,7 +1,10 @@
 import { notFound } from "next/navigation";
 import { BoardPage } from "@/components/board-page";
+import { cachedLiveMatchEvents } from "@/lib/live-data-cache";
 import { getLeagueBySlug, leaguesForSport } from "@/lib/leagues";
 import { SPORTS, type Sport } from "@/lib/types";
+
+export const revalidate = 30;
 
 export function generateStaticParams() {
   const params: { sport: string; league: string }[] = [];
@@ -32,5 +35,10 @@ export default async function LeagueBoard({
   if (!SPORTS.includes(sport as Sport)) notFound();
   const cfg = getLeagueBySlug(league);
   if (!cfg || cfg.sport !== sport) notFound();
-  return <BoardPage sport={sport as Sport} leagueSlug={league} />;
+  const s = sport as Sport;
+  const initialEvents =
+    s === "nba" || s === "soccer"
+      ? await cachedLiveMatchEvents([s], 32, league)
+      : [];
+  return <BoardPage sport={s} leagueSlug={league} initialEvents={initialEvents} />;
 }
