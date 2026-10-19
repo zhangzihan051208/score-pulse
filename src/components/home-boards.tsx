@@ -11,8 +11,10 @@ import { sortEventsForHome } from "@/lib/favorite-teams";
 import { useI18n } from "@/i18n/use-i18n";
 import { tx } from "@/lib/copy";
 import { events, formatWhen, overallScore } from "@/lib/data";
+import { EventSpotlightGrid } from "@/components/event-spotlight-card";
 import { PlayerAvatar } from "@/components/player-avatar";
-import { resolveAthlete } from "@/lib/event-resolve";
+import { useCommunity } from "@/hooks/use-community";
+import { pickEventSpotlights } from "@/lib/event-spotlight";
 import { SPORT_CHIP } from "@/lib/sports";
 import { LeagueTabs } from "@/components/league-tabs";
 import { leagueLabel } from "@/i18n/league-labels";
@@ -22,6 +24,7 @@ const LIVE_SPORTS: Sport[] = ["nba", "soccer"];
 
 export function HomeBoards() {
   const { locale, t } = useI18n();
+  const { state } = useCommunity();
   const { events: liveAll, syncedAt } = useLiveEvents();
   const { favorites, hydrated } = useFavoriteTeams();
   const sortedAll = useMemo(
@@ -93,32 +96,31 @@ export function HomeBoards() {
           <ul>
             {liveAll
               .flatMap((event) =>
-                event.performances.slice(0, 6).map((p) => ({ event, p })),
+                pickEventSpotlights(event, state, locale).map((pick) => ({
+                  event,
+                  pick,
+                })),
               )
               .slice(0, 8)
-              .map(({ event, p }) => {
-                const athlete = resolveAthlete(event, p.athleteId);
-                if (!athlete) return null;
-                return (
-                  <li key={`${event.id}-${p.athleteId}`} className="border-b last:border-0">
-                    <Link
-                      href={`/events/${event.slug}/${p.athleteId}`}
-                      className="flex items-center justify-between gap-2 px-3 py-2.5 hover:bg-muted/60"
-                    >
-                      <PlayerAvatar athlete={athlete} size="sm" />
-                      <div className="min-w-0 flex-1">
-                        <p className="truncate text-sm font-medium">{athlete.name}</p>
-                        <p className="truncate text-xs text-muted-foreground">
-                          {t.sports[event.sport]} · {tx(event.title, locale)}
-                        </p>
-                      </div>
-                      <span className="text-sm font-bold tabular-nums text-primary">
-                        {overallScore(p.communityAvg, p.positionKey).toFixed(1)}
-                      </span>
-                    </Link>
-                  </li>
-                );
-              })}
+              .map(({ event, pick }) => (
+                <li key={`${event.id}-${pick.athlete.id}`} className="border-b last:border-0">
+                  <Link
+                    href={`/events/${event.slug}/${pick.athlete.id}`}
+                    className="flex items-center justify-between gap-2 px-3 py-2.5 hover:bg-muted/60"
+                  >
+                    <PlayerAvatar athlete={pick.athlete} size="sm" />
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-medium">{pick.athlete.name}</p>
+                      <p className="truncate text-xs text-muted-foreground">
+                        {t.sports[event.sport]} · {tx(event.title, locale)}
+                      </p>
+                    </div>
+                    <span className="text-sm font-bold tabular-nums text-primary">
+                      {overallScore(pick.merged.avg, pick.performance.positionKey).toFixed(1)}
+                    </span>
+                  </Link>
+                </li>
+              ))}
           </ul>
         </aside>
       </div>
@@ -134,6 +136,7 @@ function LiveSportBlock({
   list: MatchEvent[];
 }) {
   const { locale, t } = useI18n();
+  const { state } = useCommunity();
   const featured = list[0];
 
   if (list.length === 0) {
@@ -171,33 +174,9 @@ function LiveSportBlock({
       {list.slice(0, sport === "soccer" ? 4 : 1).map((event) => (
         <FeaturedEventRow key={event.id} event={event} locale={locale} t={t} />
       ))}
-      <ul>
-        {featured.performances.slice(0, 8).map((p) => {
-          const athlete = resolveAthlete(featured, p.athleteId);
-          if (!athlete) return null;
-          return (
-            <li key={p.athleteId} className="border-b last:border-0">
-              <Link
-                href={`/events/${featured.slug}/${p.athleteId}`}
-                className="flex items-center justify-between px-3 py-2 text-sm hover:bg-muted/40"
-              >
-                <span>
-                  <span className="text-muted-foreground">{t.home.rate} </span>
-                  {athlete.name}
-                </span>
-                <span className="font-semibold tabular-nums text-primary">
-                  {overallScore(p.communityAvg, p.positionKey).toFixed(1)}
-                </span>
-              </Link>
-            </li>
-          );
-        })}
-        {featured.performances.length > 8 && (
-          <li className="px-3 py-2 text-xs text-muted-foreground">
-            +{featured.performances.length - 8} {t.home.morePlayers}
-          </li>
-        )}
-      </ul>
+      <div className="border-t px-3 py-3">
+        <EventSpotlightGrid event={featured} state={state} compact />
+      </div>
     </section>
   );
 }

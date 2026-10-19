@@ -74,6 +74,7 @@ export function playersToPerformances(
       shortName: shortName(p.strPlayer),
       country: S("—"),
       team,
+      idTeam: p.idTeam,
       photoUrl,
       jerseyNumber,
     };

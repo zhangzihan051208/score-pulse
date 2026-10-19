@@ -5,16 +5,12 @@ import { StatusPill } from "@/components/status-pill";
 import { useLiveEvents } from "@/hooks/use-live-events";
 import { useI18n } from "@/i18n/use-i18n";
 import { tx } from "@/lib/copy";
-import {
-  athletes,
-  eventsBySport,
-  formatWhen,
-  overallScore,
-} from "@/lib/data";
-import { resolveAthlete } from "@/lib/event-resolve";
+import { eventsBySport, formatWhen } from "@/lib/data";
 import { SPORT_ACCENT } from "@/lib/sports";
+import { EventSpotlightGrid } from "@/components/event-spotlight-card";
 import { LeagueTabs } from "@/components/league-tabs";
 import { MatchScoreboard } from "@/components/match-scoreboard";
+import { useCommunity } from "@/hooks/use-community";
 import { leagueLabel } from "@/i18n/league-labels";
 import { getLeagueBySlug } from "@/lib/leagues";
 import type { Sport } from "@/lib/types";
@@ -27,6 +23,7 @@ export function BoardPage({
   leagueSlug?: string;
 }) {
   const { locale, t } = useI18n();
+  const { state } = useCommunity();
   const isLive = sport === "nba" || sport === "soccer";
   const league = leagueSlug ? getLeagueBySlug(leagueSlug) : undefined;
   const { events: liveList, syncedAt } = useLiveEvents(
@@ -95,32 +92,9 @@ export function BoardPage({
                       : ""}
                   </p>
                 </Link>
-                <ul>
-                  {event.performances.map((p) => {
-                    const athlete =
-                      resolveAthlete(event, p.athleteId) ??
-                      athletes[p.athleteId];
-                    if (!athlete) return null;
-                    return (
-                      <li key={p.athleteId}>
-                        <Link
-                          href={`/events/${event.slug}/${athlete.id}`}
-                          className="flex items-center justify-between px-4 py-2.5 text-sm hover:bg-muted/40"
-                        >
-                          <span>
-                            {athlete.name}
-                            <span className="ml-2 text-muted-foreground">
-                              {tx(p.role, locale)}
-                            </span>
-                          </span>
-                          <span className="font-semibold tabular-nums text-primary">
-                            {overallScore(p.communityAvg, p.positionKey).toFixed(1)}
-                          </span>
-                        </Link>
-                      </li>
-                    );
-                  })}
-                </ul>
+                <div className="border-t px-3 py-3">
+                  <EventSpotlightGrid event={event} state={state} compact />
+                </div>
               </article>
             ))
           )}

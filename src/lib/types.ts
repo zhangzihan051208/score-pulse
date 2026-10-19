@@ -19,6 +19,8 @@ export type Athlete = {
   shortName: string;
   country: Localized;
   team?: string;
+  /** TheSportsDB team id — for home/away grouping */
+  idTeam?: string;
   photoUrl?: string;
   jerseyNumber?: string;
 };

@@ -1,16 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { PlayerAvatar } from "@/components/player-avatar";
+import { EventSpotlightGrid } from "@/components/event-spotlight-card";
 import { MatchScoreboard } from "@/components/match-scoreboard";
-import { Overall } from "@/components/score-rows";
 import { StatusPill } from "@/components/status-pill";
 import { useCommunity } from "@/hooks/use-community";
 import { useI18n } from "@/i18n/use-i18n";
 import { tx } from "@/lib/copy";
-import { formatWhen, overallScore } from "@/lib/data";
-import { resolveAthlete } from "@/lib/event-resolve";
-import { mergedAverages } from "@/lib/store";
+import { formatWhen } from "@/lib/data";
 import type { MatchEvent } from "@/lib/types";
 
 export function EventThread({ event }: { event: MatchEvent }) {
@@ -42,52 +39,13 @@ export function EventThread({ event }: { event: MatchEvent }) {
       </section>
 
       <div className="mx-auto max-w-3xl space-y-3 px-3 py-6">
-        {event.performances.map((p) => {
-          const athlete = resolveAthlete(event, p.athleteId);
-          const merged = mergedAverages(event, p.athleteId, state);
-          if (!merged || !athlete) return null;
-          return (
-            <article key={p.athleteId} className="rounded-xl border bg-card p-4">
-              <div className="flex items-start justify-between gap-3">
-                <div className="flex items-center gap-3">
-                  <PlayerAvatar athlete={athlete} size="default" />
-                  <div>
-                    <h2 className="font-semibold leading-tight">{athlete.name}</h2>
-                    <p className="text-xs text-muted-foreground">
-                      {athlete.team ? `${athlete.team} · ` : ""}
-                      {tx(p.role, locale)}
-                      {athlete.jerseyNumber ? ` · #${athlete.jerseyNumber}` : ""}
-                      {p.result && !athlete.jerseyNumber
-                        ? ` · ${tx(p.result, locale)}`
-                        : ""}
-                    </p>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <Overall value={overallScore(merged.avg, merged.positionKey)} />
-                  <p className="text-[11px] text-muted-foreground">
-                    {merged.count.toLocaleString()} {t.event.ratings}
-                  </p>
-                </div>
-              </div>
-              <p className="mt-3 text-sm leading-6">{tx(p.highlight, locale)}</p>
-              <dl className="mt-3 flex flex-wrap gap-1.5">
-                {p.stats.map((stat) => (
-                  <div key={tx(stat.label, locale)} className="rounded bg-muted px-2 py-1 text-xs">
-                    <span className="text-muted-foreground">{tx(stat.label, locale)} </span>
-                    <span className="font-medium">{stat.value}</span>
-                  </div>
-                ))}
-              </dl>
-              <Link
-                href={`/events/${event.slug}/${athlete.id}`}
-                className="mt-4 inline-flex h-8 items-center rounded-lg bg-primary px-3 text-sm font-medium text-primary-foreground"
-              >
-                {t.event.ratePlayer}
-              </Link>
-            </article>
-          );
-        })}
+        <EventSpotlightGrid event={event} state={state} />
+        <p className="text-center text-xs text-muted-foreground">
+          {t.event.spotlightHint.replace(
+            "{n}",
+            String(event.performances.length),
+          )}
+        </p>
       </div>
     </div>
   );

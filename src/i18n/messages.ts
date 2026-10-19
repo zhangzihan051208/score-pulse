@@ -123,6 +123,12 @@ type Dict = {
     community: string;
     ratings: string;
     yourScore: string;
+    homeSpotlight: string;
+    awaySpotlight: string;
+    hotTake: string;
+    noHotTake: string;
+    spotlightEmpty: string;
+    spotlightHint: string;
   };
   rate: {
     title: string;
@@ -309,6 +315,12 @@ export const messages: Record<Locale, Dict> = {
       community: "Board average",
       ratings: "ratings",
       yourScore: "Your card",
+      homeSpotlight: "Home spotlight",
+      awaySpotlight: "Away spotlight",
+      hotTake: "Hot take",
+      noHotTake: "No standout comment yet — open the card to post one.",
+      spotlightEmpty: "No spotlight players yet. Sync lineups or grade someone first.",
+      spotlightHint: "Spotlight picks for this thread · {n} players on the card",
     },
     rate: {
       title: "Player card",
@@ -559,6 +571,12 @@ export const messages: Record<Locale, Dict> = {
       community: "分区均分",
       ratings: "人评",
       yourScore: "你的卡",
+      homeSpotlight: "主队代表",
+      awaySpotlight: "客队代表",
+      hotTake: "热评",
+      noHotTake: "还没有热评，点进球员卡来一条。",
+      spotlightEmpty: "暂无代表球员，请先同步阵容或给球员打分。",
+      spotlightHint: "本场各队代表 · 阵容共 {n} 人可评",
     },
     rate: {
       title: "球员卡",
@@ -809,6 +827,12 @@ export const messages: Record<Locale, Dict> = {
       community: "Media",
       ratings: "votos",
       yourScore: "Tu carta",
+      homeSpotlight: "Local",
+      awaySpotlight: "Visitante",
+      hotTake: "Comentario top",
+      noHotTake: "Aún no hay comentario destacado.",
+      spotlightEmpty: "Sin jugadores destacados todavía.",
+      spotlightHint: "Destacados del partido · {n} jugadores en la ficha",
     },
     rate: {
       title: "Carta",
@@ -1059,6 +1083,12 @@ export const messages: Record<Locale, Dict> = {
       community: "平均",
       ratings: "件",
       yourScore: "あなたの点",
+      homeSpotlight: "ホーム代表",
+      awaySpotlight: "アウェイ代表",
+      hotTake: "注目コメント",
+      noHotTake: "まだ注目コメントがありません。",
+      spotlightEmpty: "代表選手がまだいません。",
+      spotlightHint: "この試合の代表 · 採点対象 {n} 人",
     },
     rate: {
       title: "選手カード",
