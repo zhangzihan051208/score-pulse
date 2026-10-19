@@ -129,6 +129,10 @@ type Dict = {
     noHotTake: string;
     spotlightEmpty: string;
     spotlightHint: string;
+    squadRatings: string;
+    squadRatingsLead: string;
+    squadPlayers: string;
+    squadEmpty: string;
   };
   rate: {
     title: string;
@@ -321,6 +325,10 @@ export const messages: Record<Locale, Dict> = {
       noHotTake: "No standout comment yet — open the card to post one.",
       spotlightEmpty: "No spotlight players yet. Sync lineups or grade someone first.",
       spotlightHint: "Spotlight picks for this thread · {n} players on the card",
+      squadRatings: "Squad ratings",
+      squadRatingsLead: "Community averages by player — home and away.",
+      squadPlayers: "players",
+      squadEmpty: "No lineup for this side yet.",
     },
     rate: {
       title: "Player card",
@@ -577,6 +585,10 @@ export const messages: Record<Locale, Dict> = {
       noHotTake: "还没有热评，点进球员卡来一条。",
       spotlightEmpty: "暂无代表球员，请先同步阵容或给球员打分。",
       spotlightHint: "本场各队代表 · 阵容共 {n} 人可评",
+      squadRatings: "全员评分",
+      squadRatingsLead: "主客队分栏展示社区均分与五维分布。",
+      squadPlayers: "人",
+      squadEmpty: "该队暂无阵容数据。",
     },
     rate: {
       title: "球员卡",
@@ -833,6 +845,10 @@ export const messages: Record<Locale, Dict> = {
       noHotTake: "Aún no hay comentario destacado.",
       spotlightEmpty: "Sin jugadores destacados todavía.",
       spotlightHint: "Destacados del partido · {n} jugadores en la ficha",
+      squadRatings: "Notas del plantel",
+      squadRatingsLead: "Medias de la comunidad, local y visitante.",
+      squadPlayers: "jugadores",
+      squadEmpty: "Sin alineación para este bando.",
     },
     rate: {
       title: "Carta",
@@ -1089,6 +1105,10 @@ export const messages: Record<Locale, Dict> = {
       noHotTake: "まだ注目コメントがありません。",
       spotlightEmpty: "代表選手がまだいません。",
       spotlightHint: "この試合の代表 · 採点対象 {n} 人",
+      squadRatings: "全員採点",
+      squadRatingsLead: "ホームとアウェイに分けてコミュニティ平均を表示。",
+      squadPlayers: "人",
+      squadEmpty: "この側のメンバーはまだありません。",
     },
     rate: {
       title: "選手カード",

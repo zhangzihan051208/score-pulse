@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { EventSpotlightGrid } from "@/components/event-spotlight-card";
+import { EventRosterColumns } from "@/components/event-roster-columns";
 import { MatchScoreboard } from "@/components/match-scoreboard";
 import { StatusPill } from "@/components/status-pill";
 import { useCommunity } from "@/hooks/use-community";
@@ -38,14 +38,8 @@ export function EventThread({ event }: { event: MatchEvent }) {
         </div>
       </section>
 
-      <div className="mx-auto max-w-3xl space-y-3 px-3 py-6">
-        <EventSpotlightGrid event={event} state={state} />
-        <p className="text-center text-xs text-muted-foreground">
-          {t.event.spotlightHint.replace(
-            "{n}",
-            String(event.performances.length),
-          )}
-        </p>
+      <div className="mx-auto max-w-6xl space-y-3 px-3 py-6">
+        <EventRosterColumns event={event} state={state} />
       </div>
     </div>
   );

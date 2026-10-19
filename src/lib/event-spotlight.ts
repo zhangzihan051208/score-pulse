@@ -46,6 +46,51 @@ function pickScore(
   return merged.count * 100 + overall * 10 + (starter ? 50 : 0);
 }
 
+export type RosterEntry = {
+  performance: Performance;
+  athlete: Athlete;
+  merged: NonNullable<ReturnType<typeof mergedAverages>>;
+};
+
+function sortRosterEntries(
+  event: MatchEvent,
+  list: RosterEntry[],
+  locale: Locale,
+): RosterEntry[] {
+  return [...list].sort((a, b) => {
+    const starterA = isStarter(a.performance, locale);
+    const starterB = isStarter(b.performance, locale);
+    if (starterA !== starterB) return starterA ? -1 : 1;
+    const scoreA = pickScore(event, a.performance, a.merged, starterA);
+    const scoreB = pickScore(event, b.performance, b.merged, starterB);
+    return scoreB - scoreA;
+  });
+}
+
+export function performancesBySide(
+  event: MatchEvent,
+  state: CommunityState,
+  locale: Locale,
+): { home: RosterEntry[]; away: RosterEntry[] } {
+  const home: RosterEntry[] = [];
+  const away: RosterEntry[] = [];
+
+  for (const p of event.performances) {
+    const athlete = resolveAthlete(event, p.athleteId);
+    const merged = mergedAverages(event, p.athleteId, state);
+    if (!athlete || !merged) continue;
+    const entry: RosterEntry = { performance: p, athlete, merged };
+    const side = athleteSide(event, athlete);
+    if (side === "away") away.push(entry);
+    else home.push(entry);
+  }
+
+  return {
+    home: sortRosterEntries(event, home, locale),
+    away: sortRosterEntries(event, away, locale),
+  };
+}
+
 export function pickEventSpotlights(
   event: MatchEvent,
   state: CommunityState,
