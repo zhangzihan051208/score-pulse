@@ -35,7 +35,7 @@ export function getDegradedMode(): DegradedMode {
 export function markTsdbUnavailable() {
   flags = {
     cacheOnly: true,
-    hideLineups: true,
+    hideLineups: false,
     noRemoteSearch: true,
   };
   degradedUntil = Date.now() + TSDB_FAIL_TTL_MS;
@@ -45,7 +45,7 @@ export function markSupabaseUnavailable() {
   flags = {
     ...flags,
     cacheOnly: true,
-    hideLineups: flags.hideLineups || true,
+    hideLineups: false,
   };
   degradedUntil = Math.max(degradedUntil, Date.now() + SUPABASE_FAIL_TTL_MS);
 }
@@ -53,6 +53,24 @@ export function markSupabaseUnavailable() {
 export function clearDegradedMode() {
   degradedUntil = 0;
   flags = { cacheOnly: false, hideLineups: false, noRemoteSearch: false };
+}
+
+/** Call after a successful Supabase read (clears false-positive degrade from schema fallbacks). */
+export function noteSupabaseHealthy() {
+  clearDegradedMode();
+}
+
+export function isBenignSupabaseSchemaError(message: string) {
+  const m = message.toLowerCase();
+  return (
+    m.includes("schema cache") ||
+    m.includes("column") ||
+    m.includes("does not exist") ||
+    m.includes("id_home_team") ||
+    m.includes("id_away_team") ||
+    m.includes("lineup") ||
+    m.includes("league_id")
+  );
 }
 
 export async function withUpstreamTimeout<T>(

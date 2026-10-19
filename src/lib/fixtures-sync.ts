@@ -32,21 +32,21 @@ import { enrichTeamSearchHit } from "@/lib/team-league";
 import { matchSearchBoost } from "@/lib/team-popularity";
 import {
   getDegradedMode,
+  isBenignSupabaseSchemaError,
   markSupabaseUnavailable,
   markTsdbUnavailable,
+  noteSupabaseHealthy,
   UPSTREAM_TIMEOUT_MS,
   withUpstreamTimeout,
 } from "@/lib/service-degraded";
-import { applyDegradedToMatchEvent } from "@/lib/match-event-display";
 import type { MatchEvent } from "./types";
 
 const LIVE_SYNC_MS = 3 * 60 * 1000;
 
 function fixtureRowToMatchEvent(row: LiveFixtureRow): MatchEvent | null {
-  const degraded = getDegradedMode();
-  const event = fixtureToMatchEvent(row, { scoreOnly: degraded.hideLineups });
-  if (!event) return null;
-  return applyDegradedToMatchEvent(event, degraded);
+  const hasLineup = rowHasLineup(row);
+  const event = fixtureToMatchEvent(row, { scoreOnly: !hasLineup });
+  return event;
 }
 const ENRICH_PER_LEAGUE = 6;
 const EVENTS_FETCH_PER_LEAGUE = 35;
@@ -380,6 +380,7 @@ type FixtureQueryResult = {
 async function fetchFixtureRows(
   run: (select: string) => PromiseLike<FixtureQueryResult>,
 ): Promise<Record<string, unknown>[]> {
+  let lastError: string | null = null;
   for (const select of [
     FIXTURE_SELECT_WITH_TEAM_COLS,
     FIXTURE_SELECT_WITH_LEAGUE,
@@ -387,9 +388,16 @@ async function fetchFixtureRows(
   ]) {
     const res = await run(select);
     if (!res.error && res.data) {
+      noteSupabaseHealthy();
       return res.data as Record<string, unknown>[];
     }
-    if (res.error) markSupabaseUnavailable();
+    if (res.error?.message) lastError = res.error.message;
+  }
+  if (
+    lastError &&
+    !isBenignSupabaseSchemaError(lastError)
+  ) {
+    markSupabaseUnavailable();
   }
   return [];
 }
@@ -404,7 +412,6 @@ export async function listFixtures(
 
   const leagueFilter = leagueSlug ? getLeagueBySlug(leagueSlug) : undefined;
 
-  const degraded = getDegradedMode();
   const data = await fetchFixtureRows((select) =>
     admin
       .from("sportsdb_fixtures")
@@ -419,7 +426,7 @@ export async function listFixtures(
   return data
     .map((row) => hydrateFixtureRow(row))
     .filter((row) => isLiveLeagueRow(row))
-    .filter((row) => degraded.hideLineups || rowHasLineup(row))
+    .filter((row) => rowHasLineup(row))
     .filter((row) => {
       if (!leagueFilter) return true;
       return (
@@ -457,6 +464,7 @@ export async function getLiveMatchBySlug(slug: string) {
       .eq("slug", slug)
       .maybeSingle();
     if (!res.error && res.data) {
+      noteSupabaseHealthy();
       rowData = res.data as unknown as Record<string, unknown>;
       break;
     }
@@ -570,8 +578,6 @@ export async function searchFixtures(query: string, limit = 20) {
   const players: SearchPlayerHit[] = [];
   const seenPlayer = new Set<string>();
 
-  const degraded = getDegradedMode();
-
   for (const row of rows) {
     const event = fixtureRowToMatchEvent(row);
     if (!event) continue;
@@ -585,8 +591,6 @@ export async function searchFixtures(query: string, limit = 20) {
     if (titleHit && matches.length < limit) {
       matches.push(event);
     }
-
-    if (degraded.hideLineups) continue;
 
     const lineup =
       row.lineup ??

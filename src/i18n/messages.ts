@@ -202,7 +202,7 @@ export const messages: Record<Locale, Dict> = {
       loadingSearch: "Searching…",
       loadingTeamSearch: "Finding teams…",
       degradedBanner:
-        "Data sources are slow — showing cached scores only. Lineups and remote search are temporarily limited.",
+        "Live data sync is paused (sources slow or offline). Scores come from cache; team search may skip TheSportsDB.",
     },
     nav: {
       home: "Home",
@@ -479,7 +479,7 @@ export const messages: Record<Locale, Dict> = {
       loadingSearch: "正在搜索…",
       loadingTeamSearch: "正在查找球队…",
       degradedBanner:
-        "数据源响应较慢，当前仅显示缓存比分；阵容与远程搜索已暂时关闭。",
+        "实时同步已暂停（数据源较慢或不可用），比分来自本地缓存；球队搜索可能仅用已同步数据。",
     },
     nav: {
       home: "首页",
@@ -751,7 +751,7 @@ export const messages: Record<Locale, Dict> = {
       loadingSearch: "Buscando…",
       loadingTeamSearch: "Buscando equipos…",
       degradedBanner:
-        "Fuentes lentas: solo marcadores en caché. Alineaciones y búsqueda remota limitadas.",
+        "Sincronización en vivo pausada; marcadores desde caché. Búsqueda de clubes puede omitir TheSportsDB.",
     },
     nav: {
       home: "Inicio",
@@ -1024,7 +1024,7 @@ export const messages: Record<Locale, Dict> = {
       loadingSearch: "検索中…",
       loadingTeamSearch: "チームを検索中…",
       degradedBanner:
-        "データソースが不安定なため、キャッシュのスコアのみ表示しています。メンバーとリモート検索は一時制限中です。",
+        "ライブ同期を一時停止中。スコアはキャッシュ表示。クラブ検索は同期済みデータのみの場合があります。",
     },
     nav: {
       home: "ホーム",
