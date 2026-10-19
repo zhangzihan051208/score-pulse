@@ -11,6 +11,7 @@ import { dimLabel } from "@/i18n/position-dims";
 import { useI18n } from "@/i18n/use-i18n";
 import { tx } from "@/lib/copy";
 import { overallScore } from "@/lib/data";
+import { playerRoleSubtitle } from "@/lib/player-meta";
 import {
   localTakesForAthlete,
   pickEventSpotlights,
@@ -74,12 +75,37 @@ export function EventSpotlightCard({
         <PlayerAvatar athlete={pick.athlete} size={compact ? "default" : "lg"} />
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-start justify-between gap-2">
-            <div>
-              <h2 className="font-semibold leading-tight">{pick.athlete.name}</h2>
-              <p className="text-xs text-muted-foreground">
-                {pick.side === "home" ? t.event.homeSpotlight : t.event.awaySpotlight}
-                {pick.athlete.team ? ` · ${pick.athlete.team}` : ""}
-                {pick.athlete.jerseyNumber ? ` · #${pick.athlete.jerseyNumber}` : ""}
+            <div className="min-w-0">
+              <h2 className="truncate font-semibold leading-tight">{pick.athlete.name}</h2>
+              <p
+                className="truncate text-xs text-muted-foreground"
+                title={playerRoleSubtitle(
+                  locale,
+                  pick.athlete,
+                  pick.performance,
+                  positionKey,
+                  {
+                    prefix:
+                      pick.side === "home"
+                        ? t.event.homeSpotlight
+                        : t.event.awaySpotlight,
+                    includePositionGuide: false,
+                  },
+                )}
+              >
+                {playerRoleSubtitle(
+                  locale,
+                  pick.athlete,
+                  pick.performance,
+                  positionKey,
+                  {
+                    prefix:
+                      pick.side === "home"
+                        ? t.event.homeSpotlight
+                        : t.event.awaySpotlight,
+                    includePositionGuide: false,
+                  },
+                )}
               </p>
             </div>
             <div className="text-right">

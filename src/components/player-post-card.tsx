@@ -14,6 +14,7 @@ import { useI18n } from "@/i18n/use-i18n";
 import { dimLabel } from "@/i18n/position-dims";
 import { tx } from "@/lib/copy";
 import { emptyScores, overallFromScores } from "@/lib/store";
+import { playerRoleSubtitle } from "@/lib/player-meta";
 import { dimensionIds } from "@/lib/position-ratings";
 import type { Athlete, MatchEvent, Performance, ScoreMap } from "@/lib/types";
 
@@ -87,10 +88,17 @@ export function PlayerPostCard({
 
       <div className="mt-4 flex gap-3">
         <PlayerAvatar athlete={athlete} size="default" />
-        <div>
-          <h1 className="text-xl font-bold">{athlete.name}</h1>
-          <p className="text-sm text-muted-foreground">
-            {tx(event.title, locale)} · {tx(performance.role, locale)}
+        <div className="min-w-0 flex-1">
+          <h1 className="truncate text-xl font-bold">{athlete.name}</h1>
+          <p
+            className="truncate text-sm text-muted-foreground"
+            title={playerRoleSubtitle(locale, athlete, performance, positionKey, {
+              prefix: tx(event.title, locale),
+            })}
+          >
+            {playerRoleSubtitle(locale, athlete, performance, positionKey, {
+              prefix: tx(event.title, locale),
+            })}
           </p>
         </div>
       </div>

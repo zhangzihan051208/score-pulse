@@ -47,8 +47,9 @@ export function PlayerAvatar({
       {showJerseyBadge && jersey ? (
         <span
           className={cn(
-            "absolute -bottom-1 -right-1 flex min-w-[1.35rem] items-center justify-center rounded-md bg-primary px-1 py-0.5 text-[10px] font-bold tabular-nums text-primary-foreground ring-2 ring-background",
-            size === "lg" && "text-xs",
+            "absolute bottom-0 right-0 flex min-w-[1.25rem] translate-x-1/4 translate-y-1/4 items-center justify-center rounded-md bg-primary px-1 py-px text-[10px] font-bold leading-none tabular-nums text-primary-foreground shadow-sm ring-2 ring-background",
+            size === "lg" && "min-w-[1.5rem] px-1.5 py-0.5 text-[11px]",
+            size === "sm" && "min-w-[1.1rem] text-[9px]",
           )}
         >
           {jersey}

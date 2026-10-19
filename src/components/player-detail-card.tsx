@@ -13,7 +13,7 @@ import { usePlayerCommunity } from "@/hooks/use-player-community";
 import { useI18n } from "@/i18n/use-i18n";
 import { tx } from "@/lib/copy";
 import { overallScore } from "@/lib/data";
-import { positionRoleLabel } from "@/i18n/position-dims";
+import { playerRoleSubtitle } from "@/lib/player-meta";
 import { dimensionIds } from "@/lib/position-ratings";
 import type { Athlete, MatchEvent, Performance } from "@/lib/types";
 
@@ -48,24 +48,19 @@ export function PlayerDetailCard({
       </Link>
 
       <div className="mt-4 flex gap-4">
-        <PlayerAvatar athlete={athlete} size="lg" />
+        <PlayerAvatar athlete={athlete} size="lg" className="mt-0.5" />
         <div className="min-w-0 flex-1">
-          <p className="text-xs text-muted-foreground">
+          <p className="truncate text-xs text-muted-foreground">
             {t.sports[event.sport]} · {tx(event.title, locale)}
           </p>
-          <div className="flex flex-wrap items-start justify-between gap-2">
-            <div>
-              <h1 className="text-2xl font-bold leading-tight">{athlete.name}</h1>
-              <p className="text-sm text-muted-foreground">
-                {athlete.team ? `${athlete.team} · ` : ""}
-                {tx(performance.role, locale)}
-                {athlete.jerseyNumber ? ` · #${athlete.jerseyNumber}` : ""}
-                {performance.result && !athlete.jerseyNumber
-                  ? ` · ${tx(performance.result, locale)}`
-                  : ""}
-              </p>
-              <p className="mt-0.5 text-xs text-muted-foreground">
-                {positionRoleLabel(locale, positionKey)}
+          <div className="flex items-start justify-between gap-2">
+            <div className="min-w-0 flex-1">
+              <h1 className="truncate text-2xl font-bold leading-tight">{athlete.name}</h1>
+              <p
+                className="truncate text-sm text-muted-foreground"
+                title={playerRoleSubtitle(locale, athlete, performance, positionKey)}
+              >
+                {playerRoleSubtitle(locale, athlete, performance, positionKey)}
               </p>
             </div>
             {displayMerged && (

@@ -9,6 +9,7 @@ import { localTakesForAthlete, topEngagementTake } from "@/lib/event-spotlight";
 import { useI18n } from "@/i18n/use-i18n";
 import { tx } from "@/lib/copy";
 import { overallScore } from "@/lib/data";
+import { playerRoleSubtitle } from "@/lib/player-meta";
 import { performancesBySide, type RosterEntry } from "@/lib/event-spotlight";
 import type { CommunityState } from "@/lib/store";
 import type { CommunityTake } from "@/components/community-ratings-panel";
@@ -43,10 +44,16 @@ function RosterPlayerCard({
           <div className="min-w-0 flex-1">
             <div className="flex items-start justify-between gap-2">
               <div className="min-w-0">
-                <p className="font-medium leading-tight">{athlete.name}</p>
-                <p className="truncate text-[11px] text-muted-foreground">
-                  {tx(p.role, locale)}
-                  {athlete.jerseyNumber ? ` · #${athlete.jerseyNumber}` : ""}
+                <p className="truncate font-medium leading-tight">{athlete.name}</p>
+                <p
+                  className="truncate text-[11px] text-muted-foreground"
+                  title={playerRoleSubtitle(locale, athlete, p, merged.positionKey, {
+                    includePositionGuide: false,
+                  })}
+                >
+                  {playerRoleSubtitle(locale, athlete, p, merged.positionKey, {
+                    includePositionGuide: false,
+                  })}
                 </p>
               </div>
               <div className="shrink-0 text-right">
