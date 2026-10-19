@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { StatusPill } from "@/components/status-pill";
-import { dimLabel, positionRoleLabels } from "@/i18n/position-dims";
 import { useLiveEvents } from "@/hooks/use-live-events";
 import { useI18n } from "@/i18n/use-i18n";
 import { tx } from "@/lib/copy";
@@ -13,7 +12,6 @@ import {
   overallScore,
 } from "@/lib/data";
 import { resolveAthlete } from "@/lib/event-resolve";
-import { BOARD_POSITIONS, dimensionIds } from "@/lib/position-ratings";
 import { SPORT_ACCENT } from "@/lib/sports";
 import { LeagueTabs } from "@/components/league-tabs";
 import { MatchScoreboard } from "@/components/match-scoreboard";
@@ -37,7 +35,6 @@ export function BoardPage({
     leagueSlug,
   );
   const list = isLive ? liveList : eventsBySport(sport);
-  const positions = BOARD_POSITIONS[sport];
 
   return (
     <div>
@@ -63,8 +60,7 @@ export function BoardPage({
         </div>
       </section>
 
-      <div className="mx-auto grid max-w-6xl gap-4 px-3 py-6 lg:grid-cols-[1fr_240px]">
-        <div className="space-y-3">
+      <div className="mx-auto max-w-6xl space-y-3 px-3 py-6">
           <h2 className="text-xs font-semibold tracking-widest text-muted-foreground uppercase">
             {t.board.matches}
           </h2>
@@ -128,31 +124,6 @@ export function BoardPage({
               </article>
             ))
           )}
-        </div>
-        <aside className="h-fit rounded-xl border bg-card p-4">
-          <p className="mb-1 text-xs font-semibold tracking-widest text-muted-foreground uppercase">
-            {t.board.dimensions}
-          </p>
-          <p className="mb-3 text-[11px] leading-5 text-muted-foreground">
-            {t.board.dimensionsHint}
-          </p>
-          <div className="space-y-4">
-            {positions.map((key) => (
-              <div key={key}>
-                <p className="text-xs font-semibold">
-                  {positionRoleLabels[locale][key]}
-                </p>
-                <ol className="mt-1 space-y-0.5">
-                  {dimensionIds(key).map((id) => (
-                    <li key={id} className="text-[11px] text-muted-foreground">
-                      · {dimLabel(locale, key, id)}
-                    </li>
-                  ))}
-                </ol>
-              </div>
-            ))}
-          </div>
-        </aside>
       </div>
     </div>
   );

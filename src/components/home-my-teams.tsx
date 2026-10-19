@@ -109,12 +109,16 @@ export function HomeMyTeams({
                 href={`/events/${featured.slug}`}
                 className="mt-3 block rounded-lg bg-muted/50 px-3 py-2 hover:bg-muted"
               >
-                <div className="flex flex-wrap items-center gap-2">
-                  <StatusPill status={featured.status} />
-                  <span className="text-sm font-medium">
+                <StatusPill status={featured.status} />
+                {featured.live && featured.homeTeamName ? (
+                  <div className="mt-2">
+                    <MatchScoreboard event={featured} size="sm" />
+                  </div>
+                ) : (
+                  <span className="mt-1 block text-sm font-medium">
                     {tx(featured.title, locale)}
                   </span>
-                </div>
+                )}
                 <p className="mt-1 text-xs text-muted-foreground">
                   {formatWhen(featured.startAt, locale)}
                 </p>

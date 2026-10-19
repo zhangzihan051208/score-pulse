@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { PlayerAvatar } from "@/components/player-avatar";
-import { DimensionChips } from "@/components/rating-guide-panel";
 import { MatchScoreboard } from "@/components/match-scoreboard";
 import { Overall } from "@/components/score-rows";
 import { StatusPill } from "@/components/status-pill";
@@ -80,9 +79,6 @@ export function EventThread({ event }: { event: MatchEvent }) {
                   </div>
                 ))}
               </dl>
-              <div className="mt-3">
-                <DimensionChips positionKey={p.positionKey} scores={merged.avg} />
-              </div>
               <Link
                 href={`/events/${event.slug}/${athlete.id}`}
                 className="mt-4 inline-flex h-8 items-center rounded-lg bg-primary px-3 text-sm font-medium text-primary-foreground"
