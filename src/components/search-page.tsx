@@ -8,6 +8,7 @@ import { StatusPill } from "@/components/status-pill";
 import { Input } from "@/components/ui/input";
 import { useI18n } from "@/i18n/use-i18n";
 import { leagueLabel } from "@/i18n/league-labels";
+import { groupTeamsByLeague } from "@/lib/team-league";
 import { tx } from "@/lib/copy";
 import type { MatchEvent } from "@/lib/types";
 
@@ -15,6 +16,7 @@ type TeamHit = {
   id: string;
   name: string;
   league?: string;
+  leagueSlug?: string;
   sport: "nba" | "soccer";
   hotWeight?: number;
 };
@@ -109,32 +111,40 @@ export function SearchPageInner() {
       )}
 
       {teams.length > 0 && (
-        <section className="mt-8">
+        <section className="mt-8 space-y-6">
           <h2 className="text-xs font-semibold tracking-widest text-muted-foreground uppercase">
             {t.search.clubs}
           </h2>
-          <ul className="mt-3 grid gap-2 sm:grid-cols-2">
-            {teams.map((team) => (
-              <li key={team.id}>
-                <Link
-                  href={`/teams/${team.id}?sport=${team.sport}&name=${encodeURIComponent(team.name)}`}
-                  className="block rounded-xl border bg-card px-4 py-3 hover:bg-muted/40"
-                >
-                  <div className="flex items-start justify-between gap-2">
-                    <p className="font-semibold">{team.name}</p>
-                    {(team.hotWeight ?? 0) >= 85 && (
-                      <span className="shrink-0 rounded-md bg-primary/15 px-1.5 py-0.5 text-[10px] font-semibold text-primary">
-                        {t.search.popularTag}
-                      </span>
-                    )}
-                  </div>
-                  <p className="mt-1 text-xs text-muted-foreground">
-                    {team.league ?? t.sports[team.sport]} · {t.search.clubPage}
-                  </p>
-                </Link>
-              </li>
-            ))}
-          </ul>
+          {groupTeamsByLeague(teams, locale).map((group) => (
+            <div key={group.leagueSlug}>
+              <h3 className="text-sm font-semibold text-foreground">{group.label}</h3>
+              <ul className="mt-2 grid gap-2 sm:grid-cols-2">
+                {group.teams.map((team) => (
+                  <li key={team.id}>
+                    <Link
+                      href={`/teams/${team.id}?sport=${team.sport}&name=${encodeURIComponent(team.name)}`}
+                      className="block rounded-xl border bg-card px-4 py-3 hover:bg-muted/40"
+                    >
+                      <div className="flex items-start justify-between gap-2">
+                        <p className="font-semibold">{team.name}</p>
+                        {((team as TeamHit).hotWeight ?? 0) >= 85 && (
+                          <span className="shrink-0 rounded-md bg-primary/15 px-1.5 py-0.5 text-[10px] font-semibold text-primary">
+                            {t.search.popularTag}
+                          </span>
+                        )}
+                      </div>
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        {team.league ??
+                          leagueLabel(locale, team.leagueSlug ?? team.sport) ??
+                          t.sports[team.sport]}{" "}
+                        · {t.search.clubPage}
+                      </p>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
         </section>
       )}
 

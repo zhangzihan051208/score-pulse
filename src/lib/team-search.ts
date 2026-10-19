@@ -1,5 +1,10 @@
 import type { TeamSearchHit } from "@/lib/fixtures-sync";
 import { searchTeamsInFixtures } from "@/lib/fixtures-sync";
+import { getLeagueBySlug, getLeagueByTsdbId, type LeagueConfig } from "@/lib/leagues";
+import {
+  enrichTeamSearchHit,
+  teamBelongsToLeague,
+} from "@/lib/team-league";
 import {
   hotWeightForTeam,
   popularTeamsMatchingQuery,
@@ -13,12 +18,22 @@ function inferSport(league: string): "nba" | "soccer" {
 }
 
 function mergeTeam(pool: Map<string, TeamSearchHit>, hit: TeamSearchHit) {
-  const prev = pool.get(hit.id);
+  const enriched = enrichTeamSearchHit(hit);
+  const prev = pool.get(enriched.id);
   if (!prev) {
-    pool.set(hit.id, hit);
+    pool.set(enriched.id, enriched);
     return;
   }
-  if (!prev.league && hit.league) pool.set(hit.id, { ...prev, league: hit.league });
+  pool.set(enriched.id, enrichTeamSearchHit({ ...prev, ...enriched }));
+}
+
+function resolveLeagueFilter(opts?: {
+  leagueId?: string;
+  leagueSlug?: string;
+}): LeagueConfig | undefined {
+  if (opts?.leagueSlug) return getLeagueBySlug(opts.leagueSlug);
+  if (opts?.leagueId) return getLeagueByTsdbId(opts.leagueId);
+  return undefined;
 }
 
 export async function intelligentTeamSearch(
@@ -27,57 +42,79 @@ export async function intelligentTeamSearch(
     limit?: number;
     sport?: "nba" | "soccer";
     leagueId?: string;
+    leagueSlug?: string;
+    /** When true (default if league set), drop teams outside the league partition. */
+    strictLeague?: boolean;
   },
 ): Promise<TeamSearchHit[]> {
   const q = query.trim();
   const limit = opts?.limit ?? 12;
   if (q.length < 2) return [];
 
+  const leagueFilter = resolveLeagueFilter(opts);
+  const strictLeague =
+    opts?.strictLeague ?? Boolean(leagueFilter);
+  const leagueId = leagueFilter?.tsdbId ?? opts?.leagueId;
+
   const pool = new Map<string, TeamSearchHit>();
 
-  for (const hit of await searchTeamsInFixtures(q, opts?.sport, opts?.leagueId, 48)) {
+  for (const hit of await searchTeamsInFixtures(
+    q,
+    opts?.sport,
+    leagueId,
+    strictLeague ? 64 : 48,
+  )) {
+    if (strictLeague && leagueFilter && !teamBelongsToLeague(hit, leagueFilter)) continue;
     mergeTeam(pool, hit);
   }
 
-  const remotePrimary = await searchTeamsByName(q);
-  for (const t of remotePrimary) {
-    if (!t.idTeam || !t.strTeam) continue;
-    const league = t.strLeague ?? "";
-    const sport = inferSport(league);
-    if (opts?.sport && sport !== opts.sport) continue;
-    mergeTeam(pool, {
-      id: t.idTeam,
-      name: t.strTeam,
-      league: t.strLeague,
-      sport,
-    });
-  }
-
-  const popMatches = popularTeamsMatchingQuery(q, 10);
-  for (const pop of popMatches.slice(0, 4)) {
-    if (opts?.sport && pop.sport !== opts.sport) continue;
-    const already = [...pool.values()].some(
-      (t) => teamQueryRelevance(pop.canonical, t.name) >= 980,
-    );
-    if (already) continue;
-
-    const remote = await searchTeamsByName(pop.canonical);
-    for (const t of remote) {
+  const addRemote = async (teams: Awaited<ReturnType<typeof searchTeamsByName>>) => {
+    for (const t of teams) {
       if (!t.idTeam || !t.strTeam) continue;
       const league = t.strLeague ?? "";
       const sport = inferSport(league);
-      if (sport !== pop.sport) continue;
       if (opts?.sport && sport !== opts.sport) continue;
-      if (teamQueryRelevance(pop.canonical, t.strTeam) < 500) continue;
-      mergeTeam(pool, {
+      const hit = enrichTeamSearchHit({
         id: t.idTeam,
         name: t.strTeam,
         league: t.strLeague,
         sport,
       });
+      if (strictLeague && leagueFilter && !teamBelongsToLeague(hit, leagueFilter)) {
+        continue;
+      }
+      mergeTeam(pool, hit);
+    }
+  };
+
+  if (!strictLeague || pool.size < limit) {
+    await addRemote(await searchTeamsByName(q));
+  }
+
+  if (!strictLeague) {
+    const popMatches = popularTeamsMatchingQuery(q, 10);
+    for (const pop of popMatches.slice(0, 4)) {
+      if (opts?.sport && pop.sport !== opts.sport) continue;
+      const already = [...pool.values()].some(
+        (t) => teamQueryRelevance(pop.canonical, t.name) >= 980,
+      );
+      if (already) continue;
+
+      await addRemote(await searchTeamsByName(pop.canonical));
     }
   }
 
-  const ranked = rankTeamSearchHits(q, [...pool.values()]);
+  let ranked = rankTeamSearchHits(q, [...pool.values()]);
+  if (strictLeague && leagueFilter) {
+    ranked = ranked.filter((t) => teamBelongsToLeague(t, leagueFilter));
+  }
+
   return ranked.slice(0, limit);
+}
+
+export function withHotWeights(teams: TeamSearchHit[]) {
+  return teams.map((team) => ({
+    ...team,
+    hotWeight: hotWeightForTeam(team.name, team.sport),
+  }));
 }

@@ -1,6 +1,5 @@
 import { getLeagueBySlug } from "@/lib/leagues";
-import { hotWeightForTeam } from "@/lib/team-popularity";
-import { intelligentTeamSearch } from "@/lib/team-search";
+import { intelligentTeamSearch, withHotWeights } from "@/lib/team-search";
 import { NextResponse } from "next/server";
 
 export async function GET(request: Request) {
@@ -14,12 +13,11 @@ export async function GET(request: Request) {
     limit: 12,
     sport: sport ?? undefined,
     leagueId,
+    leagueSlug,
+    strictLeague: Boolean(leagueSlug || leagueId),
   });
 
-  const teams = teamsRaw.map((team) => ({
-    ...team,
-    hotWeight: hotWeightForTeam(team.name, team.sport),
-  }));
+  const teams = withHotWeights(teamsRaw);
 
   return NextResponse.json({ teams });
 }

@@ -21,12 +21,14 @@ import {
 import { statusRank } from "@/lib/favorite-teams";
 import {
   getLeagueBySlug,
+  getLeagueByTsdbId,
   isTrackedFixture,
   leagueMatchesRow,
   SIDELINE_LEAGUES,
   tsdbEventBelongsToLeague,
   type LeagueConfig,
 } from "@/lib/leagues";
+import { enrichTeamSearchHit } from "@/lib/team-league";
 import { matchSearchBoost } from "@/lib/team-popularity";
 import type { MatchEvent } from "./types";
 
@@ -581,6 +583,8 @@ export type TeamSearchHit = {
   id: string;
   name: string;
   league?: string;
+  leagueSlug?: string;
+  leagueId?: string;
   sport: "nba" | "soccer";
 };
 
@@ -608,7 +612,11 @@ export async function searchTeamsInFixtures(
   for (const row of data) {
     const hydrated = hydrateFixtureRow(row as Record<string, unknown>);
     if (!isTrackedFixture(hydrated)) continue;
-    if (leagueId && hydrated.league_id !== leagueId) continue;
+    const rowLeague = leagueMatchesRow(hydrated);
+    if (leagueId) {
+      const want = getLeagueByTsdbId(leagueId);
+      if (!want || !rowLeague || rowLeague.tsdbId !== want.tsdbId) continue;
+    }
 
     const candidates: { id?: string | null; name?: string | null }[] = [
       { id: hydrated.id_home_team, name: hydrated.str_home_team },
@@ -618,12 +626,18 @@ export async function searchTeamsInFixtures(
       if (!c.id || !c.name) continue;
       if (!c.name.toLowerCase().includes(q)) continue;
       if (byId.has(c.id)) continue;
-      byId.set(c.id, {
-        id: c.id,
-        name: c.name,
-        league: hydrated.str_league ?? undefined,
-        sport: hydrated.sport as "nba" | "soccer",
-      });
+      byId.set(
+        c.id,
+        enrichTeamSearchHit(
+          {
+            id: c.id,
+            name: c.name,
+            league: hydrated.str_league ?? undefined,
+            sport: hydrated.sport as "nba" | "soccer",
+          },
+          hydrated.league_id,
+        ),
+      );
       if (byId.size >= limit) break;
     }
     if (byId.size >= limit) break;

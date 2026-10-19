@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Input } from "@/components/ui/input";
+import { leagueLabel } from "@/i18n/league-labels";
 import { useI18n } from "@/i18n/use-i18n";
 import type { FavoriteTeam } from "@/lib/types";
 
@@ -20,11 +21,11 @@ export function TeamPicker({
   onSelect: (team: FavoriteTeam) => void;
   onClear: () => void;
 }) {
-  const { t } = useI18n();
+  const { locale, t } = useI18n();
   const [q, setQ] = useState("");
   const [debounced, setDebounced] = useState("");
   const [hits, setHits] = useState<
-    { id: string; name: string; league?: string }[]
+    { id: string; name: string; league?: string; leagueSlug?: string }[]
   >([]);
   const [open, setOpen] = useState(false);
 
@@ -42,9 +43,13 @@ export function TeamPicker({
     if (leagueSlug) params.set("league", leagueSlug);
     fetch(`/api/teams/search?${params}`)
       .then((r) => r.json())
-      .then((d: { teams?: { id: string; name: string; league?: string }[] }) => {
-        setHits(d.teams ?? []);
-      });
+      .then(
+        (d: {
+          teams?: { id: string; name: string; league?: string; leagueSlug?: string }[];
+        }) => {
+          setHits(d.teams ?? []);
+        },
+      );
   }, [debounced, leagueSlug, sport]);
 
   return (
@@ -90,9 +95,12 @@ export function TeamPicker({
                     }}
                   >
                     <span className="font-medium">{hit.name}</span>
-                    {hit.league ? (
-                      <span className="text-xs text-muted-foreground">{hit.league}</span>
-                    ) : null}
+                    <span className="text-xs text-muted-foreground">
+                      {hit.league ??
+                        (hit.leagueSlug
+                          ? leagueLabel(locale, hit.leagueSlug)
+                          : t.sports[sport])}
+                    </span>
                   </button>
                 </li>
               ))}

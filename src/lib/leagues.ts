@@ -82,7 +82,7 @@ export function leaguesForSport(sport: Sport): LeagueConfig[] {
   return [];
 }
 
-function leagueNameMatches(league: LeagueConfig, leagueName: string): boolean {
+export function leagueNameMatches(league: LeagueConfig, leagueName: string): boolean {
   if (!leagueName.trim()) return false;
   if (league.sport === "soccer" && leagueName.includes("Brazilian")) return false;
   return league.nameHints.some((h) => leagueName.includes(h));
