@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { MatchScoreboard } from "@/components/match-scoreboard";
 import { StatusPill } from "@/components/status-pill";
@@ -29,12 +30,17 @@ type PlayerHit = {
 
 export function SearchPageInner() {
   const { locale, t } = useI18n();
-  const [q, setQ] = useState("");
+  const searchParams = useSearchParams();
+  const [q, setQ] = useState(() => searchParams.get("q") ?? "");
   const [debounced, setDebounced] = useState("");
   const [matches, setMatches] = useState<MatchEvent[]>([]);
   const [teams, setTeams] = useState<TeamHit[]>([]);
   const [players, setPlayers] = useState<PlayerHit[]>([]);
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    setQ(searchParams.get("q") ?? "");
+  }, [searchParams]);
 
   useEffect(() => {
     const id = setTimeout(() => setDebounced(q.trim()), 280);
