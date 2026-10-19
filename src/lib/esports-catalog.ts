@@ -44,6 +44,7 @@ function sortEvents(list: MatchEvent[]) {
 export async function listEsportsMatchEvents(
   gameSlug?: EsportsGameSlug,
   limit = 32,
+  options?: { includeRosters?: boolean },
 ): Promise<MatchEvent[]> {
   if (!isPandaScoreConfigured()) return [];
 
@@ -51,21 +52,28 @@ export async function listEsportsMatchEvents(
     ? ESPORTS_GAMES.filter((g) => g.slug === gameSlug)
     : ESPORTS_GAMES;
 
-  const perGameCap = gameSlug ? Math.max(limit, 24) : Math.max(Math.ceil(limit / games.length) + 8, 16);
+  const perGameCap = gameSlug
+    ? Math.max(limit, 24)
+    : Math.max(Math.ceil(limit / games.length) + 8, 16);
 
-  const buckets = await Promise.all(
-    games.map(async (game) => {
-      const raw = await fetchEsportsMatches(game.apiPrefix);
-      const picked = prioritizeRawMatches(raw, perGameCap);
-      const withRosters = await enrichMatchesWithTeamRosters(picked, {
-        apiPrefixFallback: game.apiPrefix,
-        concurrency: 3,
-      });
-      return withRosters
+  const includeRosters = options?.includeRosters ?? false;
+  const buckets: MatchEvent[][] = [];
+
+  for (const game of games) {
+    const raw = await fetchEsportsMatches(game.apiPrefix);
+    const picked = prioritizeRawMatches(raw, perGameCap);
+    const matches = includeRosters
+      ? await enrichMatchesWithTeamRosters(picked, {
+          apiPrefixFallback: game.apiPrefix,
+          concurrency: 2,
+        })
+      : picked;
+    buckets.push(
+      matches
         .map((m) => pandaMatchToEvent(game, m))
-        .filter((e): e is MatchEvent => Boolean(e));
-    }),
-  );
+        .filter((e): e is MatchEvent => Boolean(e)),
+    );
+  }
 
   return sortEvents(buckets.flat()).slice(0, limit);
 }

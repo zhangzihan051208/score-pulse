@@ -50,8 +50,14 @@ export type PsMatch = {
 
 type ListResponse = PsMatch[];
 
-async function psFetch(path: string): Promise<ListResponse> {
-  if (!isPandaScoreConfigured()) return [];
+const staleMatchCache = new Map<string, PsMatch[]>();
+
+async function sleep(ms: number) {
+  await new Promise((r) => setTimeout(r, ms));
+}
+
+async function psFetchOnce(path: string): Promise<{ status: number; data: ListResponse }> {
+  if (!isPandaScoreConfigured()) return { status: 0, data: [] };
   const sep = path.includes("?") ? "&" : "?";
   const url = `${BASE}${path}${sep}per_page=36&page=1`;
   const res = await fetch(url, {
@@ -59,25 +65,50 @@ async function psFetch(path: string): Promise<ListResponse> {
       Accept: "application/json",
       Authorization: `Bearer ${token()}`,
     },
-    next: { revalidate: 45 },
+    cache: "no-store",
   });
-  if (!res.ok) return [];
-  const data = (await res.json()) as ListResponse | { error?: string };
-  if (!Array.isArray(data)) return [];
-  return data;
+  if (!res.ok) return { status: res.status, data: [] };
+  const json = (await res.json()) as ListResponse | { error?: string };
+  if (!Array.isArray(json)) return { status: res.status, data: [] };
+  return { status: res.status, data: json };
+}
+
+async function psFetch(path: string): Promise<ListResponse> {
+  for (let attempt = 0; attempt < 6; attempt++) {
+    const { status, data } = await psFetchOnce(path);
+    if (data.length > 0) return data;
+    if (status === 429) {
+      await sleep(600 * (attempt + 1));
+      continue;
+    }
+    break;
+  }
+  return [];
 }
 
 export async function fetchEsportsMatches(apiPrefix: string): Promise<PsMatch[]> {
-  const [upcoming, running, past] = await Promise.all([
-    psFetch(`/${apiPrefix}/matches/upcoming`),
-    psFetch(`/${apiPrefix}/matches/running`),
-    psFetch(`/${apiPrefix}/matches/past`),
-  ]);
   const byId = new Map<number, PsMatch>();
-  for (const m of [...running, ...upcoming, ...past]) {
-    if (m?.id) byId.set(m.id, m);
+  const paths = [
+    `/${apiPrefix}/matches/running`,
+    `/${apiPrefix}/matches/upcoming`,
+    `/${apiPrefix}/matches/past`,
+  ];
+
+  for (const path of paths) {
+    const chunk = await psFetch(path);
+    for (const m of chunk) {
+      if (m?.id) byId.set(m.id, m);
+    }
+    if (byId.size >= 36) break;
+    await sleep(120);
   }
-  return [...byId.values()];
+
+  const result = [...byId.values()];
+  if (result.length > 0) {
+    staleMatchCache.set(apiPrefix, result);
+    return result;
+  }
+  return staleMatchCache.get(apiPrefix) ?? [];
 }
 
 /** Match detail — generic path works on fixtures-tier tokens (`/{game}/matches/{id}` often 403). */
@@ -86,17 +117,24 @@ export async function fetchEsportsMatchById(
   id: number,
 ): Promise<PsMatch | null> {
   if (!isPandaScoreConfigured()) return null;
-  const res = await fetch(`${BASE}/matches/${id}`, {
-    headers: {
-      Accept: "application/json",
-      Authorization: `Bearer ${token()}`,
-    },
-    next: { revalidate: 30 },
-  });
-  if (!res.ok) return null;
-  const data = (await res.json()) as PsMatch | { error?: string };
-  if (!data || typeof data !== "object" || !("id" in data)) return null;
-  return data as PsMatch;
+  for (let attempt = 0; attempt < 5; attempt++) {
+    const res = await fetch(`${BASE}/matches/${id}`, {
+      headers: {
+        Accept: "application/json",
+        Authorization: `Bearer ${token()}`,
+      },
+      cache: "no-store",
+    });
+    if (res.status === 429) {
+      await sleep(500 * (attempt + 1));
+      continue;
+    }
+    if (!res.ok) return null;
+    const data = (await res.json()) as PsMatch | { error?: string };
+    if (!data || typeof data !== "object" || !("id" in data)) return null;
+    return data as PsMatch;
+  }
+  return null;
 }
 
 /** @deprecated Use fetchPandaTeamPlayersResolved from pandascore-teams.ts */
