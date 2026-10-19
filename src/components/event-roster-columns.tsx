@@ -40,7 +40,7 @@ function RosterPlayerCard({
         className="block rounded-lg border bg-background p-3 transition-colors hover:border-primary/40 hover:bg-muted/30"
       >
         <div className="flex items-start gap-2.5">
-          <PlayerAvatar athlete={athlete} size="sm" />
+          <PlayerAvatar athlete={athlete} size="default" />
           <div className="min-w-0 flex-1">
             <div className="flex items-start justify-between gap-2">
               <div className="min-w-0">
