@@ -1,3 +1,4 @@
+import { rememberKrList, sleep, staleKrList } from "@/lib/kashrock-cache";
 import { normalizeKrMatch, type RawKrMatchInput } from "@/lib/kashrock-normalize";
 
 const BASE = "https://kashrock.up.railway.app";
@@ -67,15 +68,35 @@ type MatchesResponse = {
 
 async function krFetch(path: string): Promise<MatchesResponse | null> {
   if (!isKashRockConfigured()) return null;
-  const res = await fetch(`${BASE}${path}`, {
-    headers: {
-      Accept: "application/json",
-      "X-API-Key": apiKey(),
-    },
-    cache: "no-store",
-  });
-  if (!res.ok) return null;
-  return (await res.json()) as MatchesResponse;
+
+  for (let attempt = 0; attempt < 3; attempt++) {
+    const res = await fetch(`${BASE}${path}`, {
+      headers: {
+        Accept: "application/json",
+        "X-API-Key": apiKey(),
+      },
+      cache: "no-store",
+    });
+    if (res.ok) {
+      return (await res.json()) as MatchesResponse;
+    }
+    if (res.status === 429 && attempt < 2) {
+      let waitMs = 1500 * (attempt + 1);
+      try {
+        const body = (await res.json()) as {
+          error?: { resets_in_seconds?: number };
+        };
+        const sec = body.error?.resets_in_seconds;
+        if (sec != null && sec > 0) waitMs = Math.min(sec * 1000 + 200, 8000);
+      } catch {
+        /* ignore */
+      }
+      await sleep(waitMs);
+      continue;
+    }
+    return null;
+  }
+  return null;
 }
 
 /** KashRock sport slug matches our game tabs (cs2, lol, dota2, valorant). */
@@ -84,7 +105,15 @@ export async function fetchKashRockMatches(
   limit = 36,
 ): Promise<KrMatch[]> {
   const data = await krFetch(`/v7/${krSport}/matches?limit=${limit}`);
-  return (data?.matches ?? []).map((m) => normalizeKrMatch(m as RawKrMatchInput));
+  const raw = data?.matches ?? [];
+  if (raw.length > 0) {
+    const matches = raw.map((m) => normalizeKrMatch(m as RawKrMatchInput));
+    rememberKrList(krSport, matches);
+    return matches;
+  }
+  const stale = staleKrList(krSport);
+  if (stale) return stale.slice(0, limit);
+  return [];
 }
 
 export function kashRockMatchId(gameSlug: string, tail: string): string {

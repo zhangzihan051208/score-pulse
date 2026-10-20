@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useMemo } from "react";
 import { LoadingView } from "@/components/loading-view";
 import { StatusPill } from "@/components/status-pill";
 import { useEsportsEvents } from "@/hooks/use-esports-events";
@@ -14,7 +15,7 @@ import { LeagueTabs } from "@/components/league-tabs";
 import { MatchScoreboard } from "@/components/match-scoreboard";
 import { useCommunity } from "@/hooks/use-community";
 import { leagueLabel } from "@/i18n/league-labels";
-import { getEsportsGame, isEsportsGameSlug } from "@/lib/esports-games";
+import { ESPORTS_GAMES, getEsportsGame, isEsportsGameSlug } from "@/lib/esports-games";
 import { getLeagueBySlug } from "@/lib/leagues";
 import type { MatchEvent, Sport } from "@/lib/types";
 
@@ -55,7 +56,30 @@ export function BoardPage({
     isEsports ? initialEvents : [],
   );
 
-  const list = isEsports ? esportsList : isTsdbLive ? tsdbList : eventsBySport(sport);
+  const esportsFiltered = useMemo(() => {
+    if (!isEsports) return [];
+    if (!esportsGame) return esportsList;
+    return esportsList.filter((e) => e.leagueSlug === esportsGame.slug);
+  }, [esportsGame, esportsList, isEsports]);
+
+  const esportsSections = useMemo(() => {
+    if (!isEsports || esportsGame) return null;
+    const byGame = new Map<string, MatchEvent[]>();
+    for (const e of esportsList) {
+      const key = e.leagueSlug ?? "other";
+      byGame.set(key, [...(byGame.get(key) ?? []), e]);
+    }
+    return ESPORTS_GAMES.map((g) => ({
+      slug: g.slug,
+      events: byGame.get(g.slug) ?? [],
+    }));
+  }, [esportsGame, esportsList, isEsports]);
+
+  const list = isEsports
+    ? esportsFiltered
+    : isTsdbLive
+      ? tsdbList
+      : eventsBySport(sport);
   const loading = isEsports ? esportsLoading : tsdbLoading;
   const showLiveBoard = isTsdbLive || isEsports;
 
@@ -100,44 +124,107 @@ export function BoardPage({
           </h2>
           {showLiveBoard && loading && list.length === 0 ? (
             <LoadingView message="page" variant="section" />
+          ) : esportsSections ? (
+            <div className="space-y-8">
+              {esportsSections.map((section) => (
+                <section key={section.slug} className="space-y-3">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <h3 className="text-sm font-semibold">
+                      {leagueLabel(locale, section.slug)}
+                      <span className="ml-2 font-normal text-muted-foreground">
+                        {section.events.length} {t.home.matches}
+                      </span>
+                    </h3>
+                    <Link
+                      href={`/boards/esports/${section.slug}`}
+                      className="text-xs font-medium text-primary hover:underline"
+                    >
+                      {t.home.enter}
+                    </Link>
+                  </div>
+                  {section.events.length === 0 ? (
+                    <p className="rounded-xl border border-dashed px-4 py-8 text-center text-sm text-muted-foreground">
+                      {t.esports.emptyGame}
+                    </p>
+                  ) : (
+                    section.events.map((event) => (
+                      <BoardEventCard
+                        key={event.id}
+                        event={event}
+                        locale={locale}
+                        t={t}
+                        state={state}
+                        showGameTag={false}
+                      />
+                    ))
+                  )}
+                </section>
+              ))}
+            </div>
           ) : list.length === 0 ? (
             <p className="rounded-xl border border-dashed px-4 py-12 text-center text-sm text-muted-foreground">
               {isEsports ? t.esports.empty : showLiveBoard ? t.home.liveEmpty : t.board.empty}
             </p>
           ) : (
             list.map((event) => (
-              <article key={event.id} className="rounded-xl border bg-card">
-                <Link
-                  href={`/events/${event.slug}`}
-                  className="block border-b px-4 py-3 hover:bg-muted/40"
-                >
-                  <div className="mb-2 flex flex-wrap items-center gap-2">
-                    <StatusPill status={event.status} />
-                    <span className="text-xs text-muted-foreground">
-                      {formatWhen(event.startAt, locale)}
-                    </span>
-                  </div>
-                  {event.live ? (
-                    <MatchScoreboard event={event} size="sm" />
-                  ) : (
-                    <h3 className="font-semibold">{tx(event.title, locale)}</h3>
-                  )}
-                  <p className="mt-2 text-sm text-muted-foreground">
-                    {event.leagueSlug
-                      ? leagueLabel(locale, event.leagueSlug)
-                      : tx(event.subtitle, locale)}
-                    {event.live
-                      ? ` · ${event.performances.length} ${t.home.players}`
-                      : ""}
-                  </p>
-                </Link>
-                <div className="border-t px-3 py-3">
-                  <EventSpotlightGrid event={event} state={state} compact />
-                </div>
-              </article>
+              <BoardEventCard
+                key={event.id}
+                event={event}
+                locale={locale}
+                t={t}
+                state={state}
+                showGameTag={isEsports && !esportsGame}
+              />
             ))
           )}
       </div>
     </div>
+  );
+}
+
+function BoardEventCard({
+  event,
+  locale,
+  t,
+  state,
+  showGameTag,
+}: {
+  event: MatchEvent;
+  locale: ReturnType<typeof useI18n>["locale"];
+  t: ReturnType<typeof useI18n>["t"];
+  state: ReturnType<typeof useCommunity>["state"];
+  showGameTag: boolean;
+}) {
+  return (
+    <article className="rounded-xl border bg-card">
+      <Link
+        href={`/events/${event.slug}`}
+        className="block border-b px-4 py-3 hover:bg-muted/40"
+      >
+        <div className="mb-2 flex flex-wrap items-center gap-2">
+          <StatusPill status={event.status} />
+          {showGameTag && event.leagueSlug ? (
+            <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide">
+              {leagueLabel(locale, event.leagueSlug)}
+            </span>
+          ) : null}
+          <span className="text-xs text-muted-foreground">
+            {formatWhen(event.startAt, locale)}
+          </span>
+        </div>
+        {event.live ? (
+          <MatchScoreboard event={event} size="sm" />
+        ) : (
+          <h3 className="font-semibold">{tx(event.title, locale)}</h3>
+        )}
+        <p className="mt-2 text-sm text-muted-foreground">
+          {tx(event.subtitle, locale)}
+          {event.live ? ` · ${event.performances.length} ${t.home.players}` : ""}
+        </p>
+      </Link>
+      <div className="border-t px-3 py-3">
+        <EventSpotlightGrid event={event} state={state} compact />
+      </div>
+    </article>
   );
 }

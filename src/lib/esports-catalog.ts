@@ -1,3 +1,4 @@
+import { sleep } from "@/lib/kashrock-cache";
 import {
   ESPORTS_GAMES,
   getEsportsGame,
@@ -84,13 +85,17 @@ async function listFromKashRock(
     : Math.max(Math.ceil(limit / games.length) + 8, 12);
 
   const buckets: MatchEvent[][] = [];
-  for (const game of games) {
+  const multiGame = !gameSlug && games.length > 1;
+  for (let i = 0; i < games.length; i++) {
+    const game = games[i]!;
+    if (multiGame && i > 0) await sleep(350);
     const raw = await fetchKashRockMatches(game.slug, perGameCap + 8);
     const picked = sortKrMatches(raw, perGameCap);
-    const enrichCap = gameSlug ? 10 : 6;
-    const withBoards = enrichBoards
-      ? await enrichKashRockMatchesWithPlayerBoards(game.slug, picked, enrichCap)
-      : picked;
+    const enrichCap = gameSlug ? 8 : 2;
+    const withBoards =
+      enrichBoards && enrichCap > 0
+        ? await enrichKashRockMatchesWithPlayerBoards(game.slug, picked, enrichCap)
+        : picked;
     buckets.push(
       withBoards
         .map((m) => kashRockMatchToEvent(game, m))
