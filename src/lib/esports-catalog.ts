@@ -133,7 +133,10 @@ export async function listEsportsMatchEvents(
   if (!isEsportsDataConfigured()) return [];
 
   if (isKashRockConfigured()) {
-    return listFromKashRock(gameSlug, limit);
+    const fromKr = await listFromKashRock(gameSlug, limit);
+    if (fromKr.length > 0 || !isPandaScoreConfigured()) {
+      return fromKr;
+    }
   }
 
   return listFromPandaScore(gameSlug, limit, options?.includeRosters ?? false);
