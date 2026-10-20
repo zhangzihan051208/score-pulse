@@ -128,6 +128,7 @@ type Dict = {
   esports: {
     empty: string;
     dataHint: string;
+    dataHintKashrock: string;
   };
   event: {
     ratePlayer: string;
@@ -345,6 +346,8 @@ export const messages: Record<Locale, Dict> = {
       empty:
         "No PandaScore matches for this title yet. Check your API token or try another game tab.",
       dataHint: "Schedules from PandaScore · cached ~45s · live threads poll faster.",
+      dataHintKashrock:
+        "Schedules from KashRock Sandbox · open a match for player board · 500 req/day limit.",
     },
     event: {
       ratePlayer: "Grade",
@@ -631,6 +634,8 @@ export const messages: Record<Locale, Dict> = {
     esports: {
       empty: "该游戏暂无 PandaScore 赛程。请检查 API Token 或切换游戏标签。",
       dataHint: "赛程来自 PandaScore · 约 45 秒缓存 · 进行中比赛刷新更快。",
+      dataHintKashrock:
+        "赛程来自 KashRock Sandbox · 点开比赛帖加载选手 · 免费档 500 次/天。",
     },
     event: {
       ratePlayer: "去打分",
@@ -918,6 +923,8 @@ export const messages: Record<Locale, Dict> = {
       empty:
         "Sin partidos de PandaScore para este título. Revisa el token o prueba otra pestaña.",
       dataHint: "Calendario de PandaScore · caché ~45 s · en vivo se actualiza más rápido.",
+      dataHintKashrock:
+        "Calendario KashRock Sandbox · jugadores al abrir el partido · 500 req/día.",
     },
     event: {
       ratePlayer: "Puntuar",
@@ -1205,6 +1212,8 @@ export const messages: Record<Locale, Dict> = {
       empty:
         "このタイトルの PandaScore 試合がありません。API トークンを確認するか別タブを試してください。",
       dataHint: "PandaScore の日程 · 約45秒キャッシュ · ライブは高頻度更新。",
+      dataHintKashrock:
+        "KashRock Sandbox の日程 · 試合を開くと選手板 · 500 req/日。",
     },
     event: {
       ratePlayer: "採点する",

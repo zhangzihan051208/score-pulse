@@ -48,7 +48,8 @@ export function BoardPage({
     isTsdbLive ? leagueSlug : undefined,
     isTsdbLive ? initialEvents : undefined,
   );
-  const { events: esportsList, loading: esportsLoading } = useEsportsEvents(
+  const { events: esportsList, loading: esportsLoading, source: esportsSource } =
+    useEsportsEvents(
     esportsGame?.slug,
     isEsports,
     isEsports ? initialEvents : [],
@@ -84,7 +85,11 @@ export function BoardPage({
             <p className="mt-2 text-xs text-white/60">{t.home.liveSyncHint}</p>
           )}
           {isEsports && (
-            <p className="mt-2 text-xs text-white/60">{t.esports.dataHint}</p>
+            <p className="mt-2 text-xs text-white/60">
+              {esportsSource === "kashrock"
+                ? t.esports.dataHintKashrock
+                : t.esports.dataHint}
+            </p>
           )}
         </div>
       </section>

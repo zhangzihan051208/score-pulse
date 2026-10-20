@@ -13,6 +13,7 @@ export function useEsportsEvents(
 ) {
   const tabVisible = useTabVisible();
   const [events, setEvents] = useState<MatchEvent[]>(initialEvents);
+  const [source, setSource] = useState<"kashrock" | "pandascore" | null>(null);
   const [loading, setLoading] = useState(
     enabled && initialEvents.length === 0,
   );
@@ -26,8 +27,12 @@ export function useEsportsEvents(
     try {
       const res = await fetch(`/api/esports/events?${params}`);
       if (!res.ok) return;
-      const data = (await res.json()) as { events?: MatchEvent[] };
+      const data = (await res.json()) as {
+        events?: MatchEvent[];
+        source?: "kashrock" | "pandascore" | null;
+      };
       setEvents(data.events ?? []);
+      setSource(data.source ?? null);
     } finally {
       setLoading(false);
     }
@@ -48,5 +53,5 @@ export function useEsportsEvents(
     { deferFirstMs: 0 },
   );
 
-  return { events, loading, refresh: load };
+  return { events, loading, source, refresh: load };
 }

@@ -1,5 +1,5 @@
 import { isEsportsGameSlug } from "@/lib/esports-games";
-import { listEsportsMatchEvents } from "@/lib/esports-catalog";
+import { esportsDataSource, listEsportsMatchEvents } from "@/lib/esports-catalog";
 import { cachedEsportsMatchEvents } from "@/lib/esports-data-cache";
 import { NextResponse } from "next/server";
 
@@ -17,7 +17,11 @@ export async function GET(request: Request) {
     : await cachedEsportsMatchEvents(gameSlug, limit);
 
   return NextResponse.json(
-    { events, syncedAt: new Date().toISOString() },
+    {
+      events,
+      source: esportsDataSource(),
+      syncedAt: new Date().toISOString(),
+    },
     {
       headers: {
         "Cache-Control": "public, s-maxage=20, stale-while-revalidate=40",
