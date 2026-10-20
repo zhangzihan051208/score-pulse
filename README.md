@@ -30,6 +30,19 @@ Open `http://127.0.0.1:43147` or use Cursor **Preview** (Desktop). Styling needs
 8. Set primary/secondary teams per league at `/my-teams` (home prioritizes primary-team fixtures; full schedule at `/my-teams/soccer-premier-league/schedule`). Run `supabase/migrate-favorite-teams.sql` if `profiles` already exists.
 9. Cloud Agents: add the same keys under **Environment → Secrets**, run `node scripts/verify-env.mjs` in a **new** agent after Save. Local dev uses `.env.local`.
 
+### Saving the Cloud Environment (avoid Save errors)
+
+In the dashboard **Install / Start** JSON, use **only** these two keys (do not paste the whole `.cursor/environment.json` if it includes `"name"`):
+
+```json
+{
+  "install": "npm ci",
+  "start": "bash .cursor/start.sh"
+}
+```
+
+Save **Secrets** in the Secrets tab separately (names like `PANDASCORE_API_TOKEN`, no spaces). If Save still errors, save scripts first, then add secrets one tab at a time.
+
 ## What you get
 
 - Boards on the home page, not a mixed match pile
