@@ -59,6 +59,12 @@ export function SiteHeader() {
           aria-label={t.nav.boards}
         >
           <NavLink href="/" label={t.nav.home} active={pathname === "/"} className="text-xs" />
+          <NavLink
+            href="/profile"
+            label={t.nav.profile}
+            active={pathname.startsWith("/profile")}
+            className="text-xs sm:text-sm"
+          />
           {SPORTS.map((sport) => {
             const href = `/boards/${sport}`;
             return (

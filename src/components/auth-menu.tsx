@@ -43,9 +43,11 @@ export function AuthMenu() {
     <div className="flex items-center gap-2">
       <Link
         href="/profile"
-        className="hidden max-w-[8rem] truncate text-xs text-white/70 hover:text-white hover:underline sm:inline"
+        className="max-w-[5.5rem] truncate rounded-md border border-white/20 px-2 py-1 text-xs font-medium text-white hover:bg-white/10 sm:max-w-[8rem]"
+        title={label}
       >
-        {label}
+        <span className="sm:hidden">{t.nav.profile}</span>
+        <span className="hidden truncate sm:inline">{label}</span>
       </Link>
       <Button
         type="button"
