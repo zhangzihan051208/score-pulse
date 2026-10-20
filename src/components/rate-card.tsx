@@ -469,6 +469,7 @@ export function RateCard({
         positionKey={positionKey}
         dimIds={[...dims]}
         takes={panelTakes}
+        onRefresh={() => void loadRemote()}
       />
     </div>
   );

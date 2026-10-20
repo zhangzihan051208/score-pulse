@@ -16,7 +16,7 @@ Open `http://127.0.0.1:43147` or use Cursor **Preview** (Desktop). Styling needs
 ## Supabase + TheSportsDB
 
 1. Copy `.env.example` → `.env.local` and fill keys.
-2. In Supabase **SQL Editor**, run `supabase/schema.sql`. Existing projects: also run `supabase/migrate-profile-fields.sql` for avatar/bio columns, and `supabase/migrate-vip.sql` for VIP + rating modes.
+2. In Supabase **SQL Editor**, run `supabase/schema.sql`. Existing projects: also run `supabase/migrate-profile-fields.sql`, `supabase/migrate-vip.sql`, and `supabase/migrate-social.sql` (comment likes/replies/hide).
 3. **Authentication → URL Configuration**: Site URL `http://127.0.0.1:43147`, redirect `http://127.0.0.1:43147/**`.
 4. Sign in at `/login`. Edit nickname, avatar URL, and signature at `/profile`. Ratings/comments post to Supabase when configured.
 5. Sync (two steps — schedules first, rosters on a schedule):

@@ -28,6 +28,16 @@ export type Athlete = {
 export type FavoriteTeam = {
   id: string;
   name: string;
+  badgeUrl?: string;
+};
+
+export type UserEngagement = {
+  commentCount: number;
+  likesReceived: number;
+  level: number;
+  levelTitleKey: "rookie" | "regular" | "analyst" | "veteran" | "legend";
+  points: number;
+  nextLevelAt: number | null;
 };
 
 export type FavoritePair = {

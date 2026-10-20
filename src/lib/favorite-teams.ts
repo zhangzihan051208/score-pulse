@@ -63,7 +63,11 @@ function teamFrom(v: unknown): FavoriteTeam | undefined {
   const id = typeof o.id === "string" ? o.id.trim() : "";
   const name = typeof o.name === "string" ? o.name.trim() : "";
   if (!id || !name) return undefined;
-  return { id, name };
+  const badgeUrl =
+    typeof o.badgeUrl === "string" && o.badgeUrl.trim()
+      ? o.badgeUrl.trim()
+      : undefined;
+  return { id, name, badgeUrl };
 }
 
 export type EventTeams = {

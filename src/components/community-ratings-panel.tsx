@@ -8,16 +8,11 @@ import { useI18n } from "@/i18n/use-i18n";
 import { formatWhen, overallScore } from "@/lib/data";
 import { overallFromScores } from "@/lib/store";
 import { averageScores } from "@/lib/score-aggregate";
+import { CommentTakeActions } from "@/components/comment-take-actions";
+import type { CommunityTake } from "@/lib/community-take-types";
 import type { PositionKey, ScoreMap } from "@/lib/types";
 
-export type CommunityTake = {
-  userId: string;
-  author: string;
-  scores: ScoreMap;
-  updatedAt: string;
-  body?: string;
-  isYou: boolean;
-};
+export type { CommunityTake };
 
 type Filter = "all" | "mine" | "others";
 
@@ -25,10 +20,12 @@ export function CommunityRatingsPanel({
   positionKey,
   dimIds,
   takes,
+  onRefresh,
 }: {
   positionKey: PositionKey;
   dimIds: string[];
   takes: CommunityTake[];
+  onRefresh?: () => void;
 }) {
   const { locale, t } = useI18n();
   const [filter, setFilter] = useState<Filter>("all");
@@ -166,6 +163,7 @@ export function CommunityRatingsPanel({
                 ) : (
                   <p className="mt-2 text-xs text-muted-foreground">{t.rate.scoreOnly}</p>
                 )}
+                <CommentTakeActions take={row} onChange={onRefresh} />
                 <div className="mt-3 border-t pt-3">
                   <DimensionRadar
                     dimIds={dimIds}

@@ -73,6 +73,27 @@ type Dict = {
     saved: string;
     signInRequired: string;
     notConfigured: string;
+    levelLabel: string;
+    commentsStat: string;
+    likesStat: string;
+    crestsTitle: string;
+    crestsEmpty: string;
+    vipEntry: string;
+    vipEntryHint: string;
+    levelTitles: {
+      rookie: string;
+      regular: string;
+      analyst: string;
+      veteran: string;
+      legend: string;
+    };
+  };
+  social: {
+    like: string;
+    reply: string;
+    hide: string;
+    replyPlaceholder: string;
+    sendReply: string;
   };
   vip: {
     title: string;
@@ -295,6 +316,27 @@ export const messages: Record<Locale, Dict> = {
       saved: "Profile saved",
       signInRequired: "Sign in to edit your profile.",
       notConfigured: "Cloud profiles need Supabase in .env.",
+      levelLabel: "Fan level",
+      commentsStat: "Comments",
+      likesStat: "Likes received",
+      crestsTitle: "My teams",
+      crestsEmpty: "Set primary teams to show crests here.",
+      vipEntry: "Sideline VIP",
+      vipEntryHint: "Unlimited five-axis ratings · 2× weight in averages",
+      levelTitles: {
+        rookie: "Rookie",
+        regular: "Regular",
+        analyst: "Analyst",
+        veteran: "Veteran",
+        legend: "Legend",
+      },
+    },
+    social: {
+      like: "Like",
+      reply: "Reply",
+      hide: "Hide",
+      replyPlaceholder: "Write a reply…",
+      sendReply: "Send",
     },
     vip: {
       title: "Sideline VIP",
@@ -614,6 +656,27 @@ export const messages: Record<Locale, Dict> = {
       saved: "已保存",
       signInRequired: "登录后可编辑个人主页。",
       notConfigured: "需在 .env 中配置 Supabase。",
+      levelLabel: "球迷等级",
+      commentsStat: "评论",
+      likesStat: "获赞",
+      crestsTitle: "我的主队",
+      crestsEmpty: "在「我的主队」里设置后会显示队徽。",
+      vipEntry: "Sideline VIP",
+      vipEntryHint: "五维详评不限次 · 均分权重 ×2",
+      levelTitles: {
+        rookie: "新秀",
+        regular: "常客",
+        analyst: "分析师",
+        veteran: "老炮",
+        legend: "传奇",
+      },
+    },
+    social: {
+      like: "赞",
+      reply: "回复",
+      hide: "隐藏",
+      replyPlaceholder: "写回复…",
+      sendReply: "发送",
     },
     vip: {
       title: "Sideline VIP",
@@ -925,6 +988,27 @@ export const messages: Record<Locale, Dict> = {
       saved: "Perfil guardado",
       signInRequired: "Inicia sesión para editar tu perfil.",
       notConfigured: "Configura Supabase en .env.",
+      levelLabel: "Nivel de fan",
+      commentsStat: "Comentarios",
+      likesStat: "Me gusta",
+      crestsTitle: "Mis equipos",
+      crestsEmpty: "Configura equipos para ver escudos aquí.",
+      vipEntry: "Sideline VIP",
+      vipEntryHint: "Notas de cinco ejes ilimitadas · peso ×2",
+      levelTitles: {
+        rookie: "Novato",
+        regular: "Habitual",
+        analyst: "Analista",
+        veteran: "Veterano",
+        legend: "Leyenda",
+      },
+    },
+    social: {
+      like: "Me gusta",
+      reply: "Responder",
+      hide: "Ocultar",
+      replyPlaceholder: "Escribe una respuesta…",
+      sendReply: "Enviar",
     },
     vip: {
       title: "Sideline VIP",
@@ -1238,6 +1322,27 @@ export const messages: Record<Locale, Dict> = {
       saved: "保存しました",
       signInRequired: "編集するにはログインしてください。",
       notConfigured: ".env に Supabase を設定してください。",
+      levelLabel: "ファンレベル",
+      commentsStat: "コメント",
+      likesStat: "いいね",
+      crestsTitle: "マイチーム",
+      crestsEmpty: "マイチームで設定するとエンブレムが表示されます。",
+      vipEntry: "Sideline VIP",
+      vipEntryHint: "五軸無制限 · 平均で 2 倍の重み",
+      levelTitles: {
+        rookie: "ルーキー",
+        regular: "レギュラー",
+        analyst: "アナリスト",
+        veteran: "ベテラン",
+        legend: "レジェンド",
+      },
+    },
+    social: {
+      like: "いいね",
+      reply: "返信",
+      hide: "非表示",
+      replyPlaceholder: "返信を書く…",
+      sendReply: "送信",
     },
     vip: {
       title: "Sideline VIP",

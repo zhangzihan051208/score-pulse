@@ -3,27 +3,26 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { PlayerAvatar } from "@/components/player-avatar";
+import { ProfileTeamCrests } from "@/components/profile-team-crests";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/hooks/use-auth";
 import { useProfile } from "@/hooks/use-profile";
-import { useVipQuota } from "@/hooks/use-vip";
 import { useI18n } from "@/i18n/use-i18n";
+import type { UserEngagement } from "@/lib/types";
 
 export function ProfilePageInner() {
   const { t } = useI18n();
   const { user, enabled, loading: authLoading } = useAuth();
-  const { profile, loading, cloud, save, reload: reloadProfile } = useProfile();
-  const { quota, reload: reloadVip } = useVipQuota();
+  const { profile, loading, cloud, save } = useProfile();
   const [displayName, setDisplayName] = useState("");
-  const [vipBusy, setVipBusy] = useState(false);
-  const [vipMsg, setVipMsg] = useState<string | null>(null);
   const [avatarUrl, setAvatarUrl] = useState("");
   const [bio, setBio] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [engagement, setEngagement] = useState<UserEngagement | null>(null);
 
   useEffect(() => {
     if (!profile) return;
@@ -31,6 +30,16 @@ export function ProfilePageInner() {
     setAvatarUrl(profile.avatarUrl ?? "");
     setBio(profile.bio ?? "");
   }, [profile]);
+
+  useEffect(() => {
+    if (!cloud || !user) return;
+    fetch("/api/profile/stats")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d: { engagement?: UserEngagement } | null) => {
+        if (d?.engagement) setEngagement(d.engagement);
+      })
+      .catch(() => {});
+  }, [cloud, user]);
 
   if (!enabled || !cloud) {
     return (
@@ -79,6 +88,10 @@ export function ProfilePageInner() {
     jerseyNumber: undefined,
   };
 
+  const levelTitle = engagement
+    ? t.profile.levelTitles[engagement.levelTitleKey]
+    : t.profile.levelTitles.rookie;
+
   return (
     <div className="mx-auto max-w-lg px-3 py-8">
       <Link href="/" className="text-xs text-muted-foreground hover:underline">
@@ -93,78 +106,20 @@ export function ProfilePageInner() {
         {t.teams.title} →
       </Link>
 
-      <section className="mt-6 rounded-xl border bg-card p-4">
-        <div className="flex flex-wrap items-start justify-between gap-3">
-          <div>
-            <h2 className="text-sm font-semibold">{t.vip.title}</h2>
-            <p className="mt-1 text-xs text-muted-foreground">
-              {profile?.isVip ? t.vip.member : t.vip.guest}
-            </p>
-          </div>
+      <div className="mt-6 flex items-center gap-4">
+        <PlayerAvatar athlete={previewAthlete} size="lg" showJerseyBadge={false} />
+        <div className="min-w-0 flex-1">
+          <p className="truncate font-semibold">{previewAthlete.name}</p>
           {profile?.isVip ? (
-            <span className="rounded-full bg-violet-600 px-2.5 py-0.5 text-xs font-bold text-white">
+            <span className="mt-1 inline-block rounded-full bg-violet-600 px-2 py-0.5 text-[10px] font-bold text-white">
               {t.vip.badge}
             </span>
           ) : null}
-        </div>
-        <ul className="mt-3 space-y-1 text-sm text-muted-foreground">
-          <li>· {t.vip.benefitFull}</li>
-          <li>· {t.vip.benefitWeight}</li>
-        </ul>
-        {profile?.isVip && profile.vipUntil ? (
-          <p className="mt-3 text-xs text-muted-foreground">
-            {t.vip.activeUntil}{" "}
-            {new Date(profile.vipUntil).toLocaleDateString(undefined, {
-              dateStyle: "medium",
-            })}
-          </p>
-        ) : (
-          <p className="mt-3 text-xs text-muted-foreground">
-            {t.vip.quotaLine
-              .replace("{used}", String(quota.fullRatingsToday))
-              .replace("{limit}", String(quota.fullRatingsLimit))}
-          </p>
-        )}
-        <div className="mt-4 rounded-lg border border-dashed p-3">
-          <p className="font-medium">{t.vip.planTitle}</p>
-          <p className="mt-1 text-xs text-muted-foreground">{t.vip.planPrice}</p>
-          <Button
-            type="button"
-            className="mt-3 w-full"
-            variant={profile?.isVip ? "outline" : "default"}
-            disabled={vipBusy}
-            onClick={async () => {
-              setVipBusy(true);
-              setVipMsg(null);
-              try {
-                const res = await fetch("/api/vip/activate", {
-                  method: "POST",
-                  headers: { "Content-Type": "application/json" },
-                  body: JSON.stringify({ days: 30 }),
-                });
-                const data = (await res.json()) as { error?: string };
-                if (!res.ok) {
-                  setVipMsg(data.error ?? t.auth.failed);
-                  return;
-                }
-                setVipMsg(t.vip.activated);
-                await Promise.all([reloadProfile(), reloadVip()]);
-              } finally {
-                setVipBusy(false);
-              }
-            }}
-          >
-            {t.vip.activate}
-          </Button>
-          <p className="mt-2 text-[11px] text-muted-foreground">{t.vip.demoNote}</p>
-        </div>
-        {vipMsg ? <p className="mt-2 text-sm text-primary">{vipMsg}</p> : null}
-      </section>
-
-      <div className="mt-6 flex items-center gap-4">
-        <PlayerAvatar athlete={previewAthlete} size="lg" showJerseyBadge={false} />
-        <div className="min-w-0">
-          <p className="truncate font-semibold">{previewAthlete.name}</p>
+          {engagement ? (
+            <p className="mt-1 text-xs text-muted-foreground">
+              {t.profile.levelLabel} Lv.{engagement.level} · {levelTitle}
+            </p>
+          ) : null}
           {bio.trim() ? (
             <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">{bio}</p>
           ) : (
@@ -172,6 +127,42 @@ export function ProfilePageInner() {
           )}
         </div>
       </div>
+
+      {engagement ? (
+        <div className="mt-4 flex gap-4 text-sm">
+          <div className="rounded-lg border px-3 py-2">
+            <p className="text-xs text-muted-foreground">{t.profile.commentsStat}</p>
+            <p className="font-semibold tabular-nums">{engagement.commentCount}</p>
+          </div>
+          <div className="rounded-lg border px-3 py-2">
+            <p className="text-xs text-muted-foreground">{t.profile.likesStat}</p>
+            <p className="font-semibold tabular-nums">{engagement.likesReceived}</p>
+          </div>
+        </div>
+      ) : null}
+
+      <section className="mt-6">
+        <h2 className="text-sm font-medium">{t.profile.crestsTitle}</h2>
+        <div className="mt-2">
+          {profile?.favoriteTeams &&
+          Object.keys(profile.favoriteTeams).length > 0 ? (
+            <ProfileTeamCrests favorites={profile.favoriteTeams} />
+          ) : (
+            <p className="text-xs text-muted-foreground">{t.profile.crestsEmpty}</p>
+          )}
+        </div>
+      </section>
+
+      <Link
+        href="/profile/vip"
+        className="mt-6 flex items-center justify-between rounded-xl border bg-card px-4 py-3 transition-colors hover:bg-muted/50"
+      >
+        <div>
+          <p className="font-medium">{t.profile.vipEntry}</p>
+          <p className="text-xs text-muted-foreground">{t.profile.vipEntryHint}</p>
+        </div>
+        <span className="text-muted-foreground">→</span>
+      </Link>
 
       <form
         className="mt-8 space-y-4"

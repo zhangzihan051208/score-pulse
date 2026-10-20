@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
+import { enrichTakesWithSocial } from "@/lib/comment-enrich";
 import { mergeTakes } from "@/lib/community-takes";
 import { weightedAverageScores } from "@/lib/score-aggregate";
 import {
@@ -44,11 +45,13 @@ export async function GET(
   const [{ data: comments }, { data: ratings }] = await Promise.all([
     supabase
       .from("comments")
-      .select("id, author, body, scores, created_at, user_id")
+      .select(
+        "id, author, body, scores, created_at, user_id, parent_id, hidden",
+      )
       .eq("event_id", eventId)
       .eq("athlete_id", athleteId)
       .order("created_at", { ascending: false })
-      .limit(80),
+      .limit(120),
     supabase
       .from("ratings")
       .select("user_id, scores, updated_at")
@@ -76,15 +79,18 @@ export async function GET(
     }
   }
 
-  const commentRows = (comments ?? []).map((c) => ({
-    id: c.id,
-    userId: c.user_id,
-    author: c.author ?? profileMap.get(c.user_id) ?? "Fan",
-    body: c.body,
-    createdAt: c.created_at,
-    scores: c.scores as ScoreMap | undefined,
-    isYou: user?.id === c.user_id,
-  }));
+  const allComments = comments ?? [];
+  const commentRows = allComments
+    .filter((c) => !c.parent_id)
+    .map((c) => ({
+      id: c.id,
+      userId: c.user_id,
+      author: c.author ?? profileMap.get(c.user_id) ?? "Fan",
+      body: c.body,
+      createdAt: c.created_at,
+      scores: c.scores as ScoreMap | undefined,
+      isYou: user?.id === c.user_id,
+    }));
 
   const ratingRows = (ratings ?? []).map((r) => ({
     userId: r.user_id,
@@ -94,24 +100,59 @@ export async function GET(
     isYou: user?.id === r.user_id,
   }));
 
-  const takes = mergeTakes(ratingRows, commentRows);
+  const merged = mergeTakes(ratingRows, commentRows);
+  const baseTakes = merged.map((t) => ({
+    userId: t.userId,
+    author: t.author,
+    scores: t.scores,
+    updatedAt: t.updatedAt,
+    body: t.body ?? "",
+    isYou: t.isYou,
+  }));
+
+  const commentIds = allComments.map((c) => c.id);
+  const likeCountById = new Map<string, number>();
+  const likedByYou = new Set<string>();
+  if (commentIds.length > 0) {
+    const { data: likes } = await supabase
+      .from("comment_likes")
+      .select("comment_id, user_id")
+      .in("comment_id", commentIds.slice(0, 200));
+    for (const like of likes ?? []) {
+      likeCountById.set(
+        like.comment_id,
+        (likeCountById.get(like.comment_id) ?? 0) + 1,
+      );
+      if (user?.id === like.user_id) likedByYou.add(like.comment_id);
+    }
+  }
+
+  const takes = enrichTakesWithSocial(
+    baseTakes,
+    allComments.map((c) => ({
+      id: c.id,
+      user_id: c.user_id,
+      author: c.author,
+      body: c.body,
+      created_at: c.created_at,
+      parent_id: c.parent_id,
+      hidden: c.hidden,
+    })),
+    likeCountById,
+    likedByYou,
+    user?.id,
+  );
+
   const weightedRows = takes.map((take) => ({
     scores: take.scores,
     weight: vipMap.get(take.userId) ? VIP_RATING_WEIGHT : STANDARD_RATING_WEIGHT,
   }));
   const communityAvg = weightedAverageScores(weightedRows, [...dimIds]);
 
-  const mineTake = user ? takes.find((t) => t.userId === user.id) : undefined;
+  const mineTake = user ? takes.find((t) => t.isYou) : undefined;
 
   return NextResponse.json({
-    takes: takes.map((t) => ({
-      userId: t.userId,
-      author: t.author,
-      scores: t.scores,
-      updatedAt: t.updatedAt,
-      body: t.body ?? "",
-      isYou: t.isYou,
-    })),
+    takes,
     ratingCount: takes.length,
     communityAvg,
     mine: mineTake?.scores ?? null,
