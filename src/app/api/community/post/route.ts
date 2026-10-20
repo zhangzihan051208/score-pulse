@@ -1,7 +1,17 @@
+import {
+  dimensionIds,
+  POSITION_PROFILES,
+  type PositionKey,
+} from "@/lib/position-ratings";
+import { canPostFullDimensions } from "@/lib/vip-server";
+import {
+  scoresFromOverall,
+  type RatingMode,
+} from "@/lib/vip";
 import { createClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 import { NextResponse } from "next/server";
-import type { PositionKey, ScoreMap, Sport } from "@/lib/types";
+import type { ScoreMap, Sport } from "@/lib/types";
 
 type Body = {
   eventId: string;
@@ -9,6 +19,8 @@ type Body = {
   sport: Sport;
   positionKey?: PositionKey;
   scores: ScoreMap;
+  ratingMode?: RatingMode;
+  overall?: number;
   comment?: string;
   displayName?: string;
 };
@@ -28,7 +40,51 @@ export async function POST(request: Request) {
   }
 
   const body = (await request.json()) as Body;
-  const { eventId, athleteId, sport, scores, comment, displayName } = body;
+  const {
+    eventId,
+    athleteId,
+    sport,
+    comment,
+    displayName,
+    positionKey = "nba.guard",
+  } = body;
+  const ratingMode: RatingMode =
+    body.ratingMode === "overall_only" ? "overall_only" : "full";
+
+  const dimIds =
+    POSITION_PROFILES[positionKey as PositionKey]?.dimensions ??
+    dimensionIds(positionKey as PositionKey);
+
+  let scores: ScoreMap = body.scores;
+  if (ratingMode === "overall_only") {
+    const overall =
+      body.overall ??
+      (dimIds.length ? scores[dimIds[0]!] : undefined) ??
+      Object.values(scores)[0];
+    if (overall == null || Number.isNaN(Number(overall))) {
+      return NextResponse.json(
+        { error: "Overall score is required for quick rating." },
+        { status: 400 },
+      );
+    }
+    scores = scoresFromOverall(Number(overall), [...dimIds]);
+  }
+
+  const gate = await canPostFullDimensions(
+    supabase,
+    user.id,
+    eventId,
+    athleteId,
+  );
+  if (ratingMode === "full" && !gate.allowed) {
+    return NextResponse.json(
+      {
+        error: "Daily full rating limit reached. Use overall-only or upgrade to VIP.",
+        code: "full_rating_limit",
+      },
+      { status: 403 },
+    );
+  }
 
   const trimmedComment = comment?.trim() ?? "";
   if (trimmedComment.length > 0 && trimmedComment.length < 8) {
@@ -72,6 +128,7 @@ export async function POST(request: Request) {
       athlete_id: athleteId,
       sport,
       scores,
+      rating_mode: ratingMode,
       updated_at: new Date().toISOString(),
     },
     { onConflict: "user_id,event_id,athlete_id" },

@@ -74,6 +74,22 @@ type Dict = {
     signInRequired: string;
     notConfigured: string;
   };
+  vip: {
+    title: string;
+    badge: string;
+    member: string;
+    guest: string;
+    activeUntil: string;
+    benefitFull: string;
+    benefitWeight: string;
+    quotaLine: string;
+    unlimited: string;
+    planTitle: string;
+    planPrice: string;
+    activate: string;
+    activated: string;
+    demoNote: string;
+  };
   auth: {
     signIn: string;
     signOut: string;
@@ -177,6 +193,11 @@ type Dict = {
     ratingGuide: string;
     ratingGuideLead: string;
     yourScores: string;
+    overallOnly: string;
+    overallOnlyHint: string;
+    fullQuotaBanner: string;
+    fullLimitError: string;
+    vipWeightHint: string;
     postComment: string;
     backToPlayer: string;
     detailScores: string;
@@ -274,6 +295,22 @@ export const messages: Record<Locale, Dict> = {
       saved: "Profile saved",
       signInRequired: "Sign in to edit your profile.",
       notConfigured: "Cloud profiles need Supabase in .env.",
+    },
+    vip: {
+      title: "Sideline VIP",
+      badge: "VIP",
+      member: "VIP member",
+      guest: "Free member",
+      activeUntil: "Valid until",
+      benefitFull: "Unlimited five-axis ratings every day",
+      benefitWeight: "Your grades count 2× in community averages",
+      quotaLine: "Full ratings today: {used} / {limit}",
+      unlimited: "Unlimited full ratings",
+      planTitle: "Monthly VIP",
+      planPrice: "Demo checkout — extends 30 days (no payment in preview)",
+      activate: "Activate VIP",
+      activated: "VIP activated. Refresh any rating page to unlock full axes.",
+      demoNote: "Production can wire Stripe or local payment here.",
     },
     auth: {
       signIn: "Sign in",
@@ -398,6 +435,14 @@ export const messages: Record<Locale, Dict> = {
       ratingGuideLead:
         "Five axes for {role} — weighted into the overall score:",
       yourScores: "Your five axes",
+      overallOnly: "Overall only",
+      overallOnlyHint:
+        "Free members get {limit} full five-axis cards per day (UTC). Overall-only ratings are unlimited.",
+      fullQuotaBanner:
+        "Today’s full cards used ({used}/{limit}). Slide overall below, or upgrade to VIP on your profile.",
+      fullLimitError:
+        "Daily full rating limit reached. Use overall-only or activate VIP in Profile.",
+      vipWeightHint: "VIP members’ ratings count double in board averages.",
       postComment: "Post rating & comment",
       backToPlayer: "Back to player card",
       detailScores: "Community breakdown",
@@ -570,6 +615,22 @@ export const messages: Record<Locale, Dict> = {
       signInRequired: "登录后可编辑个人主页。",
       notConfigured: "需在 .env 中配置 Supabase。",
     },
+    vip: {
+      title: "Sideline VIP",
+      badge: "VIP",
+      member: "VIP 会员",
+      guest: "普通会员",
+      activeUntil: "有效期至",
+      benefitFull: "五维详细评分每日不限次数",
+      benefitWeight: "你的评分在选手均分里权重 ×2",
+      quotaLine: "今日五维名额：{used} / {limit}",
+      unlimited: "五维评分不限次",
+      planTitle: "月度 VIP",
+      planPrice: "演示开通 — 延长 30 天（预览环境无需付款）",
+      activate: "开通 VIP",
+      activated: "VIP 已开通，刷新评分页即可无限五维打分。",
+      demoNote: "正式环境可在此接入 Stripe 或本地支付。",
+    },
     auth: {
       signIn: "登录",
       signOut: "退出",
@@ -685,6 +746,13 @@ export const messages: Record<Locale, Dict> = {
       ratingGuide: "评分须知",
       ratingGuideLead: "本场按「{role}」五个维度打分，权重合成总分：",
       yourScores: "你的五维打分",
+      overallOnly: "仅总评",
+      overallOnlyHint:
+        "普通会员每天（UTC）最多 {limit} 次五维详评；仅总评不限次数。",
+      fullQuotaBanner:
+        "今日五维名额已用完（{used}/{limit}）。请用下方总评，或在个人主页开通 VIP。",
+      fullLimitError: "今日五维名额已满。请改用总评，或在个人主页开通 VIP。",
+      vipWeightHint: "VIP 会员的评分在选手均分中计为 2 倍权重。",
       scoreOnly: "仅评分，未写短评。",
       postComment: "发布评分与短评",
       backToPlayer: "返回球员卡",
@@ -858,6 +926,22 @@ export const messages: Record<Locale, Dict> = {
       signInRequired: "Inicia sesión para editar tu perfil.",
       notConfigured: "Configura Supabase en .env.",
     },
+    vip: {
+      title: "Sideline VIP",
+      badge: "VIP",
+      member: "Miembro VIP",
+      guest: "Miembro gratis",
+      activeUntil: "Válido hasta",
+      benefitFull: "Notas de cinco ejes ilimitadas al día",
+      benefitWeight: "Tus notas cuentan ×2 en la media",
+      quotaLine: "Notas completas hoy: {used} / {limit}",
+      unlimited: "Notas completas ilimitadas",
+      planTitle: "VIP mensual",
+      planPrice: "Demo — +30 días (sin pago en vista previa)",
+      activate: "Activar VIP",
+      activated: "VIP activado. Recarga la página de notas.",
+      demoNote: "En producción conecta Stripe aquí.",
+    },
     auth: {
       signIn: "Entrar",
       signOut: "Salir",
@@ -975,6 +1059,13 @@ export const messages: Record<Locale, Dict> = {
       ratingGuide: "Guía de notas",
       ratingGuideLead: "Cinco ejes para {role}, ponderados en la nota global:",
       yourScores: "Tus cinco ejes",
+      overallOnly: "Solo global",
+      overallOnlyHint:
+        "Gratis: {limit} fichas de cinco ejes al día (UTC). Global ilimitado.",
+      fullQuotaBanner:
+        "Límite diario de fichas completas ({used}/{limit}). Usa global o VIP en perfil.",
+      fullLimitError: "Límite diario alcanzado. Usa solo global o activa VIP.",
+      vipWeightHint: "Las notas VIP cuentan doble en la media.",
       scoreOnly: "Solo nota numérica, sin texto.",
       postComment: "Publicar nota y comentario",
       backToPlayer: "Volver a la ficha",
@@ -1148,6 +1239,22 @@ export const messages: Record<Locale, Dict> = {
       signInRequired: "編集するにはログインしてください。",
       notConfigured: ".env に Supabase を設定してください。",
     },
+    vip: {
+      title: "Sideline VIP",
+      badge: "VIP",
+      member: "VIP 会員",
+      guest: "無料会員",
+      activeUntil: "有効期限",
+      benefitFull: "五軸の詳細採点が毎日無制限",
+      benefitWeight: "あなたの採点は平均に 2 倍の重み",
+      quotaLine: "本日の五軸：{used} / {limit}",
+      unlimited: "五軸採点無制限",
+      planTitle: "月額 VIP",
+      planPrice: "デモ — 30 日延長（プレビューでは決済なし）",
+      activate: "VIP を有効化",
+      activated: "VIP を有効化しました。採点ページを更新してください。",
+      demoNote: "本番では Stripe 等を接続できます。",
+    },
     auth: {
       signIn: "ログイン",
       signOut: "ログアウト",
@@ -1265,6 +1372,13 @@ export const messages: Record<Locale, Dict> = {
       ratingGuide: "採点ガイド",
       ratingGuideLead: "「{role}」の五軸を重み付けして総合点にします：",
       yourScores: "あなたの五軸",
+      overallOnly: "総合のみ",
+      overallOnlyHint:
+        "無料会員は UTC 日あたり {limit} 回まで五軸詳細。総合のみは無制限。",
+      fullQuotaBanner:
+        "本日の五軸枠を使い切りました（{used}/{limit}）。総合のみかプロフィールで VIP。",
+      fullLimitError: "五軸の日次上限です。総合のみか VIP をご利用ください。",
+      vipWeightHint: "VIP 会員の採点は平均で 2 倍の重みになります。",
       scoreOnly: "採点のみ（コメントなし）。",
       postComment: "採点・コメントを投稿",
       backToPlayer: "選手カードに戻る",

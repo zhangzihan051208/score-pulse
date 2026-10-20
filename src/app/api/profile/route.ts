@@ -1,4 +1,5 @@
 import { normalizeFavorites } from "@/lib/favorite-teams";
+import { isVipActive } from "@/lib/vip";
 import { createClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 import { NextResponse } from "next/server";
@@ -9,14 +10,18 @@ function rowToProfile(row: {
   avatar_url: string | null;
   bio: string | null;
   favorite_teams?: unknown;
+  vip_until?: string | null;
   updated_at: string;
 }) {
+  const vipUntil = row.vip_until ?? null;
   return {
     id: row.id,
     displayName: row.display_name?.trim() || "Fan",
     avatarUrl: row.avatar_url?.trim() || null,
     bio: row.bio?.trim() || null,
     favoriteTeams: normalizeFavorites(row.favorite_teams),
+    vipUntil,
+    isVip: isVipActive(vipUntil),
     updatedAt: row.updated_at,
   };
 }
@@ -37,7 +42,7 @@ export async function GET() {
 
   const { data, error } = await supabase
     .from("profiles")
-    .select("id, display_name, avatar_url, bio, favorite_teams, updated_at")
+    .select("id, display_name, avatar_url, bio, favorite_teams, vip_until, updated_at")
     .eq("id", user.id)
     .maybeSingle();
 
@@ -56,6 +61,8 @@ export async function GET() {
         avatarUrl: null,
         bio: null,
         favoriteTeams: {},
+        vipUntil: null,
+        isVip: false,
         updatedAt: null,
       },
     });
@@ -123,7 +130,7 @@ export async function PATCH(request: Request) {
   const { data, error } = await supabase
     .from("profiles")
     .upsert({ id: user.id, ...patch })
-    .select("id, display_name, avatar_url, bio, favorite_teams, updated_at")
+    .select("id, display_name, avatar_url, bio, favorite_teams, vip_until, updated_at")
     .single();
 
   if (error) {

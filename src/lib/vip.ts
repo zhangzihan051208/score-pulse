@@ -1,0 +1,32 @@
+import type { ScoreMap } from "@/lib/types";
+
+export const FREE_FULL_RATINGS_PER_DAY = 5;
+export const VIP_RATING_WEIGHT = 2;
+export const STANDARD_RATING_WEIGHT = 1;
+
+export type RatingMode = "full" | "overall_only";
+
+export function isVipActive(vipUntil: string | null | undefined): boolean {
+  if (!vipUntil) return false;
+  return new Date(vipUntil).getTime() > Date.now();
+}
+
+export function utcDayStartIso(d = new Date()): string {
+  return new Date(
+    Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()),
+  ).toISOString();
+}
+
+export function scoresFromOverall(overall: number, dimIds: string[]): ScoreMap {
+  const v = Math.min(10, Math.max(1, Number(overall.toFixed(1))));
+  const out: ScoreMap = {};
+  for (const id of dimIds) out[id] = v;
+  return out;
+}
+
+export function isUniformOverallScores(scores: ScoreMap, dimIds: string[]): boolean {
+  if (dimIds.length === 0) return false;
+  const vals = dimIds.map((id) => scores[id]).filter((n) => n != null);
+  if (vals.length !== dimIds.length) return false;
+  return vals.every((v) => Math.abs(v - vals[0]!) < 0.01);
+}

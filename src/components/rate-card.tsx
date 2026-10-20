@@ -18,6 +18,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Overall } from "@/components/score-rows";
 import { useAuth } from "@/hooks/use-auth";
 import { useProfile } from "@/hooks/use-profile";
+import { useVipQuota } from "@/hooks/use-vip";
 import { useCommunity } from "@/hooks/use-community";
 import { useI18n } from "@/i18n/use-i18n";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
@@ -32,6 +33,12 @@ import {
   overallFromScores,
 } from "@/lib/store";
 import { dimensionIds } from "@/lib/position-ratings";
+import {
+  FREE_FULL_RATINGS_PER_DAY,
+  isUniformOverallScores,
+  scoresFromOverall,
+  type RatingMode,
+} from "@/lib/vip";
 import type {
   Athlete,
   Localized,
@@ -52,8 +59,10 @@ export function RateCard({
   const { locale, t } = useI18n();
   const { user, enabled: authEnabled } = useAuth();
   const { profile } = useProfile();
+  const { quota, cloud: vipCloud, reload: reloadVip } = useVipQuota();
   const { state, postTake } = useCommunity();
   const [draft, setDraft] = useState<ScoreMap | null>(null);
+  const [ratingMode, setRatingMode] = useState<RatingMode>("full");
   const [body, setBody] = useState("");
   const [nameDraft, setNameDraft] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
@@ -166,6 +175,24 @@ export function RateCard({
   const cloudPost = isSupabaseConfigured();
   const mustSignIn = cloudPost && !user;
 
+  const mineScores = mine?.scores;
+  const alreadyFullCard =
+    Boolean(mineScores) &&
+    !isUniformOverallScores(mineScores!, [...dims]);
+
+  const allowsFullDimensions =
+    !vipCloud ||
+    !cloudPost ||
+    quota.isVip ||
+    quota.fullRatingsRemaining > 0 ||
+    alreadyFullCard;
+
+  useEffect(() => {
+    if (!allowsFullDimensions && ratingMode === "full") {
+      setRatingMode("overall_only");
+    }
+  }, [allowsFullDimensions, ratingMode]);
+
   const baseScores = {
     ...emptyScores(event.sport, positionKey),
     ...(mine?.scores ?? {}),
@@ -257,6 +284,10 @@ export function RateCard({
             return;
           }
           if (cloudPost && user) {
+            const mode =
+              allowsFullDimensions && ratingMode === "full"
+                ? "full"
+                : "overall_only";
             const res = await fetch("/api/community/post", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
@@ -266,16 +297,26 @@ export function RateCard({
                 sport: event.sport,
                 positionKey,
                 scores,
+                ratingMode: mode,
+                overall: overallFromScores(scores, positionKey),
                 comment: body,
                 displayName: name,
               }),
             });
             if (!res.ok) {
-              const data = (await res.json()) as { error?: string };
-              setError(data.error ?? t.auth.failed);
+              const data = (await res.json()) as {
+                error?: string;
+                code?: string;
+              };
+              setError(
+                data.code === "full_rating_limit"
+                  ? t.rate.fullLimitError
+                  : (data.error ?? t.auth.failed),
+              );
               return;
             }
             await loadRemote();
+            await reloadVip();
           } else if (!cloudPost) {
             postTake(event.id, athlete.id, scores, body, name);
             if (!body.trim()) setBody("");
@@ -291,23 +332,86 @@ export function RateCard({
           });
         }}
       >
+        {cloudPost && user && vipCloud && !quota.isVip ? (
+          <p className="rounded-lg border border-dashed bg-muted/40 px-3 py-2 text-xs text-muted-foreground">
+            {allowsFullDimensions
+              ? t.rate.overallOnlyHint.replace(
+                  "{limit}",
+                  String(FREE_FULL_RATINGS_PER_DAY),
+                )
+              : t.rate.fullQuotaBanner
+                  .replace("{used}", String(quota.fullRatingsToday))
+                  .replace("{limit}", String(quota.fullRatingsLimit))}{" "}
+            <Link href="/profile" className="font-medium text-primary hover:underline">
+              VIP
+            </Link>
+          </p>
+        ) : null}
+        {cloudPost && user && quota.isVip ? (
+          <p className="text-xs text-muted-foreground">{t.rate.vipWeightHint}</p>
+        ) : null}
+
         <div>
-          <div className="mb-3 flex items-baseline justify-between">
-            <h2 className="text-sm font-semibold">{t.rate.yourScores}</h2>
+          <div className="mb-3 flex flex-wrap items-baseline justify-between gap-2">
+            <h2 className="text-sm font-semibold">
+              {ratingMode === "full" && allowsFullDimensions
+                ? t.rate.yourScores
+                : t.rate.overallOnly}
+            </h2>
+            {allowsFullDimensions && !quota.isVip && cloudPost && user ? (
+              <div className="flex gap-1 rounded-lg border p-0.5 text-xs">
+                <button
+                  type="button"
+                  className={
+                    ratingMode === "full"
+                      ? "rounded-md bg-primary px-2 py-0.5 text-primary-foreground"
+                      : "px-2 py-0.5 text-muted-foreground"
+                  }
+                  onClick={() => setRatingMode("full")}
+                >
+                  {t.rate.yourScores}
+                </button>
+                <button
+                  type="button"
+                  className={
+                    ratingMode === "overall_only"
+                      ? "rounded-md bg-primary px-2 py-0.5 text-primary-foreground"
+                      : "px-2 py-0.5 text-muted-foreground"
+                  }
+                  onClick={() => setRatingMode("overall_only")}
+                >
+                  {t.rate.overallOnly}
+                </button>
+              </div>
+            ) : null}
             <span className="text-lg font-bold tabular-nums text-primary">
               {overallFromScores(scores, positionKey).toFixed(1)}
             </span>
           </div>
-          <div className="space-y-3">
-            {dims.map((id) => (
-              <GradeSlider
-                key={id}
-                label={dimLabel(locale, positionKey, id)}
-                value={scores[id] ?? 7}
-                onChange={(next) => patchScore(id, next)}
-              />
-            ))}
-          </div>
+          {ratingMode === "full" && allowsFullDimensions ? (
+            <div className="space-y-3">
+              {dims.map((id) => (
+                <GradeSlider
+                  key={id}
+                  label={dimLabel(locale, positionKey, id)}
+                  value={scores[id] ?? 7}
+                  onChange={(next) => patchScore(id, next)}
+                />
+              ))}
+            </div>
+          ) : (
+            <GradeSlider
+              label={t.rate.overallOnly}
+              value={overallFromScores(scores, positionKey)}
+              onChange={(next) => {
+                setDraft({
+                  ...baseScores,
+                  ...scoresFromOverall(next, [...dims]),
+                });
+                setSaved(false);
+              }}
+            />
+          )}
         </div>
 
         <div className="space-y-2">

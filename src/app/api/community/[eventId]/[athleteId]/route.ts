@@ -1,7 +1,12 @@
 import { createClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
-import { mergeTakes, scoresForAggregation } from "@/lib/community-takes";
-import { averageScores } from "@/lib/score-aggregate";
+import { mergeTakes } from "@/lib/community-takes";
+import { weightedAverageScores } from "@/lib/score-aggregate";
+import {
+  isVipActive,
+  VIP_RATING_WEIGHT,
+  STANDARD_RATING_WEIGHT,
+} from "@/lib/vip";
 import {
   dimensionIds,
   POSITION_PROFILES,
@@ -59,13 +64,15 @@ export async function GET(
     ]),
   ];
   const profileMap = new Map<string, string>();
+  const vipMap = new Map<string, boolean>();
   if (userIds.length > 0) {
     const { data: profiles } = await supabase
       .from("profiles")
-      .select("id, display_name")
+      .select("id, display_name, vip_until")
       .in("id", userIds);
     for (const p of profiles ?? []) {
       profileMap.set(p.id, p.display_name ?? "Fan");
+      vipMap.set(p.id, isVipActive(p.vip_until));
     }
   }
 
@@ -88,8 +95,11 @@ export async function GET(
   }));
 
   const takes = mergeTakes(ratingRows, commentRows);
-  const scoreRows = scoresForAggregation(takes);
-  const communityAvg = averageScores(scoreRows, [...dimIds]);
+  const weightedRows = takes.map((take) => ({
+    scores: take.scores,
+    weight: vipMap.get(take.userId) ? VIP_RATING_WEIGHT : STANDARD_RATING_WEIGHT,
+  }));
+  const communityAvg = weightedAverageScores(weightedRows, [...dimIds]);
 
   const mineTake = user ? takes.find((t) => t.userId === user.id) : undefined;
 

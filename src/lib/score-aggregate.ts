@@ -5,10 +5,27 @@ export function averageScores(
   dimIds: string[],
 ): ScoreMap | null {
   if (rows.length === 0) return null;
+  return weightedAverageScores(
+    rows.map((scores) => ({ scores, weight: 1 })),
+    dimIds,
+  );
+}
+
+export function weightedAverageScores(
+  rows: { scores: ScoreMap; weight: number }[],
+  dimIds: string[],
+): ScoreMap | null {
+  const active = rows.filter((r) => r.weight > 0);
+  if (active.length === 0) return null;
+  const totalWeight = active.reduce((acc, r) => acc + r.weight, 0);
+  if (totalWeight <= 0) return null;
   const avg: ScoreMap = {};
   for (const id of dimIds) {
-    const sum = rows.reduce((acc, row) => acc + (row[id] ?? 0), 0);
-    avg[id] = Number((sum / rows.length).toFixed(1));
+    const sum = active.reduce(
+      (acc, row) => acc + (row.scores[id] ?? 0) * row.weight,
+      0,
+    );
+    avg[id] = Number((sum / totalWeight).toFixed(1));
   }
   return avg;
 }

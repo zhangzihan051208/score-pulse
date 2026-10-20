@@ -6,6 +6,7 @@ create table if not exists public.profiles (
   avatar_url text,
   bio text,
   favorite_teams jsonb not null default '{}'::jsonb,
+  vip_until timestamptz,
   updated_at timestamptz not null default now()
 );
 
@@ -15,6 +16,7 @@ create table if not exists public.ratings (
   athlete_id text not null,
   sport text not null,
   scores jsonb not null,
+  rating_mode text not null default 'full' check (rating_mode in ('full', 'overall_only')),
   updated_at timestamptz not null default now(),
   primary key (user_id, event_id, athlete_id)
 );

@@ -8,13 +8,17 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/hooks/use-auth";
 import { useProfile } from "@/hooks/use-profile";
+import { useVipQuota } from "@/hooks/use-vip";
 import { useI18n } from "@/i18n/use-i18n";
 
 export function ProfilePageInner() {
   const { t } = useI18n();
   const { user, enabled, loading: authLoading } = useAuth();
-  const { profile, loading, cloud, save } = useProfile();
+  const { profile, loading, cloud, save, reload: reloadProfile } = useProfile();
+  const { quota, reload: reloadVip } = useVipQuota();
   const [displayName, setDisplayName] = useState("");
+  const [vipBusy, setVipBusy] = useState(false);
+  const [vipMsg, setVipMsg] = useState<string | null>(null);
   const [avatarUrl, setAvatarUrl] = useState("");
   const [bio, setBio] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -88,6 +92,74 @@ export function ProfilePageInner() {
       >
         {t.teams.title} →
       </Link>
+
+      <section className="mt-6 rounded-xl border bg-card p-4">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <h2 className="text-sm font-semibold">{t.vip.title}</h2>
+            <p className="mt-1 text-xs text-muted-foreground">
+              {profile?.isVip ? t.vip.member : t.vip.guest}
+            </p>
+          </div>
+          {profile?.isVip ? (
+            <span className="rounded-full bg-violet-600 px-2.5 py-0.5 text-xs font-bold text-white">
+              {t.vip.badge}
+            </span>
+          ) : null}
+        </div>
+        <ul className="mt-3 space-y-1 text-sm text-muted-foreground">
+          <li>· {t.vip.benefitFull}</li>
+          <li>· {t.vip.benefitWeight}</li>
+        </ul>
+        {profile?.isVip && profile.vipUntil ? (
+          <p className="mt-3 text-xs text-muted-foreground">
+            {t.vip.activeUntil}{" "}
+            {new Date(profile.vipUntil).toLocaleDateString(undefined, {
+              dateStyle: "medium",
+            })}
+          </p>
+        ) : (
+          <p className="mt-3 text-xs text-muted-foreground">
+            {t.vip.quotaLine
+              .replace("{used}", String(quota.fullRatingsToday))
+              .replace("{limit}", String(quota.fullRatingsLimit))}
+          </p>
+        )}
+        <div className="mt-4 rounded-lg border border-dashed p-3">
+          <p className="font-medium">{t.vip.planTitle}</p>
+          <p className="mt-1 text-xs text-muted-foreground">{t.vip.planPrice}</p>
+          <Button
+            type="button"
+            className="mt-3 w-full"
+            variant={profile?.isVip ? "outline" : "default"}
+            disabled={vipBusy}
+            onClick={async () => {
+              setVipBusy(true);
+              setVipMsg(null);
+              try {
+                const res = await fetch("/api/vip/activate", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ days: 30 }),
+                });
+                const data = (await res.json()) as { error?: string };
+                if (!res.ok) {
+                  setVipMsg(data.error ?? t.auth.failed);
+                  return;
+                }
+                setVipMsg(t.vip.activated);
+                await Promise.all([reloadProfile(), reloadVip()]);
+              } finally {
+                setVipBusy(false);
+              }
+            }}
+          >
+            {t.vip.activate}
+          </Button>
+          <p className="mt-2 text-[11px] text-muted-foreground">{t.vip.demoNote}</p>
+        </div>
+        {vipMsg ? <p className="mt-2 text-sm text-primary">{vipMsg}</p> : null}
+      </section>
 
       <div className="mt-6 flex items-center gap-4">
         <PlayerAvatar athlete={previewAthlete} size="lg" showJerseyBadge={false} />

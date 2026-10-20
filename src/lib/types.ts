@@ -45,7 +45,18 @@ export type UserProfile = {
   avatarUrl: string | null;
   bio: string | null;
   favoriteTeams: FavoriteTeamsMap;
+  vipUntil: string | null;
+  isVip: boolean;
   updatedAt: string | null;
+};
+
+export type VipQuota = {
+  isVip: boolean;
+  vipUntil: string | null;
+  fullRatingsToday: number;
+  fullRatingsLimit: number;
+  fullRatingsRemaining: number;
+  canFullDimensions: boolean;
 };
 
 export type Performance = {
