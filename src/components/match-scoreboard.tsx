@@ -22,6 +22,8 @@ export function MatchScoreboard({
     MatchEvent,
     | "homeTeamName"
     | "awayTeamName"
+    | "homeTeamLogoUrl"
+    | "awayTeamLogoUrl"
     | "homeScore"
     | "awayScore"
     | "status"
@@ -55,6 +57,8 @@ export function MatchScoreboard({
 
   function TeamName({ side, name, win }: { side: "home" | "away"; name: string; win: boolean }) {
     const href = teamHref(event as MatchEvent, side);
+    const logoUrl =
+      side === "home" ? event.homeTeamLogoUrl : event.awayTeamLogoUrl;
     const inner = (
       <span
         className={cn(
@@ -65,14 +69,45 @@ export function MatchScoreboard({
         {name}
       </span>
     );
+    const logo =
+      logoUrl ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={logoUrl}
+          alt=""
+          width={28}
+          height={28}
+          className="size-7 shrink-0 rounded-sm object-contain"
+        />
+      ) : null;
+    const row = (
+      <div
+        className={cn(
+          "flex items-center gap-2",
+          side === "home" ? "justify-end" : "justify-start",
+        )}
+      >
+        {side === "home" ? (
+          <>
+            {inner}
+            {logo}
+          </>
+        ) : (
+          <>
+            {logo}
+            {inner}
+          </>
+        )}
+      </div>
+    );
     if (href) {
       return (
         <Link href={href} className={cn(nameClass, "hover:underline")}>
-          {inner}
+          {row}
         </Link>
       );
     }
-    return <div className={nameClass}>{inner}</div>;
+    return <div className={nameClass}>{row}</div>;
   }
 
   return (

@@ -1,5 +1,8 @@
 import { isEsportsGameSlug } from "@/lib/esports-games";
-import { esportsDataSource, listEsportsMatchEvents } from "@/lib/esports-catalog";
+import {
+  esportsDataSource,
+  listEsportsMatchEventsWithSource,
+} from "@/lib/esports-catalog";
 import { cachedEsportsMatchEvents } from "@/lib/esports-data-cache";
 import { NextResponse } from "next/server";
 
@@ -12,14 +15,19 @@ export async function GET(request: Request) {
   const gameSlug =
     game && isEsportsGameSlug(game) ? game : undefined;
 
-  const events = liveTick
-    ? await listEsportsMatchEvents(gameSlug, limit)
-    : await cachedEsportsMatchEvents(gameSlug, limit);
+  const { events, source } = liveTick
+    ? await listEsportsMatchEventsWithSource(gameSlug, limit, {
+        enrichKrBoards: true,
+      })
+    : {
+        events: await cachedEsportsMatchEvents(gameSlug, limit),
+        source: esportsDataSource(),
+      };
 
   return NextResponse.json(
     {
       events,
-      source: esportsDataSource(),
+      source,
       syncedAt: new Date().toISOString(),
     },
     {

@@ -69,6 +69,8 @@ export type MatchEvent = {
   awayTeamId?: string;
   homeTeamName?: string;
   awayTeamName?: string;
+  homeTeamLogoUrl?: string;
+  awayTeamLogoUrl?: string;
   homeScore?: number | null;
   awayScore?: number | null;
   /** Raw status from TheSportsDB e.g. FT, NS, 1H */

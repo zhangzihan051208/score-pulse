@@ -1,7 +1,7 @@
 import { S } from "@/lib/copy";
 import { emptyScoresForPosition } from "@/lib/position-ratings";
 import type { EsportsGameConfig } from "@/lib/esports-games";
-import type { KrMatch, KrPlayerBoardTeam } from "@/lib/kashrock";
+import type { KrMatch, KrPlayerBoardPlayer, KrPlayerBoardTeam } from "@/lib/kashrock";
 import { SPORT_ACCENT } from "@/lib/sports";
 import type { Athlete, MatchEvent, Performance } from "@/lib/types";
 
@@ -16,8 +16,37 @@ export function kashRockEventSlug(gameSlug: string, match: KrMatch): string {
   return `es-${gameSlug}-${tail}`.replace(/[^a-zA-Z0-9-]/g, "-").slice(0, 120);
 }
 
+function normTeam(s: string) {
+  return s
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, "");
+}
+
 function playerId(teamId: string, nickname: string) {
   return `${teamId}-${nickname}`.replace(/[^a-zA-Z0-9-_]/g, "_").slice(0, 80);
+}
+
+function sideForTeam(
+  teamName: string,
+  homeName: string,
+  awayName: string,
+): "home" | "away" | "unknown" {
+  const n = normTeam(teamName);
+  if (n === normTeam(homeName)) return "home";
+  if (n === normTeam(awayName)) return "away";
+  return "unknown";
+}
+
+function boardStats(p: KrPlayerBoardPlayer) {
+  const out: { label: ReturnType<typeof S>; value: string }[] = [];
+  if (p.kd != null) out.push({ label: S("K/D"), value: p.kd.toFixed(2) });
+  if (p.adr != null) out.push({ label: S("ADR"), value: p.adr.toFixed(1) });
+  if (out.length >= 2) return out;
+  if (p.kills != null && p.deaths != null) {
+    out.push({ label: S("K-D"), value: `${Math.round(p.kills)}-${Math.round(p.deaths)}` });
+  }
+  return out.slice(0, 2);
 }
 
 function boardToPerformances(
@@ -26,6 +55,8 @@ function boardToPerformances(
   awayName: string,
   homeId: string,
   awayId: string,
+  homeCountry?: string | null,
+  awayCountry?: string | null,
 ) {
   const performances: Performance[] = [];
   const roster: Record<string, Athlete> = {};
@@ -33,13 +64,16 @@ function boardToPerformances(
 
   for (const block of teams ?? []) {
     const teamName = block.team ?? "";
+    const side = sideForTeam(teamName, homeName, awayName);
     const tag =
-      teamName === homeName
+      side === "home"
         ? homeName.slice(0, 3).toUpperCase()
-        : teamName === awayName
+        : side === "away"
           ? awayName.slice(0, 3).toUpperCase()
           : teamName.slice(0, 3).toUpperCase();
-    const teamKey = teamName === homeName ? homeId : teamName === awayName ? awayId : teamName;
+    const teamKey = side === "home" ? homeId : side === "away" ? awayId : teamName;
+    const countryRaw =
+      side === "home" ? homeCountry : side === "away" ? awayCountry : undefined;
 
     for (const p of block.players ?? []) {
       const name = p.nickname?.trim() || p.real_name?.trim();
@@ -49,8 +83,9 @@ function boardToPerformances(
         id,
         name,
         shortName: name.slice(0, 2).toUpperCase(),
-        country: S("—"),
+        country: S(countryRaw?.trim() || "—"),
         team: tag,
+        idTeam: teamKey,
         photoUrl: p.icon_url,
       };
       performances.push({
@@ -58,7 +93,7 @@ function boardToPerformances(
         positionKey,
         role: S(p.role?.trim() || "Player"),
         highlight: S("Grade this series on five axes — not the season stat line."),
-        stats: [],
+        stats: boardStats(p),
         communityAvg: { ...emptyScoresForPosition(positionKey) },
         ratingCount: 0,
       });
@@ -96,6 +131,8 @@ export function kashRockMatchToEvent(
     awayName,
     homeId,
     awayId,
+    match.team1_country,
+    match.team2_country,
   );
 
   const s1 = match.score1 ?? null;
@@ -117,6 +154,8 @@ export function kashRockMatchToEvent(
     awayTeamId: awayId,
     homeTeamName: homeName,
     awayTeamName: awayName,
+    homeTeamLogoUrl: match.team1_logo ?? undefined,
+    awayTeamLogoUrl: match.team2_logo ?? undefined,
     homeScore: s1,
     awayScore: s2,
     statusDetail: match.status,

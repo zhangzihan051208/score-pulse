@@ -1,3 +1,5 @@
+import { normalizeKrMatch, type RawKrMatchInput } from "@/lib/kashrock-normalize";
+
 const BASE = "https://kashrock.up.railway.app";
 
 export function isKashRockConfigured() {
@@ -13,6 +15,11 @@ export type KrPlayerBoardPlayer = {
   real_name?: string;
   icon_url?: string;
   role?: string;
+  kd?: number;
+  adr?: number;
+  kills?: number;
+  deaths?: number;
+  assists?: number;
 };
 
 export type KrPlayerBoardTeam = {
@@ -29,6 +36,10 @@ export type KrMatch = {
   team2?: string;
   team1_id?: string;
   team2_id?: string;
+  team1_logo?: string | null;
+  team2_logo?: string | null;
+  team1_country?: string | null;
+  team2_country?: string | null;
   score1?: number | null;
   score2?: number | null;
   competition?: string;
@@ -73,7 +84,7 @@ export async function fetchKashRockMatches(
   limit = 36,
 ): Promise<KrMatch[]> {
   const data = await krFetch(`/v7/${krSport}/matches?limit=${limit}`);
-  return data?.matches ?? [];
+  return (data?.matches ?? []).map((m) => normalizeKrMatch(m as RawKrMatchInput));
 }
 
 export function kashRockMatchId(gameSlug: string, tail: string): string {
@@ -89,5 +100,6 @@ export async function fetchKashRockMatchDetail(
   const data = await krFetch(
     `/v7/${krSport}/matches?ids=${id}&include=player_board`,
   );
-  return data?.matches?.[0] ?? null;
+  const raw = data?.matches?.[0];
+  return raw ? normalizeKrMatch(raw as RawKrMatchInput) : null;
 }

@@ -13,6 +13,7 @@ import {
   isKashRockConfigured,
   kashRockMatchId,
 } from "@/lib/kashrock";
+import { enrichKashRockMatchesWithPlayerBoards } from "@/lib/kashrock-rosters";
 import {
   fetchEsportsMatchById,
   fetchEsportsMatches,
@@ -71,6 +72,7 @@ function sortEvents(list: MatchEvent[]) {
 async function listFromKashRock(
   gameSlug: EsportsGameSlug | undefined,
   limit: number,
+  enrichBoards = true,
 ): Promise<MatchEvent[]> {
   const games = gameSlug
     ? ESPORTS_GAMES.filter((g) => g.slug === gameSlug)
@@ -84,8 +86,12 @@ async function listFromKashRock(
   for (const game of games) {
     const raw = await fetchKashRockMatches(game.slug, perGameCap + 8);
     const picked = sortKrMatches(raw, perGameCap);
+    const enrichCap = gameSlug ? 10 : 6;
+    const withBoards = enrichBoards
+      ? await enrichKashRockMatchesWithPlayerBoards(game.slug, picked, enrichCap)
+      : picked;
     buckets.push(
-      picked
+      withBoards
         .map((m) => kashRockMatchToEvent(game, m))
         .filter((e): e is MatchEvent => Boolean(e)),
     );
@@ -128,18 +134,32 @@ async function listFromPandaScore(
 export async function listEsportsMatchEvents(
   gameSlug?: EsportsGameSlug,
   limit = 32,
-  options?: { includeRosters?: boolean },
+  options?: { includeRosters?: boolean; enrichKrBoards?: boolean },
 ): Promise<MatchEvent[]> {
-  if (!isEsportsDataConfigured()) return [];
+  const { events } = await listEsportsMatchEventsWithSource(gameSlug, limit, options);
+  return events;
+}
+
+export async function listEsportsMatchEventsWithSource(
+  gameSlug?: EsportsGameSlug,
+  limit = 32,
+  options?: { includeRosters?: boolean; enrichKrBoards?: boolean },
+): Promise<{ events: MatchEvent[]; source: "kashrock" | "pandascore" | null }> {
+  if (!isEsportsDataConfigured()) return { events: [], source: null };
 
   if (isKashRockConfigured()) {
-    const fromKr = await listFromKashRock(gameSlug, limit);
+    const fromKr = await listFromKashRock(gameSlug, limit, options?.enrichKrBoards);
     if (fromKr.length > 0 || !isPandaScoreConfigured()) {
-      return fromKr;
+      return { events: fromKr, source: "kashrock" };
     }
   }
 
-  return listFromPandaScore(gameSlug, limit, options?.includeRosters ?? false);
+  const events = await listFromPandaScore(
+    gameSlug,
+    limit,
+    options?.includeRosters ?? false,
+  );
+  return { events, source: isPandaScoreConfigured() ? "pandascore" : null };
 }
 
 async function getKashRockBySlug(slug: string, game: EsportsGameConfig, tail: string) {
@@ -168,7 +188,8 @@ export async function getEsportsMatchBySlug(slug: string): Promise<MatchEvent | 
   const tail = m[2];
 
   if (isKashRockConfigured()) {
-    return getKashRockBySlug(slug, game, tail);
+    const fromKr = await getKashRockBySlug(slug, game, tail);
+    if (fromKr || !isPandaScoreConfigured()) return fromKr;
   }
 
   for (const g of ESPORTS_GAMES) {

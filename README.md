@@ -26,7 +26,7 @@ Open `http://127.0.0.1:43147` or use Cursor **Preview** (Desktop). Styling needs
    - Needs `SUPABASE_SERVICE_ROLE_KEY` + `THESPORTSDB_API_KEY`. Leagues: **NBA**, **Premier League**, **La Liga**, **Bundesliga**, **Serie A**, **Ligue 1**, **Champions League**.
    - User page loads no longer trigger a full sync; only live score ticks refresh a few in-play matches.
 6. Browse league sub-boards under `/boards/soccer/premier-league`, `/boards/soccer/la-liga`, etc. Search teams, matches, and players at `/search`.
-7. **Esports (PandaScore):** set `PANDASCORE_API_TOKEN` in `.env.local`. Boards: `/boards/esports` (all titles) and branches `/boards/esports/lol`, `/cs2`, `/dota2`, `/valorant`. Match lists cache ~45s; live threads poll `/api/esports/events`.
+7. **Esports:** set **`KASHROCK_API_KEY`** (Sandbox, 500 req/UTC day) and/or `PANDASCORE_API_TOKEN`. **KashRock wins when both are set.** Boards: `/boards/esports` and `/boards/esports/lol`, `/cs2`, `/dota2`, `/valorant`. CS2 live lists pull rosters from map box scores when `player_board` is not cached; lists poll `/api/esports/events?live=1` for enriched cards.
 8. Set primary/secondary teams per league at `/my-teams` (home prioritizes primary-team fixtures; full schedule at `/my-teams/soccer-premier-league/schedule`). Run `supabase/migrate-favorite-teams.sql` if `profiles` already exists.
 9. Cloud Agents: add the same keys under **Environment → Secrets**, run `node scripts/verify-env.mjs` in a **new** agent after Save. Local dev uses `.env.local`.
 
