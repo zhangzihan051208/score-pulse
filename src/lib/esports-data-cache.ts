@@ -7,8 +7,8 @@ export function cachedEsportsMatchEvents(
   limit = 32,
 ): Promise<Awaited<ReturnType<typeof listEsportsMatchEvents>>> {
   return unstable_cache(
-    () => listEsportsMatchEvents(gameSlug, limit),
-    ["esports-match-events", gameSlug ?? "all", String(limit)],
-    { revalidate: 45, tags: ["esports"] },
+    () => listEsportsMatchEvents(gameSlug, limit, { enrichKrBoards: true }),
+    ["esports-match-events", gameSlug ?? "all", String(limit), "v2"],
+    { revalidate: 30, tags: ["esports"] },
   )();
 }

@@ -45,7 +45,7 @@ export function useEsportsEvents(
 
   const hasLive = events.some((e) => e.status === "live");
   const pollMs =
-    enabled && hasLive && tabVisible ? 30_000 : null;
+    enabled && tabVisible ? (hasLive ? 20_000 : 60_000) : null;
 
   useIntervalWhen(
     () => load(),

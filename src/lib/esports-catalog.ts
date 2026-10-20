@@ -13,6 +13,7 @@ import {
   isKashRockConfigured,
   kashRockMatchId,
 } from "@/lib/kashrock";
+import { mergeKrMatches } from "@/lib/kashrock-normalize";
 import { enrichKashRockMatchesWithPlayerBoards } from "@/lib/kashrock-rosters";
 import {
   fetchEsportsMatchById,
@@ -162,20 +163,38 @@ export async function listEsportsMatchEventsWithSource(
   return { events, source: isPandaScoreConfigured() ? "pandascore" : null };
 }
 
-async function getKashRockBySlug(slug: string, game: EsportsGameConfig, tail: string) {
+async function resolveKashRockMatch(
+  slug: string,
+  game: EsportsGameConfig,
+  tail: string,
+): Promise<import("@/lib/kashrock").KrMatch | null> {
   const krId = kashRockMatchId(game.slug, tail);
-  let match = await fetchKashRockMatchDetail(game.slug, krId);
-  if (!match) {
-    const list = await fetchKashRockMatches(game.slug, 80);
-    match =
-      list.find((m) => kashRockEventSlug(game.slug, m) === slug) ??
-      list.find((m) => m.slug === tail || m.kr_match_id === krId) ??
-      null;
-    if (match) {
-      match =
-        (await fetchKashRockMatchDetail(game.slug, match.kr_match_id)) ?? match;
-    }
+  const list = await fetchKashRockMatches(game.slug, 100);
+  const fromList =
+    list.find((m) => kashRockEventSlug(game.slug, m) === slug) ??
+    list.find((m) => m.slug === tail || m.kr_match_id === krId) ??
+    null;
+
+  const detail = await fetchKashRockMatchDetail(
+    game.slug,
+    fromList?.kr_match_id ?? krId,
+  );
+
+  if (fromList && detail) return mergeKrMatches(fromList, detail);
+  if (detail) return detail;
+  if (fromList) {
+    const enriched = await enrichKashRockMatchesWithPlayerBoards(
+      game.slug,
+      [fromList],
+      1,
+    );
+    return enriched[0] ?? fromList;
   }
+  return null;
+}
+
+async function getKashRockBySlug(slug: string, game: EsportsGameConfig, tail: string) {
+  const match = await resolveKashRockMatch(slug, game, tail);
   return match ? kashRockMatchToEvent(game, match) : null;
 }
 
@@ -216,4 +235,15 @@ export async function getEsportsMatchBySlug(slug: string): Promise<MatchEvent | 
   }
 
   return null;
+}
+
+/** Fresh KashRock pull for live detail pages (bypasses React `cache`). */
+export async function refreshEsportsMatchBySlug(slug: string): Promise<MatchEvent | null> {
+  if (!isKashRockConfigured()) return getEsportsMatchBySlug(slug);
+  const m = slug.match(/^es-(lol|cs2|dota2|valorant)-(.+)$/);
+  if (!m) return null;
+  const game = getEsportsGame(m[1]);
+  if (!game) return null;
+  const match = await resolveKashRockMatch(slug, game, m[2]);
+  return match ? kashRockMatchToEvent(game, match) : null;
 }

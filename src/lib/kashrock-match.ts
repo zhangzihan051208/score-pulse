@@ -6,7 +6,13 @@ import { SPORT_ACCENT } from "@/lib/sports";
 import type { Athlete, MatchEvent, Performance } from "@/lib/types";
 
 function mapStatus(status?: string): MatchEvent["status"] {
-  if (status === "current" || status === "live") return "live";
+  if (
+    status === "current" ||
+    status === "live" ||
+    status === "running"
+  ) {
+    return "live";
+  }
   if (status === "finished" || status === "completed") return "ended";
   return "upcoming";
 }

@@ -151,3 +151,40 @@ export function krMatchHasPlayerData(match: KrMatch): boolean {
   const teams = match.include?.player_board?.teams;
   return Boolean(teams && teams.length > 0);
 }
+
+/** Prefer fresher scores/status from detail while keeping list map rosters. */
+export function mergeKrMatches(base: KrMatch, detail: KrMatch): KrMatch {
+  const baseTeams = base.include?.player_board?.teams;
+  const detailTeams = detail.include?.player_board?.teams;
+  const teams =
+    detailTeams && detailTeams.length > 0
+      ? detailTeams
+      : baseTeams && baseTeams.length > 0
+        ? baseTeams
+        : undefined;
+
+  return {
+    ...base,
+    ...detail,
+    kr_match_id: detail.kr_match_id || base.kr_match_id,
+    slug: detail.slug ?? base.slug,
+    status: detail.status ?? base.status,
+    event_time: detail.event_time ?? base.event_time,
+    team1: detail.team1 ?? base.team1,
+    team2: detail.team2 ?? base.team2,
+    team1_id: detail.team1_id ?? base.team1_id,
+    team2_id: detail.team2_id ?? base.team2_id,
+    team1_logo: detail.team1_logo ?? base.team1_logo,
+    team2_logo: detail.team2_logo ?? base.team2_logo,
+    team1_country: detail.team1_country ?? base.team1_country,
+    team2_country: detail.team2_country ?? base.team2_country,
+    score1: detail.score1 ?? base.score1,
+    score2: detail.score2 ?? base.score2,
+    competition: detail.competition ?? base.competition,
+    stage_name: detail.stage_name ?? base.stage_name,
+    metadata: { ...base.metadata, ...detail.metadata },
+    include: teams?.length
+      ? { player_board: { available: true, teams } }
+      : (detail.include ?? base.include),
+  };
+}
