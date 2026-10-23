@@ -117,7 +117,7 @@ export const deOverrides = {
   },
   teams: {
     title: "Meine Teams",
-    lead: "Haupt- und Zweitteam pro Liga. Startseite priorisiert dein Hauptteam.",
+    lead: "Nur Ligen aktivieren, die du verfolgst — dann Haupt- und Zweitteam. Rest überspringen.",
     primary: "Hauptteam",
     secondary: "Zweitteam",
     searchPlaceholder: "Verein suchen…",
