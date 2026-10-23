@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { PlayerAvatar } from "@/components/player-avatar";
+import { ProfileRatingHistory } from "@/components/profile-rating-history";
 import { ProfileTeamCrests } from "@/components/profile-team-crests";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -152,6 +153,8 @@ export function ProfilePageInner() {
           )}
         </div>
       </section>
+
+      <ProfileRatingHistory />
 
       <Link
         href="/profile/vip"

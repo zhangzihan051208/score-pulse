@@ -106,6 +106,12 @@ type Dict = {
     crestsEmpty: string;
     vipEntry: string;
     vipEntryHint: string;
+    ratingsTitle: string;
+    ratingsHint: string;
+    ratingsEmpty: string;
+    ratingModeFull: string;
+    ratingModeOverall: string;
+    ratingOpenMatch: string;
     levelTitles: {
       rookie: string;
       regular: string;
@@ -375,6 +381,13 @@ export const messages: Record<Locale, Dict> = {
       crestsEmpty: "Set primary teams to show crests here.",
       vipEntry: "Sideline VIP",
       vipEntryHint: "Unlimited five-axis ratings · 2× weight in averages",
+      ratingsTitle: "Your rating history",
+      ratingsHint:
+        "Cloud scores you posted while signed in (newest first). Demo seed comments are not listed here.",
+      ratingsEmpty: "No cloud ratings yet. Rate a player from a match thread while signed in.",
+      ratingModeFull: "Five-axis",
+      ratingModeOverall: "Overall only",
+      ratingOpenMatch: "Open match",
       levelTitles: {
         rookie: "Rookie",
         regular: "Regular",
@@ -742,6 +755,13 @@ export const messages: Record<Locale, Dict> = {
       crestsEmpty: "在「我的主队」里设置后会显示队徽。",
       vipEntry: "Sideline VIP",
       vipEntryHint: "五维详评不限次 · 均分权重 ×2",
+      ratingsTitle: "我的评分记录",
+      ratingsHint:
+        "登录后在云端提交的评分（按时间倒序）。演示用的内置假评论不会出现在这里。",
+      ratingsEmpty: "还没有云端评分，请登录后在比赛帖里给球员打分。",
+      ratingModeFull: "五维详评",
+      ratingModeOverall: "仅总分",
+      ratingOpenMatch: "打开比赛",
       levelTitles: {
         rookie: "新秀",
         regular: "常客",
@@ -1101,6 +1121,13 @@ export const messages: Record<Locale, Dict> = {
       crestsEmpty: "Configura equipos para ver escudos aquí.",
       vipEntry: "Sideline VIP",
       vipEntryHint: "Notas de cinco ejes ilimitadas · peso ×2",
+      ratingsTitle: "Historial de notas",
+      ratingsHint:
+        "Tus notas en la nube con sesión iniciada (más recientes primero). Los comentarios demo no aparecen.",
+      ratingsEmpty: "Sin notas en la nube. Puntúa en un hilo de partido con sesión iniciada.",
+      ratingModeFull: "Cinco ejes",
+      ratingModeOverall: "Solo total",
+      ratingOpenMatch: "Ver partido",
       levelTitles: {
         rookie: "Novato",
         regular: "Habitual",
@@ -1462,6 +1489,13 @@ export const messages: Record<Locale, Dict> = {
       crestsEmpty: "マイチームで設定するとエンブレムが表示されます。",
       vipEntry: "Sideline VIP",
       vipEntryHint: "五軸無制限 · 平均で 2 倍の重み",
+      ratingsTitle: "採点履歴",
+      ratingsHint:
+        "ログイン中にクラウドへ投稿した採点（新しい順）。デモ用の固定コメントは含みません。",
+      ratingsEmpty: "クラウド採点はまだありません。試合スレッドからログインして採点してください。",
+      ratingModeFull: "五軸",
+      ratingModeOverall: "総合のみ",
+      ratingOpenMatch: "試合を開く",
       levelTitles: {
         rookie: "ルーキー",
         regular: "レギュラー",
