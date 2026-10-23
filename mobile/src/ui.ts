@@ -44,7 +44,18 @@ export const ui = StyleSheet.create({
     backgroundColor: colors.primary,
     borderRadius: 12,
     paddingVertical: 12,
+    paddingHorizontal: 16,
     alignItems: "center",
   },
   primaryBtnText: { color: "#fff", fontWeight: "800" },
+  outlineBtn: {
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: colors.line,
+    backgroundColor: colors.card,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    alignItems: "center",
+  },
+  outlineBtnText: { color: colors.ink, fontWeight: "800" },
 });

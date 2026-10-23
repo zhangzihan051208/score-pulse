@@ -2,8 +2,9 @@ import { useState } from "react";
 import { Image, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { sportLabel, team } from "../catalog";
+import { sportLabel } from "../catalog";
 import { esportsGames, eventsForTeam, hotPlayers, leagues, matchEvents, pairText } from "../events";
+import { favoriteNames } from "../favorites";
 import { useLocale } from "../i18n";
 import type { RootStackParamList } from "../navigation";
 import { useSession } from "../store";
@@ -17,14 +18,9 @@ export function HomeScreen() {
   const session = useSession();
   const [league, setLeague] = useState<string | null>(null);
   const live = matchEvents.filter((event) => event.status === "live");
-  const favoriteNames = Object.entries(session.favorites).flatMap(([sport, slots]) =>
-    [slots.primary, slots.secondary]
-      .filter((id): id is string => Boolean(id))
-      .map((id) => team(sport, id)?.name)
-      .filter((name): name is string => Boolean(name)),
-  );
+  const clubs = favoriteNames(session.favorites);
   const favoriteEvents = matchEvents.filter((event) =>
-    favoriteNames.some((name) => eventsForTeam(name).some((row) => row.slug === event.slug)),
+    clubs.some((name) => eventsForTeam(name).some((row) => row.slug === event.slug)),
   );
   const hot = hotPlayers(6);
 
@@ -48,29 +44,27 @@ export function HomeScreen() {
         <Text style={styles.enter}>{t.enter}</Text>
       </Pressable>
 
-      <View style={styles.links}>
-        <Pressable style={styles.link} onPress={() => navigation.navigate("Guide")}>
-          <Text style={styles.linkText}>{t.guide}</Text>
+      {clubs.length === 0 ? (
+        <Pressable style={styles.teamsPrompt} onPress={() => navigation.navigate("Tabs", { screen: "Profile" })}>
+          <View style={{ flex: 1, gap: 4 }}>
+            <Text style={ui.title}>{t.myTeams}</Text>
+            <Text style={ui.muted}>{t.setTeamsHint}</Text>
+          </View>
+          <Text style={styles.enter}>{t.setTeams}</Text>
         </Pressable>
-        <Pressable style={styles.link} onPress={() => navigation.navigate("Feed")}>
-          <Text style={styles.linkText}>{t.feed}</Text>
-        </Pressable>
-        <Pressable style={styles.link} onPress={() => navigation.navigate("MyTeams")}>
-          <Text style={styles.linkText}>{t.myTeams}</Text>
-        </Pressable>
-        <Pressable style={styles.link} onPress={() => navigation.navigate("Search", {})}>
-          <Text style={styles.linkText}>{t.find}</Text>
-        </Pressable>
-      </View>
-
-      {favoriteEvents.length > 0 ? (
+      ) : favoriteEvents.length > 0 ? (
         <View style={ui.card}>
-          <Text style={styles.section}>{t.myTeams}</Text>
+          <Text style={styles.section}>{t.clubMatches}</Text>
           {favoriteEvents.map((event) => (
             <MatchLine key={event.slug} status={event.status} title={pairText(locale, event.title)} slug={event.slug} />
           ))}
         </View>
-      ) : null}
+      ) : (
+        <View style={ui.card}>
+          <Text style={styles.section}>{t.clubMatches}</Text>
+          <Text style={ui.muted}>{t.scheduleEmpty}</Text>
+        </View>
+      )}
 
       {live.length > 0 ? (
         <View>
@@ -203,24 +197,25 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#F0C2B0",
   },
-  links: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
-  link: {
+  teamsPrompt: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
     backgroundColor: colors.card,
-    borderRadius: 999,
+    borderRadius: 16,
     borderWidth: 1,
     borderColor: colors.line,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
+    padding: 14,
   },
-  linkText: { color: colors.ink, fontWeight: "700", fontSize: 13 },
   section: { color: colors.muted, fontSize: 12, fontWeight: "800", letterSpacing: 1 },
   liveRow: { gap: 8, paddingVertical: 4 },
   liveChip: {
     backgroundColor: colors.card,
-    borderRadius: 12,
+    borderRadius: 14,
     borderWidth: 1,
     borderColor: colors.line,
-    padding: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
     maxWidth: 220,
     gap: 4,
   },
@@ -240,7 +235,14 @@ const styles = StyleSheet.create({
     fontWeight: "700",
   },
   leagueOn: { backgroundColor: colors.primary, color: "#fff" },
-  match: { flexDirection: "row", gap: 8, alignItems: "flex-start", paddingTop: 8 },
+  match: {
+    flexDirection: "row",
+    gap: 8,
+    alignItems: "flex-start",
+    paddingVertical: 10,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: colors.line,
+  },
   flag: { color: colors.muted, fontSize: 11, fontWeight: "800", marginTop: 3, width: 46 },
   flagLive: { color: colors.primary },
 });

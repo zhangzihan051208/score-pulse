@@ -20,8 +20,10 @@ export function LoginScreen({ navigation }: NativeStackScreenProps<RootStackPara
       <Pressable
         style={ui.primaryBtn}
         onPress={() => {
+          const first = !session.onboarded;
           session.signIn(name, bio);
-          navigation.goBack();
+          if (first) navigation.replace("Onboarding");
+          else navigation.goBack();
         }}
       >
         <Text style={ui.primaryBtnText}>{t.signIn}</Text>

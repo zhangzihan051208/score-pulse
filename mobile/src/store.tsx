@@ -50,6 +50,7 @@ type Session = {
   name: string | null;
   bio: string;
   vip: boolean;
+  onboarded: boolean;
   ratings: SavedRating[];
   favorites: Favorites;
   zones: Zone[];
@@ -59,8 +60,10 @@ type SessionApi = Session & {
   ready: boolean;
   signIn: (name: string, bio: string) => void;
   signOut: () => void;
+  completeOnboarding: () => void;
   setVip: (vip: boolean) => void;
   setFavorite: (sport: string, slot: "primary" | "secondary", teamId?: string) => void;
+  clearPartition: (key: string) => void;
   fullLeft: () => number;
   addRating: (rating: Omit<SavedRating, "id" | "at" | "author">) => void;
   addZone: (zone: Omit<Zone, "id" | "owner" | "items"> & { items?: ZoneItem[] }) => string;
@@ -109,7 +112,15 @@ const seedZones: Zone[] = [
   },
 ];
 
-const empty: Session = { name: null, bio: "", vip: false, ratings: [], favorites: {}, zones: seedZones };
+const empty: Session = {
+  name: null,
+  bio: "",
+  vip: false,
+  onboarded: false,
+  ratings: [],
+  favorites: {},
+  zones: seedZones,
+};
 
 const SessionContext = createContext<SessionApi | null>(null);
 
@@ -130,8 +141,14 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     AsyncStorage.getItem(KEY)
       .then((raw) => {
         if (raw) {
-          const parsed = JSON.parse(raw) as Session;
-          setSession({ ...empty, ...parsed, zones: parsed.zones?.length ? parsed.zones : seedZones });
+          const parsed = JSON.parse(raw) as Partial<Session>;
+          const onboarded = typeof parsed.onboarded === "boolean" ? parsed.onboarded : Boolean(parsed.name);
+          setSession({
+            ...empty,
+            ...parsed,
+            onboarded,
+            zones: parsed.zones?.length ? parsed.zones : seedZones,
+          });
         }
       })
       .catch(() => undefined)
@@ -150,15 +167,22 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       ready,
       signIn: (name, bio) => setSession((current) => ({ ...current, name: name.trim() || "球迷", bio })),
       signOut: () => setSession((current) => ({ ...current, name: null, bio: "" })),
+      completeOnboarding: () => setSession((current) => ({ ...current, onboarded: true })),
       setVip: (vip) => setSession((current) => ({ ...current, vip })),
-      setFavorite: (sport, slot, teamId) =>
-        setSession((current) => ({
-          ...current,
-          favorites: {
-            ...current.favorites,
-            [sport]: { ...current.favorites[sport], [slot]: teamId },
-          },
-        })),
+      setFavorite: (key, slot, teamId) =>
+        setSession((current) => {
+          const prev = current.favorites[key] ?? {};
+          const next = { ...prev, [slot]: teamId };
+          if (teamId && slot === "primary" && next.secondary === teamId) next.secondary = undefined;
+          if (teamId && slot === "secondary" && next.primary === teamId) next.primary = undefined;
+          return { ...current, favorites: { ...current.favorites, [key]: next } };
+        }),
+      clearPartition: (key) =>
+        setSession((current) => {
+          const favorites = { ...current.favorites };
+          delete favorites[key];
+          return { ...current, favorites };
+        }),
       fullLeft: () => {
         if (session.vip) return FREE_FULL_RATINGS;
         const start = dayStartIso();

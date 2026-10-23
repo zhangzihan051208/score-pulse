@@ -11,6 +11,7 @@ export type RootStackParamList = {
   ZoneCreate: undefined;
   ZoneItem: { zoneId: string; itemId: string };
   Login: undefined;
+  Onboarding: undefined;
   Vip: undefined;
   MyTeams: undefined;
   Guide: undefined;

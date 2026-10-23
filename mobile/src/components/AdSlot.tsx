@@ -12,11 +12,11 @@ export function AdSlot({ dock = false }: { dock?: boolean }) {
       accessibilityLabel={t.adLabel}
       style={[styles.slot, dock && { paddingBottom: Math.max(insets.bottom, 8) }]}
     >
-      <View style={styles.copy}>
+      <View style={styles.top}>
         <Text style={styles.label}>{t.adLabel}</Text>
-        <Text style={styles.hint}>{t.adHint}</Text>
+        <Text style={styles.platforms}>iOS · Android · Web</Text>
       </View>
-      <Text style={styles.platforms}>iOS · Android · Web</Text>
+      <Text style={styles.hint}>{t.adHint}</Text>
     </View>
   );
 }
@@ -29,11 +29,9 @@ const styles = StyleSheet.create({
     backgroundColor: "#F3E6C8",
     borderTopWidth: 1,
     borderTopColor: "#E0C9A0",
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
+    gap: 2,
   },
-  copy: { flex: 1, gap: 2 },
+  top: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 8 },
   label: { color: "#8A5A12", fontSize: 11, fontWeight: "800", letterSpacing: 1 },
   hint: { color: "#7A6A5A", fontSize: 12, lineHeight: 16 },
   platforms: { color: "#A08050", fontSize: 10, fontWeight: "700" },
