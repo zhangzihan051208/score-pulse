@@ -105,24 +105,33 @@ export function HomeMyTeams({
               </Link>
             </div>
             {featured ? (
-              <Link
-                href={`/events/${featured.slug}`}
-                className="mt-3 block rounded-lg bg-muted/50 px-3 py-2 hover:bg-muted"
-              >
-                <StatusPill status={featured.status} />
+              <div className="mt-3 rounded-lg bg-muted/50 px-3 py-2">
+                <Link href={`/events/${featured.slug}`} className="hover:underline">
+                  <StatusPill status={featured.status} />
+                </Link>
                 {featured.live && featured.homeTeamName ? (
                   <div className="mt-2">
-                    <MatchScoreboard event={featured} size="sm" />
+                    <MatchScoreboard
+                      event={featured}
+                      size="sm"
+                      matchHref={`/events/${featured.slug}`}
+                    />
                   </div>
                 ) : (
-                  <span className="mt-1 block text-sm font-medium">
+                  <Link
+                    href={`/events/${featured.slug}`}
+                    className="mt-1 block text-sm font-medium hover:underline"
+                  >
                     {tx(featured.title, locale)}
-                  </span>
+                  </Link>
                 )}
-                <p className="mt-1 text-xs text-muted-foreground">
+                <Link
+                  href={`/events/${featured.slug}`}
+                  className="mt-1 block text-xs text-muted-foreground hover:text-foreground"
+                >
                   {formatWhen(featured.startAt, locale)}
-                </p>
-              </Link>
+                </Link>
+              </div>
             ) : null}
           </article>
         ))}

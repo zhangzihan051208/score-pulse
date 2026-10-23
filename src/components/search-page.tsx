@@ -160,25 +160,34 @@ export function SearchPageInner() {
           <ul className="mt-3 space-y-2">
             {matches.map((event) => (
               <li key={event.id}>
-                <Link
-                  href={`/events/${event.slug}`}
-                  className="block rounded-xl border bg-card px-4 py-3 hover:bg-muted/40"
-                >
-                  <div className="mb-2 flex flex-wrap items-center gap-2">
+                <div className="rounded-xl border bg-card px-4 py-3">
+                  <Link
+                    href={`/events/${event.slug}`}
+                    className="mb-2 flex flex-wrap items-center gap-2 hover:underline"
+                  >
                     <StatusPill status={event.status} />
-                  </div>
+                  </Link>
                   {event.live && event.homeTeamName ? (
-                    <MatchScoreboard event={event} size="sm" />
+                    <MatchScoreboard
+                      event={event}
+                      size="sm"
+                      matchHref={`/events/${event.slug}`}
+                    />
                   ) : (
-                    <span className="font-semibold">{tx(event.title, locale)}</span>
+                    <Link href={`/events/${event.slug}`} className="font-semibold hover:underline">
+                      {tx(event.title, locale)}
+                    </Link>
                   )}
-                  <p className="mt-2 text-xs text-muted-foreground">
+                  <Link
+                    href={`/events/${event.slug}`}
+                    className="mt-2 block text-xs text-muted-foreground hover:text-foreground"
+                  >
                     {event.leagueSlug
                       ? leagueLabel(locale, event.leagueSlug)
                       : tx(event.subtitle, locale)}{" "}
                     · {t.sports[event.sport]}
-                  </p>
-                </Link>
+                  </Link>
+                </div>
               </li>
             ))}
           </ul>

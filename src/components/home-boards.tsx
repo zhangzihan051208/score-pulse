@@ -261,31 +261,34 @@ function FeaturedEventRow({
   locale: string;
   t: ReturnType<typeof useI18n>["t"];
 }) {
+  const matchHref = `/events/${event.slug}`;
   return (
-    <Link
-      href={`/events/${event.slug}`}
-      className="block border-b px-3 py-3 hover:bg-muted/40"
-    >
-      <div className="flex items-center gap-2">
+    <div className="border-b px-3 py-3">
+      <Link href={matchHref} className="flex items-center gap-2 hover:underline">
         <StatusPill status={event.status} />
         <span className="text-xs text-muted-foreground">
           {formatWhen(event.startAt, locale as "en")}
         </span>
-      </div>
+      </Link>
       {event.live ? (
         <div className="mt-2">
-          <MatchScoreboard event={event} size="sm" />
+          <MatchScoreboard event={event} size="sm" matchHref={matchHref} />
         </div>
       ) : (
-        <p className="mt-1 font-medium">{tx(event.title, locale as "en")}</p>
+        <Link href={matchHref} className="mt-1 block font-medium hover:underline">
+          {tx(event.title, locale as "en")}
+        </Link>
       )}
-      <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">
+      <Link
+        href={matchHref}
+        className="mt-1 line-clamp-2 block text-sm text-muted-foreground hover:text-foreground"
+      >
         {event.leagueSlug
           ? leagueLabel(locale as "en", event.leagueSlug)
           : tx(event.subtitle, locale as "en")}{" "}
         · {event.performances.length} {t.home.players}
-      </p>
-    </Link>
+      </Link>
+    </div>
   );
 }
 

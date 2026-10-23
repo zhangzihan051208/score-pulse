@@ -214,15 +214,7 @@ function TeamEventsSection({
                   <span className="text-xs text-muted-foreground">{ev.date}</span>
                 ) : null}
               </div>
-              <MatchScoreboard event={pseudoEvent} size="sm" />
-              {href ? (
-                <Link
-                  href={href}
-                  className="mt-2 inline-block text-xs font-medium text-primary hover:underline"
-                >
-                  {t.team.openMatch}
-                </Link>
-              ) : null}
+              <MatchScoreboard event={pseudoEvent} size="sm" matchHref={href} />
             </li>
           );
         })}

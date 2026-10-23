@@ -34,6 +34,7 @@ export function MatchScoreboard({
   size = "md",
   className,
   inverted = false,
+  matchHref,
 }: {
   event: Pick<
     MatchEvent,
@@ -54,6 +55,8 @@ export function MatchScoreboard({
   size?: "sm" | "md" | "lg";
   className?: string;
   inverted?: boolean;
+  /** Match thread. Score block links here; team names stay separate. */
+  matchHref?: string;
 }) {
   const { t } = useI18n();
   const home = event.homeTeamName ?? "Home";
@@ -118,15 +121,62 @@ export function MatchScoreboard({
         )}
       </div>
     );
-    if (href) {
-      return (
-        <Link href={href} className={cn(nameClass, "hover:underline")}>
-          {row}
-        </Link>
-      );
-    }
-    return <div className={nameClass}>{row}</div>;
+    return (
+      <div className={cn("flex flex-col gap-1", side === "home" ? "items-end" : "items-start")}>
+        <div className={nameClass}>{row}</div>
+        {href ? (
+          <Link
+            href={href}
+            onClick={(e) => e.stopPropagation()}
+            className={cn(
+              "inline-flex max-w-full items-center rounded-md border px-1.5 py-0.5 text-[10px] font-medium leading-none",
+              inverted
+                ? "border-white/25 text-white/80 hover:bg-white/10"
+                : "border-border bg-background text-muted-foreground hover:border-primary/40 hover:text-primary",
+            )}
+          >
+            {t.search.clubPage}
+          </Link>
+        ) : null}
+      </div>
+    );
   }
+
+  const scoreBlock = (
+    <>
+      {hasScore ? (
+        <div
+          className={cn(
+            "flex items-center gap-2 font-bold tabular-nums tracking-tight",
+            scoreClass,
+            live && "text-primary",
+          )}
+        >
+          <span className={homeWin ? "opacity-100" : "opacity-90"}>{event.homeScore}</span>
+          <span className="text-lg font-normal text-muted-foreground">–</span>
+          <span className={awayWin ? "opacity-100" : "opacity-90"}>{event.awayScore}</span>
+        </div>
+      ) : (
+        <span className={cn("font-semibold text-muted-foreground", nameClass)}>vs</span>
+      )}
+      {live ? (
+        <span className="mt-1 flex items-center gap-1.5 text-[10px] font-semibold uppercase text-primary">
+          <span className="size-1.5 animate-pulse rounded-full bg-primary" />
+          {t.status.live}
+          <LiveClock startAt={event.startAt} detail={event.statusDetail} />
+        </span>
+      ) : event.statusDetail && size !== "sm" ? (
+        <span className="mt-0.5 text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+          {event.statusDetail}
+        </span>
+      ) : null}
+      {matchHref ? (
+        <span className="mt-1 text-[10px] font-semibold tracking-wide text-primary">
+          {t.team.openMatch}
+        </span>
+      ) : null}
+    </>
+  );
 
   return (
     <div
@@ -140,32 +190,21 @@ export function MatchScoreboard({
         <TeamName side="home" name={home} win={homeWin} />
       </div>
       <div className="flex min-w-[5.5rem] flex-col items-center">
-        {hasScore ? (
-          <div
+        {matchHref ? (
+          <Link
+            href={matchHref}
             className={cn(
-              "flex items-center gap-2 font-bold tabular-nums tracking-tight",
-              scoreClass,
-              live && "text-primary",
+              "flex flex-col items-center rounded-lg border px-3 py-1.5 text-center transition-colors",
+              inverted
+                ? "border-white/30 bg-white/10 hover:bg-white/15"
+                : "border-primary/35 bg-primary/10 hover:bg-primary/15",
             )}
           >
-            <span className={homeWin ? "opacity-100" : "opacity-90"}>{event.homeScore}</span>
-            <span className="text-lg font-normal text-muted-foreground">–</span>
-            <span className={awayWin ? "opacity-100" : "opacity-90"}>{event.awayScore}</span>
-          </div>
+            {scoreBlock}
+          </Link>
         ) : (
-          <span className={cn("font-semibold text-muted-foreground", nameClass)}>vs</span>
+          <div className="flex flex-col items-center">{scoreBlock}</div>
         )}
-        {live ? (
-          <span className="mt-1 flex items-center gap-1.5 text-[10px] font-semibold uppercase text-primary">
-            <span className="size-1.5 animate-pulse rounded-full bg-primary" />
-            {t.status.live}
-            <LiveClock startAt={event.startAt} detail={event.statusDetail} />
-          </span>
-        ) : event.statusDetail && size !== "sm" ? (
-          <span className="mt-0.5 text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
-            {event.statusDetail}
-          </span>
-        ) : null}
       </div>
       <div className="text-left">
         <TeamName side="away" name={away} win={awayWin} />

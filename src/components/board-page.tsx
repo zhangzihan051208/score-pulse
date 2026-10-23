@@ -197,11 +197,11 @@ function BoardEventCard({
 }) {
   return (
     <article className="rounded-xl border bg-card">
-      <Link
-        href={`/events/${event.slug}`}
-        className="block border-b px-4 py-3 hover:bg-muted/40"
-      >
-        <div className="mb-2 flex flex-wrap items-center gap-2">
+      <div className="border-b px-4 py-3">
+        <Link
+          href={`/events/${event.slug}`}
+          className="mb-2 flex flex-wrap items-center gap-2 hover:underline"
+        >
           <StatusPill status={event.status} />
           {showGameTag && event.leagueSlug ? (
             <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide">
@@ -211,17 +211,22 @@ function BoardEventCard({
           <span className="text-xs text-muted-foreground">
             {formatWhen(event.startAt, locale)}
           </span>
-        </div>
+        </Link>
         {event.live ? (
-          <MatchScoreboard event={event} size="sm" />
+          <MatchScoreboard event={event} size="sm" matchHref={`/events/${event.slug}`} />
         ) : (
-          <h3 className="font-semibold">{tx(event.title, locale)}</h3>
+          <Link href={`/events/${event.slug}`} className="font-semibold hover:underline">
+            {tx(event.title, locale)}
+          </Link>
         )}
-        <p className="mt-2 text-sm text-muted-foreground">
+        <Link
+          href={`/events/${event.slug}`}
+          className="mt-2 block text-sm text-muted-foreground hover:text-foreground"
+        >
           {tx(event.subtitle, locale)}
           {event.live ? ` · ${event.performances.length} ${t.home.players}` : ""}
-        </p>
-      </Link>
+        </Link>
+      </div>
       <div className="border-t px-3 py-3">
         <EventSpotlightGrid event={event} state={state} compact />
       </div>
