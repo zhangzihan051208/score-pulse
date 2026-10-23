@@ -330,6 +330,8 @@ const ja: Dict = {
       squadPlayers: "人",
       squadEmpty: "この側のメンバーはまだありません。",
       viewPlayer: "カードを見る",
+      matchupsTab: "全ポジション対位",
+      matchupsLead: "ホームとアウェイの同ポジションペア一覧。重ねレーダーへ。",
     },
     matchup: {
       tab: "対位比較",

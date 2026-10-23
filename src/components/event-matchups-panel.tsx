@@ -8,7 +8,13 @@ import { useI18n } from "@/i18n/use-i18n";
 import { buildEventMatchups } from "@/lib/matchup-pairs";
 import type { MatchEvent } from "@/lib/types";
 
-export function EventMatchupsPanel({ event }: { event: MatchEvent }) {
+export function EventMatchupsPanel({
+  event,
+  fullPage = false,
+}: {
+  event: MatchEvent;
+  fullPage?: boolean;
+}) {
   const { locale, t } = useI18n();
   const { state } = useCommunity();
   const pairs = useMemo(
@@ -16,12 +22,20 @@ export function EventMatchupsPanel({ event }: { event: MatchEvent }) {
     [event, state, locale],
   );
 
-  if (pairs.length === 0) return null;
-
   return (
     <section className="rounded-xl border bg-card p-4">
-      <h2 className="font-semibold">{t.matchup.allInMatch}</h2>
-      <p className="mt-1 text-xs text-muted-foreground">{t.matchup.eventLead}</p>
+      <h2 className="font-semibold">
+        {fullPage ? t.event.matchupsTab : t.matchup.allInMatch}
+      </h2>
+      <p className="mt-1 text-xs text-muted-foreground">
+        {fullPage ? t.event.matchupsLead : t.matchup.eventLead}
+      </p>
+      {pairs.length === 0 ? (
+        <p className="mt-6 rounded-lg border border-dashed px-3 py-10 text-center text-sm text-muted-foreground">
+          {t.matchup.noCounterpart}
+        </p>
+      ) : null}
+      {pairs.length > 0 ? (
       <ul className="mt-3 space-y-2">
         {pairs.map((p) => {
           const key = `${p.positionKey}-${p.slot}-${p.home.athlete.id}`;
@@ -50,6 +64,7 @@ export function EventMatchupsPanel({ event }: { event: MatchEvent }) {
           );
         })}
       </ul>
+      ) : null}
     </section>
   );
 }

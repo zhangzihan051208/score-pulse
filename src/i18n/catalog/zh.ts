@@ -329,6 +329,8 @@ const zh: Dict = {
       squadPlayers: "人",
       squadEmpty: "该队暂无阵容数据。",
       viewPlayer: "查看球员卡",
+      matchupsTab: "全位置对位",
+      matchupsLead: "主客同位置自动配对一览，点「看重叠图」进入五维雷达对比。",
     },
     matchup: {
       tab: "对位对比",

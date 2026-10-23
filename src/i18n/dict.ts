@@ -294,6 +294,8 @@ export type Dict = {
     squadPlayers: string;
     squadEmpty: string;
     viewPlayer: string;
+    matchupsTab: string;
+    matchupsLead: string;
   };
   matchup: {
     tab: string;

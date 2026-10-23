@@ -332,6 +332,8 @@ const es: Dict = {
       squadPlayers: "jugadores",
       squadEmpty: "Sin alineación para este bando.",
       viewPlayer: "Ver ficha",
+      matchupsTab: "Duelos por posición",
+      matchupsLead: "Todos los pares local vs visitante por rol — abre el radar superpuesto.",
     },
     matchup: {
       tab: "Duelo",

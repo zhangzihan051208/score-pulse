@@ -328,6 +328,8 @@ export const deOverrides = {
     squadPlayers: "Spieler",
     squadEmpty: "Noch kein Lineup für diese Seite.",
     viewPlayer: "Karte ansehen",
+    matchupsTab: "Positions-Duels",
+    matchupsLead: "Alle Heim-vs-Auswärts-Paare nach Rolle — Radar-Overlay öffnen.",
   },
   matchup: {
     tab: "Duel",

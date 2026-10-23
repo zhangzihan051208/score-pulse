@@ -336,6 +336,8 @@ const en: Dict = {
       squadPlayers: "players",
       squadEmpty: "No lineup for this side yet.",
       viewPlayer: "View card",
+      matchupsTab: "Position matchups",
+      matchupsLead: "Every paired role on home vs away — open overlay charts from each row.",
     },
     matchup: {
       tab: "Matchup",
