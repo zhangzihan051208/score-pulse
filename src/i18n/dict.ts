@@ -60,6 +60,14 @@ export type Dict = {
     profileLink: string;
     fiveTitle: string;
     fiveHint: string;
+    honorsTitle: string;
+    commentsTitle: string;
+    scheduleTitle: string;
+    scheduleEmpty: string;
+    recentRatingsTitle: string;
+    upcoming: string;
+    played: string;
+    formNote: string;
   };
   zones: {
     title: string;

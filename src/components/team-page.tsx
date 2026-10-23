@@ -12,7 +12,7 @@ import { playerHubHref } from "@/lib/player-routes";
 import { S } from "@/lib/copy";
 import type { ReputationCard } from "@/lib/reputation/types";
 import type { TeamHub } from "@/lib/team-hub";
-import type { MatchEvent } from "@/lib/types";
+import type { MatchEvent, Sport } from "@/lib/types";
 
 export function TeamPageInner({
   teamId,
@@ -20,7 +20,7 @@ export function TeamPageInner({
   nameHint,
 }: {
   teamId: string;
-  sport: "nba" | "soccer";
+  sport: Sport;
   nameHint?: string;
 }) {
   const { locale, t } = useI18n();
@@ -183,7 +183,7 @@ export function TeamPageInner({
                   <div className="min-w-0">
                     <p className="truncate font-medium">{p.name}</p>
                     <p className="text-xs text-muted-foreground">
-                      {[p.number ? `#${p.number}` : null, p.position]
+                      {[p.number ? `#${p.number}` : null, p.position?.split(".").pop()]
                         .filter(Boolean)
                         .join(" · ")}
                     </p>
@@ -233,7 +233,7 @@ function TeamEventsSection({
   title: string;
   events: TeamHub["recent"];
   hub: TeamHub;
-  sport: "nba" | "soccer";
+  sport: Sport;
 }) {
   const { t } = useI18n();
   if (events.length === 0) return null;

@@ -3,7 +3,9 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { DimensionRadar } from "@/components/dimension-radar";
+import { PlayerAvatar } from "@/components/player-avatar";
 import { Overall } from "@/components/score-rows";
+import { initials } from "@/lib/reputation/portraits";
 import { useI18n } from "@/i18n/use-i18n";
 import { dimLabel } from "@/i18n/position-dims";
 import type { HonorBoardKind } from "@/lib/reputation/catalog";
@@ -67,9 +69,34 @@ export function HonorBoard({
                 </p>
               ) : null}
               <div className="flex items-start gap-3">
-                <span className="w-7 shrink-0 pt-0.5 text-center text-sm font-bold text-muted-foreground">
+                <span className="w-7 shrink-0 pt-1.5 text-center text-sm font-bold text-muted-foreground">
                   {entry.rank}
                 </span>
+                {entry.photoUrl ? (
+                  entry.href ? (
+                    <Link href={entry.href} className="shrink-0">
+                      <PlayerAvatar
+                        athlete={{
+                          name: entry.name,
+                          shortName: initials(entry.name),
+                          photoUrl: entry.photoUrl,
+                        }}
+                        size="sm"
+                        showJerseyBadge={false}
+                      />
+                    </Link>
+                  ) : (
+                    <PlayerAvatar
+                      athlete={{
+                        name: entry.name,
+                        shortName: initials(entry.name),
+                        photoUrl: entry.photoUrl,
+                      }}
+                      size="sm"
+                      showJerseyBadge={false}
+                    />
+                  )
+                ) : null}
                 <div className="min-w-0 flex-1">
                   {entry.href ? (
                     <Link href={entry.href} className="truncate font-medium hover:underline">
@@ -112,13 +139,6 @@ export function HonorBoard({
                   ))}
                 </ul>
               </div>
-              <ul className="mt-2 space-y-1.5">
-                {entry.takes.map((take) => (
-                  <li key={take.id} className="text-sm leading-6">
-                    {copy(take)}
-                  </li>
-                ))}
-              </ul>
             </li>
           );
         })}

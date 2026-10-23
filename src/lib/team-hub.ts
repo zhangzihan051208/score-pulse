@@ -9,7 +9,7 @@ import {
   fetchTeamRoster,
   mapTsdbStatus,
 } from "./thesportsdb";
-import type { MatchEvent } from "./types";
+import type { MatchEvent, Sport } from "./types";
 
 export type TeamRosterMember = {
   id: string;
@@ -42,7 +42,7 @@ export type TeamEventCard = {
 export type TeamHub = {
   id: string;
   name: string;
-  sport: "nba" | "soccer";
+  sport: Sport;
   league?: string;
   badgeUrl?: string;
   stadium?: string;

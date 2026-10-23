@@ -109,6 +109,15 @@ const en: Dict = {
       profileLink: "Player hub",
       fiveTitle: "Five-axis overall",
       fiveHint: "Trophies set the baseline. Every match rating pulls the average.",
+      honorsTitle: "Honours",
+      commentsTitle: "Comments",
+      scheduleTitle: "Schedule",
+      scheduleEmpty: "No fixtures linked yet.",
+      recentRatingsTitle: "Recent ratings",
+      upcoming: "Upcoming",
+      played: "Played",
+      formNote:
+        "These nights float around the honour baseline. A real match thread replaces them.",
     },
     rankings: {
       title: "Rating boards",

@@ -109,6 +109,15 @@ const es: Dict = {
       profileLink: "Ficha",
       fiveTitle: "Nota de cinco ejes",
       fiveHint: "Los títulos marcan la base. Cada partido tira del promedio.",
+      honorsTitle: "Palmarés",
+      commentsTitle: "Comentarios",
+      scheduleTitle: "Calendario",
+      scheduleEmpty: "Sin partidos vinculados.",
+      recentRatingsTitle: "Notas recientes",
+      upcoming: "Próximo",
+      played: "Jugado",
+      formNote:
+        "Estas fechas flotan sobre la base de honores. Un hilo real las sustituye.",
     },
     rankings: {
       title: "Tablones de notas",

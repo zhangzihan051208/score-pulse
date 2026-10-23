@@ -3,11 +3,40 @@ import {
   playersOnClub,
   presentTeam,
 } from "@/lib/reputation/catalog";
+import { teamTimeline } from "@/lib/reputation/dossier";
+import { portraitFor } from "@/lib/reputation/portraits";
 import { loadLiveHonorSamples } from "@/lib/reputation/live-samples";
 import { buildTeamHub } from "@/lib/team-hub";
-import type { TeamHub } from "@/lib/team-hub";
-import type { ScoreMap } from "@/lib/types";
+import type { TeamEventCard, TeamHub } from "@/lib/team-hub";
+import { SPORTS, type ScoreMap, type Sport } from "@/lib/types";
 import { NextResponse } from "next/server";
+
+function asSport(value: string | null): Sport | null {
+  return value && (SPORTS as readonly string[]).includes(value) ? (value as Sport) : null;
+}
+
+function timelineCards(clubId: string, sport: Sport, name: string): {
+  recent: TeamEventCard[];
+  upcoming: TeamEventCard[];
+} {
+  const cards = teamTimeline({ id: clubId, name, sport }).map((row) => {
+    const [homeTeam, awayTeam] = row.title.en.split(" vs ");
+    const card: TeamEventCard = {
+      id: row.id,
+      title: row.title.en,
+      date: row.date,
+      status: row.status,
+      homeTeam: homeTeam || name,
+      awayTeam: awayTeam || name,
+      isHome: (homeTeam || name) === name,
+    };
+    return card;
+  });
+  return {
+    recent: cards.filter((row) => row.status !== "upcoming"),
+    upcoming: cards.filter((row) => row.status === "upcoming"),
+  };
+}
 
 export async function GET(
   request: Request,
@@ -15,11 +44,11 @@ export async function GET(
 ) {
   const { teamId } = await context.params;
   const { searchParams } = new URL(request.url);
-  const sport = searchParams.get("sport") as "nba" | "soccer" | null;
+  const sport = asSport(searchParams.get("sport"));
   const name = searchParams.get("name") ?? undefined;
 
-  if (!sport || (sport !== "nba" && sport !== "soccer")) {
-    return NextResponse.json({ error: "sport required (nba|soccer)" }, { status: 400 });
+  if (!sport) {
+    return NextResponse.json({ error: "sport required" }, { status: 400 });
   }
 
   const honor = findHonorTeam(sport, name || teamId);
@@ -32,11 +61,13 @@ export async function GET(
       teamSamples = [];
     }
   }
-  const hub = teamId.startsWith("honor-")
-    ? null
-    : await buildTeamHub(teamId, sport, name);
+  const hub =
+    teamId.startsWith("honor-") || (sport !== "nba" && sport !== "soccer")
+      ? null
+      : await buildTeamHub(teamId, sport, name);
   if (!hub && honor) {
     const reputation = presentTeam(honor, teamSamples);
+    const fixtures = timelineCards(honor.id, sport, honor.name);
     const synthetic: TeamHub = {
       id: teamId,
       name: honor.name,
@@ -47,9 +78,10 @@ export async function GET(
         id: p.id,
         name: p.name,
         position: p.positionKey,
+        photoUrl: portraitFor(p.sport, p.id, p.name),
       })),
-      recent: [],
-      upcoming: [],
+      recent: fixtures.recent,
+      upcoming: fixtures.upcoming,
       honors: [{ title: honor.honors.en }],
     };
     return NextResponse.json({ team: synthetic, reputation });

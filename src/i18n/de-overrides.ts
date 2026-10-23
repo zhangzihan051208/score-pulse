@@ -108,6 +108,15 @@ export const deOverrides = {
     profileLink: "Spielerprofil",
     fiveTitle: "Fünf-Achsen-Gesamt",
     fiveHint: "Titel setzen die Basis. Jede Spielnote zieht den Schnitt.",
+    honorsTitle: "Ehrungen",
+    commentsTitle: "Kommentare",
+    scheduleTitle: "Spielplan",
+    scheduleEmpty: "Noch keine Spiele verknüpft.",
+    recentRatingsTitle: "Letzte Noten",
+    upcoming: "Kommend",
+    played: "Gespielt",
+    formNote:
+      "Diese Abende schwanken um die Ehren-Basis. Ein echter Spielthread ersetzt sie.",
   },
   rankings: {
     title: "Bewertungs-Ranglisten",

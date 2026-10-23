@@ -3,17 +3,18 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { DimensionRadar } from "@/components/dimension-radar";
-import { DimensionChips } from "@/components/rating-guide-panel";
 import { PlayerAvatar } from "@/components/player-avatar";
 import { Overall } from "@/components/score-rows";
 import { useCommunity } from "@/hooks/use-community";
 import { useI18n } from "@/i18n/use-i18n";
 import { dimLabel } from "@/i18n/position-dims";
-import type { PlayerEventRating } from "@/lib/rankings-server";
 import { dimensionIds, type PositionKey } from "@/lib/position-ratings";
+import type { PlayerEventRating } from "@/lib/rankings-server";
 import { blendScores, playerOverall } from "@/lib/reputation/blend";
+import type { DossierFixture, DossierRating } from "@/lib/reputation/dossier";
+import { initials } from "@/lib/reputation/portraits";
 import type { ReputationCard } from "@/lib/reputation/types";
-import { playerHubHref, rankingsHref } from "@/lib/player-routes";
+import { rankingsHref } from "@/lib/player-routes";
 import type { ScoreMap, Sport } from "@/lib/types";
 
 type HubPayload = {
@@ -29,6 +30,8 @@ type HubPayload = {
   totalRatings: number;
   byEvent: PlayerEventRating[];
   reputation: ReputationCard | null;
+  schedule?: DossierFixture[];
+  recentRatings?: DossierRating[];
 };
 
 export function PlayerHubPageInner({
@@ -96,12 +99,9 @@ export function PlayerHubPageInner({
   const name = data?.profile?.display_name ?? playerId;
   const teamId = data?.profile?.team_id ?? undefined;
   const teamName = data?.profile?.team_name ?? undefined;
-  const teamHref =
-    teamId && (sport === "nba" || sport === "soccer")
-      ? `/teams/${encodeURIComponent(teamId)}?sport=${sport}${teamName ? `&name=${encodeURIComponent(teamName)}` : ""}`
-      : teamId
-        ? rankingsHref({ sport, teamId })
-        : undefined;
+  const teamHref = teamId
+    ? `/teams/${encodeURIComponent(teamId)}?sport=${sport}${teamName ? `&name=${encodeURIComponent(teamName)}` : ""}`
+    : undefined;
 
   return (
     <div className="mx-auto max-w-2xl px-3 py-6 pb-24">
@@ -113,10 +113,11 @@ export function PlayerHubPageInner({
         <PlayerAvatar
           athlete={{
             name,
-            shortName: name.slice(0, 2),
-            photoUrl: data?.profile?.photo_url ?? undefined,
+            shortName: initials(name),
+            photoUrl: data?.profile?.photo_url ?? data?.reputation?.photoUrl,
           }}
           size="xl"
+          showJerseyBadge={false}
         />
         <div className="min-w-0 flex-1">
           <p className="text-xs text-muted-foreground">{t.player.hubKicker}</p>
@@ -153,16 +154,12 @@ export function PlayerHubPageInner({
           <p className="text-[11px] font-medium text-muted-foreground">
             {data?.reputation ? t.player.fiveHint : t.player.careerAxes}
           </p>
-          {data?.reputation ? (
-            <p className="mt-1 text-sm leading-6">
-              {locale === "zh" ? data.reputation.honors.zh : data.reputation.honors.en}
-            </p>
-          ) : null}
-          <div className="mt-3 flex justify-center">
+          <div className="mt-3 grid items-center gap-3 sm:grid-cols-[220px_minmax(0,1fr)]">
             <DimensionRadar
               dimIds={radarIds}
               dimLabels={radarIds.map((id) => dimLabel(locale, positionKey, id))}
               size={220}
+              showLabels={false}
               series={[
                 {
                   label: name,
@@ -172,21 +169,122 @@ export function PlayerHubPageInner({
                 },
               ]}
             />
-          </div>
-          <div className="mt-2">
-            <DimensionChips positionKey={positionKey} scores={shown.scores} />
-          </div>
-          {data?.reputation?.takes?.length ? (
-            <ul className="mt-4 space-y-2">
-              {data.reputation.takes.map((take) => (
-                <li key={take.id} className="rounded-md bg-muted/40 px-3 py-2 text-sm leading-6">
-                  {locale === "zh" ? take.zh : take.en}
+            <ul className="space-y-2">
+              {radarIds.map((id) => (
+                <li key={id} className="flex items-center justify-between gap-3 text-sm">
+                  <span className="text-muted-foreground">{dimLabel(locale, positionKey, id)}</span>
+                  <span className="font-semibold tabular-nums">
+                    {(shown.scores?.[id] ?? 0).toFixed(1)}
+                  </span>
                 </li>
               ))}
             </ul>
-          ) : null}
+          </div>
         </div>
       )}
+
+      {data?.reputation ? (
+        <section className="mt-6">
+          <h2 className="text-xs font-semibold tracking-widest text-muted-foreground uppercase">
+            {t.player.honorsTitle}
+          </h2>
+          <p className="mt-2 rounded-lg border px-3 py-3 text-sm leading-6">
+            {locale === "zh" ? data.reputation.honors.zh : data.reputation.honors.en}
+          </p>
+        </section>
+      ) : null}
+
+      {data?.reputation?.takes?.length ? (
+        <section className="mt-6">
+          <h2 className="text-xs font-semibold tracking-widest text-muted-foreground uppercase">
+            {t.player.commentsTitle}
+          </h2>
+          <ul className="mt-2 space-y-2">
+            {data.reputation.takes.map((take) => (
+              <li key={take.id} className="rounded-md bg-muted/40 px-3 py-2 text-sm leading-6">
+                {locale === "zh" ? take.zh : take.en}
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
+
+      <section className="mt-6">
+        <h2 className="text-xs font-semibold tracking-widest text-muted-foreground uppercase">
+          {t.player.scheduleTitle}
+        </h2>
+        {!data?.schedule?.length ? (
+          <p className="mt-2 text-sm text-muted-foreground">{t.player.scheduleEmpty}</p>
+        ) : (
+          <ul className="mt-2 space-y-2">
+            {data.schedule.map((row) => {
+              const title = locale === "zh" ? row.title.zh : row.title.en;
+              const detail = row.detail
+                ? locale === "zh"
+                  ? row.detail.zh
+                  : row.detail.en
+                : undefined;
+              const inner = (
+                <div className="flex items-center gap-3 rounded-lg border px-3 py-2.5">
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate font-medium">{title}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {[row.date, detail, row.status === "upcoming" ? t.player.upcoming : t.player.played]
+                        .filter(Boolean)
+                        .join(" · ")}
+                    </p>
+                  </div>
+                </div>
+              );
+              return (
+                <li key={row.id}>
+                  {row.href ? (
+                    <Link href={row.href} className="block hover:border-primary/40">
+                      {inner}
+                    </Link>
+                  ) : (
+                    inner
+                  )}
+                </li>
+              );
+            })}
+          </ul>
+        )}
+      </section>
+
+      <section className="mt-6">
+        <h2 className="text-xs font-semibold tracking-widest text-muted-foreground uppercase">
+          {t.player.recentRatingsTitle}
+        </h2>
+        {data?.recentRatings?.some((row) => row.source === "form") ? (
+          <p className="mt-1 text-xs text-muted-foreground">{t.player.formNote}</p>
+        ) : (
+          <p className="mt-1 text-xs text-muted-foreground">{t.player.eventRankHint}</p>
+        )}
+        {!data?.recentRatings?.length ? (
+          <p className="mt-3 text-sm text-muted-foreground">{t.player.noRatingsYet}</p>
+        ) : (
+          <ol className="mt-3 space-y-2">
+            {data.recentRatings.map((row) => {
+              const title = locale === "zh" ? row.title.zh : row.title.en;
+              const inner = (
+                <div className="flex items-center gap-3 rounded-lg border px-3 py-2.5">
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate font-medium">{title}</p>
+                    <p className="text-xs text-muted-foreground">{row.date}</p>
+                  </div>
+                  <Overall value={row.overall} />
+                </div>
+              );
+              return (
+                <li key={row.id}>
+                  {row.href ? <Link href={row.href}>{inner}</Link> : inner}
+                </li>
+              );
+            })}
+          </ol>
+        )}
+      </section>
 
       <div className="mt-4 flex flex-wrap gap-2">
         {teamId ? (
@@ -205,77 +303,6 @@ export function PlayerHubPageInner({
         </Link>
       </div>
 
-      <section className="mt-8">
-        <h2 className="text-xs font-semibold tracking-widest text-muted-foreground uppercase">
-          {t.player.eventRankTitle}
-        </h2>
-        <p className="mt-1 text-xs text-muted-foreground">{t.player.eventRankHint}</p>
-        {!data?.byEvent.length ? (
-          <p className="mt-4 text-sm text-muted-foreground">{t.player.noRatingsYet}</p>
-        ) : (
-          <ol className="mt-3 space-y-2">
-            {data.byEvent.map((row, idx) => (
-              <li key={row.eventId}>
-                <EventRatingRow
-                  rank={idx + 1}
-                  row={row}
-                  sport={sport}
-                  playerId={playerId}
-                  positionKey={positionKey}
-                />
-              </li>
-            ))}
-          </ol>
-        )}
-      </section>
     </div>
   );
-}
-
-function EventRatingRow({
-  rank,
-  row,
-  sport,
-  playerId,
-  positionKey,
-}: {
-  rank: number;
-  row: PlayerEventRating;
-  sport: Sport;
-  playerId: string;
-  positionKey: import("@/lib/position-ratings").PositionKey;
-}) {
-  const { t } = useI18n();
-  const href = row.eventSlug
-    ? `/events/${row.eventSlug}/${encodeURIComponent(playerId)}`
-    : undefined;
-
-  const inner = (
-    <div className="flex items-center gap-3 rounded-lg border px-3 py-2.5">
-      <span className="w-6 shrink-0 text-center text-sm font-semibold text-muted-foreground">
-        {rank}
-      </span>
-      <div className="min-w-0 flex-1">
-        <p className="truncate font-medium">
-          {row.eventTitle ?? `${t.player.matchFallback} ${row.eventId.slice(0, 8)}`}
-        </p>
-        <p className="text-xs text-muted-foreground">
-          {[row.eventDate, `${row.ratingCount} ${t.event.ratings}`]
-            .filter(Boolean)
-            .join(" · ")}
-        </p>
-      </div>
-      <Overall value={row.overall} />
-    </div>
-  );
-
-  if (href) {
-    return (
-      <Link href={href} className="block transition-colors hover:border-primary/40">
-        {inner}
-      </Link>
-    );
-  }
-
-  return inner;
 }

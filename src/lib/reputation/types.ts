@@ -66,4 +66,5 @@ export type ReputationCard = {
   takes: FanTake[];
   era?: "active" | "legend";
   href?: string;
+  photoUrl?: string;
 };

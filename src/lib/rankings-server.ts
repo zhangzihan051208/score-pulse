@@ -5,6 +5,8 @@ import {
   seedMatchSamples,
 } from "@/lib/reputation/catalog";
 import { blendScores, playerDimIds, playerOverall } from "@/lib/reputation/blend";
+import { playerTimeline, type DossierFixture, type DossierRating } from "@/lib/reputation/dossier";
+import { portraitFor } from "@/lib/reputation/portraits";
 import {
   fetchAthleteProfileRow,
   fetchAthleteProfilesForTeam,
@@ -256,6 +258,8 @@ export async function buildPlayerEventRankings(
   totalRatings: number;
   byEvent: PlayerEventRating[];
   reputation: ReputationCard | null;
+  schedule: DossierFixture[];
+  recentRatings: DossierRating[];
 }> {
   const profile = await fetchAthleteProfileRow(sport, athleteId);
   const honor =
@@ -324,6 +328,24 @@ export async function buildPlayerEventRankings(
     reputation = presentPlayer(honor, eventRankings.map((row) => row.avg));
   }
 
+  const timeline = honor ? playerTimeline(honor) : { schedule: [], recentRatings: [] };
+  const communityRatings: DossierRating[] = eventRankings
+    .filter((row) => row.eventDate)
+    .map((row) => ({
+      id: row.eventId,
+      title: { en: row.eventTitle ?? row.eventId, zh: row.eventTitle ?? row.eventId },
+      date: row.eventDate ?? "",
+      overall: row.overall,
+      href: row.eventSlug
+        ? `/events/${row.eventSlug}/${encodeURIComponent(athleteId)}`
+        : undefined,
+      source: "match" as const,
+    }));
+  const recentRatings =
+    communityRatings.length > 0
+      ? communityRatings.sort((a, b) => b.date.localeCompare(a.date))
+      : timeline.recentRatings;
+
   const resolvedProfile =
     profile ??
     (honor
@@ -333,7 +355,7 @@ export async function buildPlayerEventRankings(
           display_name: honor.name,
           team_id: honor.clubId ? `honor-${honor.clubId}` : null,
           team_name: honor.team,
-          photo_url: null,
+          photo_url: portraitFor(honor.sport, honor.id, honor.name),
           position_key: honor.positionKey,
         }
       : null);
@@ -345,6 +367,8 @@ export async function buildPlayerEventRankings(
     totalRatings,
     byEvent: eventRankings,
     reputation,
+    schedule: timeline.schedule,
+    recentRatings,
   };
 }
 

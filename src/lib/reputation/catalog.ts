@@ -14,6 +14,7 @@ import { extraLegendPlayers } from "./extra-legends";
 import { extraHonorTeams } from "./extra-teams";
 import { legendPlayers as seededLegendPlayers } from "./legends";
 import { honorTeams as seededHonorTeams } from "./teams";
+import { portraitFor } from "./portraits";
 import type { HonorPlayer, HonorTeam, ReputationCard } from "./types";
 import { fanTakes } from "./voice";
 
@@ -227,6 +228,7 @@ export function presentPlayer(
     }),
     era: person.era,
     href: `/players/${person.sport}/${person.id}`,
+    photoUrl: portraitFor(person.sport, person.id, person.name),
   };
 }
 
@@ -237,10 +239,7 @@ export function presentTeam(
   const dimIds = [...SPORT_DIMENSIONS[club.sport]];
   const samples = [...clubMatchSamples(club), ...extraSamples];
   const scores = blendScores(club.scores, club.seedWeight, samples, dimIds);
-  const href =
-    club.sport === "soccer" || club.sport === "nba"
-      ? `/teams/honor-${club.id}?sport=${club.sport}&name=${encodeURIComponent(club.name)}`
-      : undefined;
+  const href = `/teams/honor-${club.id}?sport=${club.sport}&name=${encodeURIComponent(club.name)}`;
   return {
     id: club.id,
     name: club.name,
