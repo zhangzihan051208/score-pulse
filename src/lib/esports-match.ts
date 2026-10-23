@@ -1,4 +1,5 @@
 import { S } from "@/lib/copy";
+import { alignEventToNow } from "@/lib/match-clock";
 import { emptyScoresForPosition } from "@/lib/position-ratings";
 import type { EsportsGameConfig, EsportsGameSlug } from "@/lib/esports-games";
 import type { PsMatch } from "@/lib/pandascore";
@@ -99,7 +100,7 @@ export function pandaMatchToEvent(game: EsportsGameConfig, match: PsMatch): Matc
   const scoreLine =
     homeScore != null && awayScore != null ? `${homeScore}-${awayScore}` : undefined;
 
-  return {
+  return alignEventToNow({
     id: String(match.id),
     slug,
     sport: "esports",
@@ -129,5 +130,5 @@ export function pandaMatchToEvent(game: EsportsGameConfig, match: PsMatch): Matc
     performances,
     roster,
     live: status === "live",
-  };
+  });
 }

@@ -1,8 +1,10 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useIntervalWhen } from "@/hooks/use-interval-when";
 import { useTabVisible } from "@/hooks/use-tab-visible";
+import { alignEventsToNow } from "@/lib/match-clock";
+import { POLL, listPollIntervalMs } from "@/lib/poll-policy";
 import type { EsportsGameSlug } from "@/lib/esports-games";
 import type { MatchEvent } from "@/lib/types";
 
@@ -12,6 +14,7 @@ export function useEsportsEvents(
   initialEvents: MatchEvent[] = [],
 ) {
   const tabVisible = useTabVisible();
+  const [now, setNow] = useState(() => Date.now());
   const [events, setEvents] = useState<MatchEvent[]>(initialEvents);
   const [source, setSource] = useState<"kashrock" | "pandascore" | null>(null);
   const [loading, setLoading] = useState(
@@ -43,15 +46,19 @@ export function useEsportsEvents(
     void load();
   }, [enabled, load]);
 
-  const hasLive = events.some((e) => e.status === "live");
-  const pollMs =
-    enabled && tabVisible ? (hasLive ? 20_000 : 60_000) : null;
+  useEffect(() => {
+    const id = setInterval(() => setNow(Date.now()), 5_000);
+    return () => clearInterval(id);
+  }, []);
+
+  const aligned = useMemo(() => alignEventsToNow(events, now), [events, now]);
+  const pollMs = enabled ? listPollIntervalMs(aligned, tabVisible, now) : null;
 
   useIntervalWhen(
     () => load(),
     pollMs,
-    { deferFirstMs: 0 },
+    { deferFirstMs: initialEvents.length > 0 ? POLL.seedGraceMs : 0 },
   );
 
-  return { events, loading, source, refresh: load };
+  return { events: aligned, loading, source, refresh: load };
 }

@@ -1,9 +1,26 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect, useState } from "react";
 import { useI18n } from "@/i18n/use-i18n";
+import { elapsedMatchMinutes } from "@/lib/match-clock";
 import { cn } from "cn";
 import type { MatchEvent } from "@/lib/types";
+
+function LiveClock({ startAt, detail }: { startAt?: string; detail?: string }) {
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    const id = setInterval(() => setNow(Date.now()), 1_000);
+    return () => clearInterval(id);
+  }, []);
+  const period = detail?.trim();
+  const useful =
+    period && !/not started|^ns$|scheduled/i.test(period) ? period : null;
+  const mins = startAt ? elapsedMatchMinutes(startAt, now) : null;
+  const label = useful ?? (mins != null ? `${mins}′` : null);
+  if (!label) return null;
+  return <span className="tabular-nums text-primary">{label}</span>;
+}
 
 function teamHref(event: MatchEvent, side: "home" | "away") {
   const id = side === "home" ? event.homeTeamId : event.awayTeamId;
@@ -28,6 +45,7 @@ export function MatchScoreboard({
     | "awayScore"
     | "status"
     | "statusDetail"
+    | "startAt"
     | "homeTeamId"
     | "awayTeamId"
     | "sport"
@@ -137,14 +155,15 @@ export function MatchScoreboard({
         ) : (
           <span className={cn("font-semibold text-muted-foreground", nameClass)}>vs</span>
         )}
-        {event.statusDetail && size !== "sm" ? (
+        {live ? (
+          <span className="mt-1 flex items-center gap-1.5 text-[10px] font-semibold uppercase text-primary">
+            <span className="size-1.5 animate-pulse rounded-full bg-primary" />
+            {t.status.live}
+            <LiveClock startAt={event.startAt} detail={event.statusDetail} />
+          </span>
+        ) : event.statusDetail && size !== "sm" ? (
           <span className="mt-0.5 text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
             {event.statusDetail}
-          </span>
-        ) : null}
-        {live ? (
-          <span className="mt-1 text-[10px] font-semibold uppercase text-primary">
-            {t.status.live}
           </span>
         ) : null}
       </div>

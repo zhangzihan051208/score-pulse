@@ -2,6 +2,7 @@ import { S } from "./copy";
 import { emptyScoresForPosition } from "./position-ratings";
 import { inferPositionKey } from "./position-infer";
 import { fixtureSlug } from "./slugify";
+import { alignEventToNow } from "./match-clock";
 import { mapTsdbStatus } from "./thesportsdb";
 import type { TsdbLineupPlayer } from "./thesportsdb";
 import { getLeagueByTsdbId, leagueMatchesRow } from "./leagues";
@@ -143,7 +144,7 @@ export function fixtureToMatchEvent(
     (raw.idAwayTeam as string | undefined) ??
     undefined;
 
-  return {
+  return alignEventToNow({
     id: row.id_event,
     slug,
     sport,
@@ -176,5 +177,5 @@ export function fixtureToMatchEvent(
     performances: scoreOnly && performances.length === 0 ? [] : performances,
     roster: scoreOnly && performances.length === 0 ? {} : roster,
     live: true,
-  };
+  });
 }

@@ -1,4 +1,5 @@
 import { S } from "@/lib/copy";
+import { alignEventToNow } from "@/lib/match-clock";
 import { emptyScoresForPosition } from "@/lib/position-ratings";
 import type { EsportsGameConfig } from "@/lib/esports-games";
 import type { KrMatch, KrPlayerBoardPlayer, KrPlayerBoardTeam } from "@/lib/kashrock";
@@ -151,7 +152,7 @@ export function kashRockMatchToEvent(
   const subtitle =
     [match.competition, match.stage_name].filter(Boolean).join(" · ") || "Esports";
 
-  return {
+  return alignEventToNow({
     id: match.kr_match_id,
     slug,
     sport: "esports",
@@ -179,5 +180,5 @@ export function kashRockMatchToEvent(
     performances,
     roster,
     live: status === "live",
-  };
+  });
 }

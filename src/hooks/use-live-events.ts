@@ -1,10 +1,20 @@
 "use client";
 
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useIntervalWhen } from "@/hooks/use-interval-when";
 import { useTabVisible } from "@/hooks/use-tab-visible";
+import { alignEventToNow, alignEventsToNow, kickoffIsSoon } from "@/lib/match-clock";
 import { POLL, detailPollIntervalMs, listPollIntervalMs } from "@/lib/poll-policy";
 import type { MatchEvent } from "@/lib/types";
+
+function useWallClock(ms = 5_000) {
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    const id = setInterval(() => setNow(Date.now()), ms);
+    return () => clearInterval(id);
+  }, [ms]);
+  return now;
+}
 
 export function useLiveEvents(
   sport?: "nba" | "soccer",
@@ -13,6 +23,7 @@ export function useLiveEvents(
   initialEvents?: MatchEvent[],
 ) {
   const tabVisible = useTabVisible();
+  const now = useWallClock();
   const [events, setEvents] = useState<MatchEvent[]>(initialEvents ?? []);
   const [loading, setLoading] = useState(
     enabled && !(initialEvents && initialEvents.length > 0),
@@ -29,7 +40,9 @@ export function useLiveEvents(
       if (sport) params.set("sport", sport);
       if (leagueSlug) params.set("league", leagueSlug);
       params.set("limit", sport ? "32" : "48");
-      const hasLive = eventsRef.current.some((e) => e.status === "live");
+      const hasLive = eventsRef.current.some(
+        (e) => e.status === "live" || kickoffIsSoon(e.startAt),
+      );
       if (refresh) params.set("sync", "1");
       else if (hasLive) params.set("live", "1");
       const res = await fetch(`/api/events?${params}`);
@@ -45,7 +58,8 @@ export function useLiveEvents(
     [enabled, leagueSlug, sport],
   );
 
-  const pollMs = enabled ? listPollIntervalMs(events, tabVisible) : null;
+  const aligned = useMemo(() => alignEventsToNow(events, now), [events, now]);
+  const pollMs = enabled ? listPollIntervalMs(aligned, tabVisible, now) : null;
 
   useIntervalWhen(
     () => load(false),
@@ -53,11 +67,12 @@ export function useLiveEvents(
     { deferFirstMs: hasSeed ? POLL.seedGraceMs : 0 },
   );
 
-  return { events, loading, syncedAt, refresh: () => load(true) };
+  return { events: aligned, loading, syncedAt, refresh: () => load(true) };
 }
 
 export function useLiveEvent(slug: string, seed?: MatchEvent | null) {
   const tabVisible = useTabVisible();
+  const now = useWallClock();
   const [event, setEvent] = useState<MatchEvent | null>(seed ?? null);
   const [loading, setLoading] = useState(!seed);
   const [syncedAt, setSyncedAt] = useState<string | null>(null);
@@ -67,8 +82,11 @@ export function useLiveEvent(slug: string, seed?: MatchEvent | null) {
   const load = useCallback(
     async (sync: boolean) => {
       const current = currentRef.current;
-      const liveQ =
-        sync || current?.status === "live" ? (sync ? "?sync=1" : "?live=1") : "";
+      const due =
+        sync ||
+        current?.status === "live" ||
+        (current ? kickoffIsSoon(current.startAt) : false);
+      const liveQ = due ? (sync ? "?sync=1" : "?live=1") : "";
       const res = await fetch(`/api/events/${encodeURIComponent(slug)}${liveQ}`);
       if (res.status === 404) {
         setEvent(null);
@@ -87,8 +105,11 @@ export function useLiveEvent(slug: string, seed?: MatchEvent | null) {
     [slug],
   );
 
-  const current = event ?? seed ?? null;
-  const pollMs = detailPollIntervalMs(current, tabVisible);
+  const current = useMemo(() => {
+    const raw = event ?? seed ?? null;
+    return raw ? alignEventToNow(raw, now) : null;
+  }, [event, now, seed]);
+  const pollMs = detailPollIntervalMs(current, tabVisible, now);
 
   useIntervalWhen(
     () => load(false),
@@ -96,5 +117,5 @@ export function useLiveEvent(slug: string, seed?: MatchEvent | null) {
     { deferFirstMs: seed ? POLL.seedGraceMs : 0 },
   );
 
-  return { event, loading, syncedAt, refresh: () => load(true) };
+  return { event: current, loading, syncedAt, refresh: () => load(true) };
 }

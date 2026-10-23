@@ -293,7 +293,7 @@ const en: Dict = {
       apiFixtures: "From TheSportsDB",
       apiFixturesHint:
         "Live NBA & Premier League threads refresh from TheSportsDB every ~90s.",
-      liveSyncHint: "Live scores refresh faster; background tabs poll less often.",
+      liveSyncHint: "Kickoff follows the clock. Live scores refresh about every 8 seconds.",
       liveEmpty:
         "No live threads yet. Set Supabase service key and run sync, or wait for the next poll.",
       liveBoardLead:

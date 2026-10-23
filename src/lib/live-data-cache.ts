@@ -16,6 +16,6 @@ export function cachedLiveMatchEvents(
       String(limit),
       leagueSlug ?? "all",
     ],
-    { revalidate: 12, tags: ["fixtures"] },
+    { revalidate: 8, tags: ["fixtures"] },
   )();
 }

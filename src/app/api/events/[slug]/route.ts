@@ -13,7 +13,8 @@ export async function GET(
 ) {
   const { slug } = await context.params;
   const { searchParams } = new URL(request.url);
-  const liveRefresh = searchParams.get("live") === "1";
+  const liveRefresh =
+    searchParams.get("live") === "1" || searchParams.get("sync") === "1";
   const degraded = getDegradedMode();
   let event: Awaited<ReturnType<typeof getLiveMatchBySlug>> = null;
 
@@ -27,7 +28,9 @@ export async function GET(
         { event, syncedAt: new Date().toISOString(), degraded },
         {
           headers: {
-            "Cache-Control": "public, s-maxage=12, stale-while-revalidate=30",
+            "Cache-Control": liveRefresh
+              ? "private, no-store"
+              : "public, s-maxage=8, stale-while-revalidate=20",
           },
         },
       );
@@ -53,7 +56,9 @@ export async function GET(
     { event, syncedAt: new Date().toISOString(), degraded },
     {
       headers: {
-        "Cache-Control": "public, s-maxage=12, stale-while-revalidate=30",
+        "Cache-Control": liveRefresh
+          ? "private, no-store"
+          : "public, s-maxage=8, stale-while-revalidate=20",
       },
     },
   );

@@ -290,7 +290,7 @@ const zh: Dict = {
       liveNow: "进行中",
       apiFixtures: "TheSportsDB 赛程",
       apiFixturesHint: "NBA 与英超真实赛程约每 90 秒自动刷新。",
-      liveSyncHint: "进行中比赛刷新更快；切到后台会降低轮询频率。",
+      liveSyncHint: "开赛时刻按当前时间校正；进行中大约每 8 秒拉一次比分。",
       liveEmpty: "暂无真实赛程。请配置 Supabase 服务端密钥并等待同步。",
       liveBoardLead: "TheSportsDB 最近比赛与阵容，可为名单中任意球员打分。",
       players: "名球员",

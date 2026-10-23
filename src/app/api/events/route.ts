@@ -8,7 +8,8 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const sport = searchParams.get("sport");
   const league = searchParams.get("league") ?? undefined;
-  const liveTick = searchParams.get("live") === "1";
+  const liveTick =
+    searchParams.get("live") === "1" || searchParams.get("sync") === "1";
   const degraded = getDegradedMode();
 
   let liveRefreshed = false;
@@ -29,9 +30,10 @@ export async function GET(request: Request) {
   const limit = Number(searchParams.get("limit") ?? "12");
   const capped = Math.min(limit, 48);
   const readLive = () => listLiveMatchEvents([...sports], capped, league);
-  const events = liveRefreshed
-    ? await readLive()
-    : await cachedLiveMatchEvents([...sports], capped, league);
+  const events =
+    liveTick || liveRefreshed
+      ? await readLive()
+      : await cachedLiveMatchEvents([...sports], capped, league);
 
   return NextResponse.json(
     {
@@ -41,7 +43,9 @@ export async function GET(request: Request) {
     },
     {
       headers: {
-        "Cache-Control": "public, s-maxage=15, stale-while-revalidate=45",
+        "Cache-Control": liveTick
+          ? "private, no-store"
+          : "public, s-maxage=8, stale-while-revalidate=20",
       },
     },
   );
