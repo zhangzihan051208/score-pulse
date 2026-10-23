@@ -174,6 +174,15 @@ type Dict = {
     replyPlaceholder: string;
     sendReply: string;
   };
+  moderation: {
+    autoBadge: string;
+    autoLead: string;
+    blockAd: string;
+    blockProfanity: string;
+    blockPornViolence: string;
+    blockSpam: string;
+    blockGeneric: string;
+  };
   vip: {
     title: string;
     badge: string;
@@ -379,8 +388,8 @@ const en: Dict = {
       fieldDimsHint: "Default food preset shown. Edit labels freely.",
       fieldCover: "Cover image URL",
       fieldDesc: "Short description",
-      moderationTitle: "Comment review",
-      moderationLead: "Approve or reject takes in your zone. Approved comments boost item heat.",
+      moderationTitle: "Comment safety",
+      moderationLead: "Automatic filters run on every comment in this zone.",
       moderationEmpty: "No comments waiting for review.",
       approve: "Approve",
       reject: "Reject",
@@ -497,6 +506,16 @@ const en: Dict = {
       hide: "Hide",
       replyPlaceholder: "Write a reply…",
       sendReply: "Send",
+    },
+    moderation: {
+      autoBadge: "Auto moderation",
+      autoLead:
+        "Comments are scanned for ads, banned words, and violent or sexual content before they go live.",
+      blockAd: "Blocked: promotional or link spam is not allowed.",
+      blockProfanity: "Blocked: abusive language is not allowed.",
+      blockPornViolence: "Blocked: sexual or violent content is not allowed.",
+      blockSpam: "Blocked: repetitive or low-quality spam.",
+      blockGeneric: "Blocked by automatic moderation. Edit your take and try again.",
     },
     vip: {
       title: "Grandstand VIP",
@@ -805,8 +824,8 @@ export const messages: Record<Locale, Dict> = {
       fieldDimsHint: "默认是美食品项，可随意改。",
       fieldCover: "封面图 URL",
       fieldDesc: "简介",
-      moderationTitle: "评论审核",
-      moderationLead: "通过或拒绝本专区评论；通过后计入热度。",
+      moderationTitle: "评论安全",
+      moderationLead: "本专区评论均经系统自动审核（违禁词 / 广告 / 色情暴力）。",
       moderationEmpty: "暂无待审核评论。",
       approve: "通过",
       reject: "拒绝",
@@ -923,6 +942,16 @@ export const messages: Record<Locale, Dict> = {
       hide: "隐藏",
       replyPlaceholder: "写回复…",
       sendReply: "发送",
+    },
+    moderation: {
+      autoBadge: "系统自动审核",
+      autoLead:
+        "评论发布前会自动检测广告引流、违禁词以及色情暴力内容，命中规则将直接拦截。",
+      blockAd: "已拦截：不允许广告、外链或引流信息。",
+      blockProfanity: "已拦截：包含辱骂或不文明用语。",
+      blockPornViolence: "已拦截：包含色情或暴力内容。",
+      blockSpam: "已拦截：重复或无意义刷屏。",
+      blockGeneric: "未通过自动审核，请修改后重试。",
     },
     vip: {
       title: "看台 VIP",
@@ -1338,6 +1367,15 @@ export const messages: Record<Locale, Dict> = {
       hide: "Ocultar",
       replyPlaceholder: "Escribe una respuesta…",
       sendReply: "Enviar",
+    },
+    moderation: {
+      autoBadge: "Moderación automática",
+      autoLead: "Detectamos anuncios, palabras prohibidas y contenido sexual o violento.",
+      blockAd: "Bloqueado: publicidad o enlaces.",
+      blockProfanity: "Bloqueado: lenguaje abusivo.",
+      blockPornViolence: "Bloqueado: contenido sexual o violento.",
+      blockSpam: "Bloqueado: spam.",
+      blockGeneric: "Bloqueado por moderación automática.",
     },
     vip: {
       title: "Grandstand VIP",
@@ -1755,6 +1793,15 @@ export const messages: Record<Locale, Dict> = {
       hide: "非表示",
       replyPlaceholder: "返信を書く…",
       sendReply: "送信",
+    },
+    moderation: {
+      autoBadge: "自動モデレーション",
+      autoLead: "広告・禁止語・性的/暴力的表現を自動検出します。",
+      blockAd: "ブロック：広告やリンク。",
+      blockProfanity: "ブロック：暴言。",
+      blockPornViolence: "ブロック：性的・暴力的内容。",
+      blockSpam: "ブロック：スパム。",
+      blockGeneric: "自動モデレーションによりブロックされました。",
     },
     vip: {
       title: "Grandstand VIP",

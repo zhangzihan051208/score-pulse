@@ -46,7 +46,7 @@ export async function GET(
     supabase
       .from("comments")
       .select(
-        "id, author, body, scores, created_at, user_id, parent_id, hidden",
+        "id, author, body, scores, created_at, user_id, parent_id, hidden, moderation_status",
       )
       .eq("event_id", eventId)
       .eq("athlete_id", athleteId)
@@ -79,7 +79,9 @@ export async function GET(
     }
   }
 
-  const allComments = comments ?? [];
+  const allComments = (comments ?? []).filter(
+    (c) => c.moderation_status === "approved" || !c.moderation_status,
+  );
   const commentRows = allComments
     .filter((c) => !c.parent_id)
     .map((c) => ({

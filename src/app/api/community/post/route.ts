@@ -8,6 +8,7 @@ import {
   scoresFromOverall,
   type RatingMode,
 } from "@/lib/vip";
+import { moderationErrorPayload, scanCommentBody } from "@/lib/comment-moderation";
 import { upsertAthleteProfile } from "@/lib/athlete-profile-server";
 import { createClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
@@ -168,6 +169,10 @@ export async function POST(request: Request) {
   }
 
   if (trimmedComment.length >= 8) {
+    const mod = scanCommentBody(trimmedComment);
+    if (!mod.pass) {
+      return NextResponse.json(moderationErrorPayload(mod), { status: 422 });
+    }
     const { error: commentError } = await supabase.from("comments").insert({
       user_id: user.id,
       event_id: eventId,
@@ -175,6 +180,7 @@ export async function POST(request: Request) {
       author: author.slice(0, 32),
       body: trimmedComment,
       scores,
+      moderation_status: mod.status,
     });
     if (commentError) {
       return NextResponse.json({ error: commentError.message }, { status: 500 });

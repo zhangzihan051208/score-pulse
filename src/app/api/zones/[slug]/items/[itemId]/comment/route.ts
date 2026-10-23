@@ -1,3 +1,4 @@
+import { moderationErrorPayload, scanCommentBody } from "@/lib/comment-moderation";
 import { createClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 import { refreshItemHeat } from "@/lib/zone-server";
@@ -66,8 +67,11 @@ export async function POST(
       "Fan";
   }
 
-  const isOwner = user.id === zone.owner_id;
-  const moderation_status = isOwner ? "approved" : "pending";
+  const mod = scanCommentBody(trimmed || "—");
+  if (!mod.pass) {
+    return NextResponse.json(moderationErrorPayload(mod), { status: 422 });
+  }
+  const moderation_status = mod.status;
 
   const { data: row, error } = await supabase
     .from("comments")
@@ -89,13 +93,10 @@ export async function POST(
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  if (moderation_status === "approved") {
-    await refreshItemHeat(supabase, itemId, zone.id);
-  }
+  await refreshItemHeat(supabase, itemId, zone.id);
 
   return NextResponse.json({
     ok: true,
     comment: row,
-    pending: moderation_status === "pending",
   });
 }

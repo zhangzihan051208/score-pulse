@@ -177,6 +177,16 @@ export const deOverrides = {
     replyPlaceholder: "Antwort schreiben…",
     sendReply: "Senden",
   },
+  moderation: {
+    autoBadge: "Auto-Moderation",
+    autoLead:
+      "Kommentare werden auf Werbung, verbotene Wörter sowie sexuelle/gewaltverherrlichende Inhalte geprüft.",
+    blockAd: "Blockiert: Werbung oder Links.",
+    blockProfanity: "Blockiert: Beleidigungen.",
+    blockPornViolence: "Blockiert: sexuelle oder gewalttätige Inhalte.",
+    blockSpam: "Blockiert: Spam.",
+    blockGeneric: "Automatische Moderation — bitte anpassen und erneut senden.",
+  },
   vip: {
     title: "Grandstand VIP",
     badge: "VIP",

@@ -8,6 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/hooks/use-auth";
 import { useI18n } from "@/i18n/use-i18n";
 import { meanScore } from "@/lib/data";
+import { moderationMessage } from "@/lib/moderation-message";
 import type { ScoreMap } from "@/lib/types";
 
 type Payload = {
@@ -44,7 +45,6 @@ export function ZoneItemPageInner({
   const [scores, setScores] = useState<ScoreMap>({});
   const [comment, setComment] = useState("");
   const [error, setError] = useState<string | null>(null);
-  const [pendingNotice, setPendingNotice] = useState(false);
 
   const load = useCallback(() => {
     fetch(`/api/zones/${encodeURIComponent(slug)}/items/${encodeURIComponent(itemId)}`)
@@ -145,9 +145,18 @@ export function ZoneItemPageInner({
                   body: JSON.stringify({ comment, scores }),
                 },
               );
-              const cj = (await cRes.json()) as { pending?: boolean; error?: string };
-              if (!cRes.ok) setError(cj.error ?? t.auth.failed);
-              else if (cj.pending) setPendingNotice(true);
+              const cj = (await cRes.json()) as {
+                error?: string;
+                code?: string;
+                messageKey?: string;
+              };
+              if (!cRes.ok) {
+                setError(
+                  cj.code === "moderation_blocked"
+                    ? moderationMessage(t.moderation, cj.messageKey)
+                    : (cj.error ?? t.auth.failed),
+                );
+              }
             }
             load();
           }}
@@ -168,9 +177,6 @@ export function ZoneItemPageInner({
             rows={3}
           />
           {error ? <p className="text-sm text-destructive">{error}</p> : null}
-          {pendingNotice ? (
-            <p className="text-sm text-primary">{t.zones.commentPending}</p>
-          ) : null}
           <Button type="submit" className="w-full">
             {t.rate.post}
           </Button>

@@ -1,3 +1,4 @@
+import { moderationErrorPayload, scanCommentBody } from "@/lib/comment-moderation";
 import { createClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 import { NextResponse } from "next/server";
@@ -43,11 +44,22 @@ export async function POST(
     .eq("id", user.id)
     .maybeSingle();
 
+  const mod = scanCommentBody(text);
+  if (!mod.pass) {
+    return NextResponse.json(moderationErrorPayload(mod), { status: 422 });
+  }
+
   const author =
     profile?.display_name?.trim() ||
     (user.user_metadata?.display_name as string | undefined)?.trim() ||
     user.email?.split("@")[0] ||
     "Fan";
+
+  const { data: parentFull } = await supabase
+    .from("comments")
+    .select("zone_id, zone_item_id")
+    .eq("id", commentId)
+    .maybeSingle();
 
   const { data: row, error } = await supabase
     .from("comments")
@@ -58,6 +70,9 @@ export async function POST(
       author: author.slice(0, 32),
       body: text.slice(0, 500),
       parent_id: commentId,
+      zone_id: parentFull?.zone_id ?? null,
+      zone_item_id: parentFull?.zone_item_id ?? null,
+      moderation_status: mod.status,
     })
     .select("id, author, body, created_at, user_id")
     .single();

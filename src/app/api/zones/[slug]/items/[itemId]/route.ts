@@ -60,9 +60,9 @@ export async function GET(
   const isOwner = user?.id === zone.owner_id;
   const visibleComments = (comments ?? []).filter((c) => {
     if (c.hidden) return false;
-    if (c.moderation_status === "approved") return true;
-    if (isOwner || c.user_id === user?.id) return true;
-    return false;
+    if (c.moderation_status === "rejected") return false;
+    if (c.moderation_status === "approved" || !c.moderation_status) return true;
+    return isOwner || c.user_id === user?.id;
   });
 
   const communityAvg = averageScores(

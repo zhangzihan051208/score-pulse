@@ -21,6 +21,7 @@ export async function GET() {
     .select("id")
     .eq("user_id", user.id)
     .eq("hidden", false)
+    .eq("moderation_status", "approved")
     .is("parent_id", null);
 
   const ids = (comments ?? []).map((c) => c.id);
