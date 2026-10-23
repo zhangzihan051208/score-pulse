@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { Overall } from "@/components/score-rows";
 import { PlayerAvatar } from "@/components/player-avatar";
 import { useI18n } from "@/i18n/use-i18n";
-import { formatWhen } from "@/lib/data";
+import { formatWhen } from "@/lib/score-display";
 import { playerHubHref } from "@/lib/player-routes";
 import type { ProfileRatingItem } from "@/app/api/profile/ratings/route";
 

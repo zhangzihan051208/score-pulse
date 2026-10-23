@@ -7,7 +7,7 @@ import { useFavoriteTeams } from "@/hooks/use-favorite-teams";
 import { useI18n } from "@/i18n/use-i18n";
 import { leagueLabel } from "@/i18n/league-labels";
 import { tx } from "@/lib/copy";
-import { formatWhen } from "@/lib/data";
+import { formatWhen } from "@/lib/score-display";
 import {
   parsePartition,
   pathToPartition,

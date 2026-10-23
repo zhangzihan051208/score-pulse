@@ -1,0 +1,126 @@
+import { L } from "./copy";
+import type { SeedComment } from "./types";
+
+export const seedComments: SeedComment[] = [
+  {
+    id: "c1",
+    eventId: "lal-bos",
+    athleteId: "doncic",
+    author: "row24",
+    createdAt: "2026-04-13T02:44:00Z",
+    scores: {
+      scoring: 9,
+      playmaking: 8,
+      perimeter_def: 6,
+      hustle: 7,
+      clutch: 8.5,
+    },
+    body: L(
+      "31 is 31. The live-ball turnovers after timeouts are why defense sits at 6.",
+      "31 分就是 31 分。暂停回来的活球失误，所以防守只给 6。",
+      "31 es 31. Las pérdidas en vivo tras timeout explican el 6 en defensa.",
+      "31は31。TO後のライブボールターンオーバーで守備は6。",
+    ),
+  },
+  {
+    id: "c2",
+    eventId: "lal-bos",
+    athleteId: "tatum",
+    author: "garden-seat",
+    createdAt: "2026-04-13T02:51:00Z",
+    scores: {
+      scoring: 8.5,
+      defense: 8,
+      rebounding: 7.5,
+      versatility: 7,
+      clutch: 8.5,
+    },
+    body: L(
+      "He stopped settling. That’s the whole card.",
+      "他不再倒手投。这张卡就这一句。",
+      "Dejó de conformarse. Esa es la carta.",
+      "落ち着いて打つのをやめた。カードはそれに尽きる。",
+    ),
+  },
+  {
+    id: "c3",
+    eventId: "rma-mci",
+    athleteId: "haaland",
+    author: "etihad-expat",
+    createdAt: "2026-04-08T21:58:00+02:00",
+    scores: {
+      finishing: 8,
+      movement: 7,
+      linkup: 5.5,
+      pressing: 6.5,
+      composure: 8,
+    },
+    body: L(
+      "Finish was elite. If you ding creation, say whether you wanted him dropping in or the 8s finding him.",
+      "终结是顶级。你要扣做戏，先说你是想让他回撤，还是让 8 号去找他。",
+      "El remate es élite. Si bajas creación, di si querías que baje o que los 8 lo encuentren.",
+      "フィニッシュは一流。創造を下げるなら、彼が落ちるべきか8番が探すべきか書け。",
+    ),
+  },
+  {
+    id: "c4",
+    eventId: "monaco-gp",
+    athleteId: "leclerc",
+    author: "harbour",
+    createdAt: "2026-05-24T14:20:00+02:00",
+    scores: {
+      pace: 9,
+      racecraft: 8.5,
+      tyres: 8.5,
+      consistency: 9,
+      wet: 8.5,
+    },
+    body: L(
+      "This is the drive people wanted in 2022. Gap management, not a selfie lap.",
+      "这才是 2022 大家想看的那场。管差距，不是自拍圈。",
+      "Esta es la carrera que se pidió en 2022. Gestionar el hueco, no una vuelta selfie.",
+      "2022に欲しかった走り。セルフィー周回ではなくギャップ管理。",
+    ),
+  },
+  {
+    id: "c5",
+    eventId: "rg-final",
+    athleteId: "sinner",
+    author: "clay-watch",
+    createdAt: "2026-06-07T18:40:00+02:00",
+    scores: {
+      serve: 8.5,
+      return: 7.5,
+      groundstrokes: 8.5,
+      movement: 8,
+      mental: 7.5,
+    },
+    body: L(
+      "Losing on clay is allowed to still be an 8. Depth died; the first-strike tennis did not.",
+      "红土输球也可以是 8 分。深度没了，第一拍还在。",
+      "Perder en tierra puede ser un 8. Murió la profundidad, no el primer golpe.",
+      "クレーの敗北でも8点でいい。深さは死んだがファーストストライクは残った。",
+    ),
+  },
+  {
+    id: "c6",
+    eventId: "ufc-314",
+    athleteId: "pereira",
+    author: "octagon-rail",
+    createdAt: "2026-04-19T06:12:00Z",
+    scores: {
+      striking: 8.5,
+      power: 8,
+      defense: 6,
+      cardio: 8,
+      composure: 8.5,
+    },
+    body: L(
+      "Left hook is loaded. If Ankalaev chains a second takedown, this card flips.",
+      "左勾在槽里。安卡拉耶夫如果能连第二次摔倒，这张卡会翻。",
+      "El gancho está cargado. Un segundo derribo encadenado voltea la carta.",
+      "左フックは装填済み。2本目のTDが繋がればカードは裏返り。",
+    ),
+  },
+];
+

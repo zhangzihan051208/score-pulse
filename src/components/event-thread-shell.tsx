@@ -6,7 +6,7 @@ import { MatchScoreboard } from "@/components/match-scoreboard";
 import { StatusPill } from "@/components/status-pill";
 import { useI18n } from "@/i18n/use-i18n";
 import { tx } from "@/lib/copy";
-import { formatWhen } from "@/lib/data";
+import { formatWhen } from "@/lib/score-display";
 import type { ReactNode } from "react";
 import type { MatchEvent } from "@/lib/types";
 

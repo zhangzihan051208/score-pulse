@@ -5,7 +5,7 @@ import { DimensionRadar } from "@/components/dimension-radar";
 import { Overall } from "@/components/score-rows";
 import { dimLabel } from "@/i18n/position-dims";
 import { useI18n } from "@/i18n/use-i18n";
-import { formatWhen, overallScore } from "@/lib/data";
+import { formatWhen, overallScore } from "@/lib/score-display";
 import { overallFromScores } from "@/lib/store";
 import { averageScores } from "@/lib/score-aggregate";
 import { CommentTakeActions } from "@/components/comment-take-actions";

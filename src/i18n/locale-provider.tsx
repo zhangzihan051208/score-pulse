@@ -9,7 +9,6 @@ import {
   useState,
   useSyncExternalStore,
 } from "react";
-import { useRouter } from "next/navigation";
 import type { Dict } from "@/i18n/dict";
 import en from "@/i18n/catalog/en";
 import { loadMessages } from "@/i18n/load-messages";
@@ -91,7 +90,6 @@ function writeLocale(next: Locale) {
 }
 
 export function LocaleProvider({ children }: { children: React.ReactNode }) {
-  const router = useRouter();
   const locale = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
   const [t, setT] = useState<Dict>(en);
   useEffect(() => {
@@ -106,13 +104,9 @@ export function LocaleProvider({ children }: { children: React.ReactNode }) {
     };
   }, [locale]);
 
-  const setLocale = useCallback(
-    (next: Locale) => {
-      writeLocale(next);
-      router.refresh();
-    },
-    [router],
-  );
+  const setLocale = useCallback((next: Locale) => {
+    writeLocale(next);
+  }, []);
 
   const value = useMemo<I18nValue>(
     () => ({

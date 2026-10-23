@@ -1,4 +1,4 @@
-import { overallScore } from "./data";
+import { overallScore } from "./score-display";
 import { tx } from "./copy";
 import type { CommunityTake } from "@/components/community-ratings-panel";
 import { resolveAthlete } from "./event-resolve";
@@ -83,6 +83,22 @@ export function performancesBySide(
     const side = athleteSide(event, athlete);
     if (side === "away") away.push(entry);
     else home.push(entry);
+  }
+
+  if (away.length === 0 && home.length > 1) {
+    const order: string[] = [];
+    for (const entry of home) {
+      const tag = entry.athlete.team?.trim();
+      if (tag && !order.includes(tag)) order.push(tag);
+    }
+    if (order.length >= 2) {
+      const homeTag = order[0]!;
+      const rest = home.splice(0, home.length);
+      for (const entry of rest) {
+        if (entry.athlete.team?.trim() === homeTag) home.push(entry);
+        else away.push(entry);
+      }
+    }
   }
 
   return {

@@ -1,6 +1,7 @@
 "use client";
 
-import { performanceKey, seedComments } from "./data";
+import { performanceKey } from "./score-display";
+import { seedComments } from "./seed-comments";
 import {
   dimensionIds,
   emptyScoresForPosition,

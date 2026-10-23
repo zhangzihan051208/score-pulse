@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/hooks/use-auth";
 import { useI18n } from "@/i18n/use-i18n";
-import { meanScore } from "@/lib/data";
+import { meanScore } from "@/lib/score-display";
 import { moderationMessage } from "@/lib/moderation-message";
 import type { ScoreMap } from "@/lib/types";
 

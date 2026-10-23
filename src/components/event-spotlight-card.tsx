@@ -10,7 +10,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { dimLabel } from "@/i18n/position-dims";
 import { useI18n } from "@/i18n/use-i18n";
 import { tx } from "@/lib/copy";
-import { overallScore } from "@/lib/data";
+import { overallScore } from "@/lib/score-display";
 import { playerRoleSubtitle } from "@/lib/player-meta";
 import {
   localTakesForAthlete,

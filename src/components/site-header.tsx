@@ -15,15 +15,18 @@ function NavLink({
   label,
   active,
   className,
+  prefetch,
 }: {
   href: string;
   label: string;
   active: boolean;
   className?: string;
+  prefetch?: boolean;
 }) {
   return (
     <Link
       href={href}
+      prefetch={prefetch}
       className={cn(
         "shrink-0 rounded-md px-2.5 py-1 text-sm text-white/70 transition-colors hover:bg-white/10 hover:text-white",
         active && "bg-white/12 text-white",
@@ -45,12 +48,14 @@ export function SiteHeader() {
     <header className="sticky top-0 z-40 border-b border-white/10 bg-gradient-to-b from-[#0a0a0d] to-[#121218] text-white shadow-md shadow-black/25 backdrop-blur-md">
       <div className="mx-auto flex h-12 max-w-6xl items-center justify-between gap-3 px-3 sm:px-4">
         <Link href="/" className="flex shrink-0 items-center gap-2.5">
-          <span
-            className="flex size-8 items-center justify-center rounded-lg bg-gradient-to-br from-primary to-orange-600 text-sm font-extrabold text-white shadow-sm"
-            aria-hidden
-          >
-            G
-          </span>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/brand-mark.jpg"
+            alt=""
+            width={32}
+            height={32}
+            className="size-8 rounded-lg object-cover shadow-sm ring-1 ring-white/15"
+          />
           <span className="font-display text-base font-bold tracking-tight sm:text-lg">
             {t.brand}
           </span>
@@ -103,6 +108,7 @@ export function SiteHeader() {
                 label={t.sports[sport]}
                 active={pathname.startsWith(href)}
                 className="text-xs sm:text-sm"
+                prefetch={false}
               />
             );
           })}

@@ -8,7 +8,7 @@ import { useEventTakesSummary } from "@/hooks/use-event-takes-summary";
 import { localTakesForAthlete, topEngagementTake } from "@/lib/event-spotlight";
 import { useI18n } from "@/i18n/use-i18n";
 import { tx } from "@/lib/copy";
-import { overallScore } from "@/lib/data";
+import { overallScore } from "@/lib/score-display";
 import { playerRoleSubtitle } from "@/lib/player-meta";
 import { performancesBySide, type RosterEntry } from "@/lib/event-spotlight";
 import type { CommunityState } from "@/lib/store";

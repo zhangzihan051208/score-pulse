@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import dynamic from "next/dynamic";
 import { useMemo } from "react";
 import { HomeMyTeams } from "@/components/home-my-teams";
 import { LoadingView } from "@/components/loading-view";
@@ -11,7 +12,7 @@ import { useLiveEvents } from "@/hooks/use-live-events";
 import { sortEventsForHome } from "@/lib/favorite-teams";
 import { useI18n } from "@/i18n/use-i18n";
 import { tx } from "@/lib/copy";
-import { events, formatWhen, overallScore } from "@/lib/data";
+import { formatWhen, overallScore } from "@/lib/score-display";
 import { EventSpotlightGrid } from "@/components/event-spotlight-card";
 import { PlayerAvatar } from "@/components/player-avatar";
 import { useCommunity } from "@/hooks/use-community";
@@ -24,6 +25,11 @@ import {
   HOME_MATCH_ROWS_PER_SPORT,
 } from "@/lib/display-limits";
 import { SPORTS, type MatchEvent, type Sport } from "@/lib/types";
+
+const LegacyBoardBlock = dynamic(
+  () => import("@/components/legacy-board-block").then((m) => m.LegacyBoardBlock),
+  { loading: () => null },
+);
 
 const LIVE_SPORTS: Sport[] = ["nba", "soccer"];
 
@@ -65,9 +71,19 @@ export function HomeBoards({ initialEvents = [] }: { initialEvents?: MatchEvent[
           className="pointer-events-none absolute -bottom-20 -left-10 size-48 rounded-full bg-orange-600/15 blur-3xl"
           aria-hidden
         />
-        <p className="relative text-xs font-semibold tracking-[0.2em] text-primary uppercase">
-          {t.home.kicker}
-        </p>
+        <div className="relative flex items-center gap-3">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/brand-mark.jpg"
+            alt=""
+            width={44}
+            height={44}
+            className="size-11 rounded-xl object-cover ring-1 ring-white/20"
+          />
+          <p className="text-xs font-semibold tracking-[0.2em] text-primary uppercase">
+            {t.home.kicker}
+          </p>
+        </div>
         <h1 className="font-display relative mt-3 max-w-xl text-3xl font-bold tracking-tight sm:text-4xl lg:text-[2.65rem] lg:leading-tight">
           {t.home.title}
         </h1>
@@ -273,36 +289,3 @@ function FeaturedEventRow({
   );
 }
 
-function LegacyBoardBlock({ sport }: { sport: Sport }) {
-  const { locale, t } = useI18n();
-  const list = events.filter((e) => e.sport === sport);
-  const featured = list[0];
-  if (!featured) return null;
-
-  return (
-    <section className="overflow-hidden rounded-xl border bg-card opacity-90">
-      <div className="flex items-center justify-between gap-3 border-b px-3 py-2">
-        <div className="flex items-center gap-2">
-          <span className={`h-5 w-1 rounded-full ${SPORT_CHIP[sport]}`} />
-          <h3 className="font-semibold">{t.sports[sport]}</h3>
-          <span className="text-xs text-muted-foreground">{t.home.demoArchive}</span>
-        </div>
-        <Link
-          href={`/boards/${sport}`}
-          className="text-xs font-medium text-primary hover:underline"
-        >
-          {t.home.enter}
-        </Link>
-      </div>
-      <Link
-        href={`/events/${featured.slug}`}
-        className="block border-b px-3 py-3 hover:bg-muted/40"
-      >
-        <div className="flex items-center gap-2">
-          <StatusPill status={featured.status} />
-          <span className="font-medium">{tx(featured.title, locale)}</span>
-        </div>
-      </Link>
-    </section>
-  );
-}

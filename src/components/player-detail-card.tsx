@@ -13,7 +13,7 @@ import { useCommunity } from "@/hooks/use-community";
 import { usePlayerCommunity } from "@/hooks/use-player-community";
 import { useI18n } from "@/i18n/use-i18n";
 import { tx } from "@/lib/copy";
-import { overallScore } from "@/lib/data";
+import { overallScore } from "@/lib/score-display";
 import { playerRoleSubtitle } from "@/lib/player-meta";
 import { playerHubHref } from "@/lib/player-routes";
 import { dimensionIds } from "@/lib/position-ratings";

@@ -24,7 +24,7 @@ import { useCommunity } from "@/hooks/use-community";
 import { useI18n } from "@/i18n/use-i18n";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 import { tx } from "@/lib/copy";
-import { overallScore } from "@/lib/data";
+import { overallScore } from "@/lib/score-display";
 import { moderationMessage } from "@/lib/moderation-message";
 import { athletePostMeta } from "@/lib/player-meta";
 import { playerHubHref } from "@/lib/player-routes";

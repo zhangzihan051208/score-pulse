@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useSyncExternalStore } from "react";
-import { performanceKey } from "@/lib/data";
+import { performanceKey } from "@/lib/score-display";
 import {
   getCommunitySnapshot,
   getServerCommunitySnapshot,

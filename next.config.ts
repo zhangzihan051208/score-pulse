@@ -9,6 +9,9 @@ const previewOrigins = [
 ];
 
 const nextConfig: NextConfig = {
+  experimental: {
+    optimizePackageImports: ["lucide-react", "@base-ui/react"],
+  },
   images: {
     remotePatterns: [
       { protocol: "https", hostname: "r2.thesportsdb.com", pathname: "/**" },
