@@ -73,8 +73,10 @@ export function PlayerHubPageInner({
       if (seen.has(rating.eventId)) continue;
       locals.push(rating.scores);
     }
+    const fcHeadline =
+      data.reputation.overallDigits === 0 ? data.reputation.overall : null;
     if (!locals.length) {
-      return { scores: data.careerAvg, overall: data.careerOverall };
+      return { scores: data.careerAvg, overall: fcHeadline ?? data.careerOverall };
     }
     const scores = blendScores(
       data.careerAvg,
@@ -84,7 +86,7 @@ export function PlayerHubPageInner({
     );
     return {
       scores,
-      overall: playerOverall(scores, data.reputation.positionKey ?? positionKey),
+      overall: fcHeadline ?? playerOverall(scores, data.reputation.positionKey ?? positionKey),
     };
   }, [data, playerId, positionKey, state.ratings]);
 
@@ -115,9 +117,10 @@ export function PlayerHubPageInner({
             name,
             shortName: initials(name),
             photoUrl: data?.profile?.photo_url ?? data?.reputation?.photoUrl,
+            jerseyNumber: data?.reputation?.kitNumber,
           }}
           size="xl"
-          showJerseyBadge={false}
+          showJerseyBadge={Boolean(data?.reputation?.kitNumber)}
           eager
         />
         <div className="min-w-0 flex-1">
@@ -138,9 +141,13 @@ export function PlayerHubPageInner({
             <div className="mt-2 flex items-end gap-3">
               <div>
                 <p className="text-[11px] text-muted-foreground">
-                  {data?.reputation ? t.player.fiveTitle : t.player.careerAvg}
+                  {data?.reputation?.ratingCaption
+                    ? data.reputation.ratingCaption
+                    : data?.reputation
+                      ? t.player.fiveTitle
+                      : t.player.careerAvg}
                 </p>
-                <Overall value={shown.overall} />
+                <Overall value={shown.overall} digits={data?.reputation?.overallDigits ?? 1} />
               </div>
               <p className="pb-1 text-xs text-muted-foreground">
                 {data?.totalRatings.toLocaleString()} {t.event.ratings}

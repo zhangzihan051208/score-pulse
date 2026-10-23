@@ -45,10 +45,10 @@ export function ScoreRows({
   );
 }
 
-export function Overall({ value }: { value: number }) {
+export function Overall({ value, digits = 1 }: { value: number; digits?: number }) {
   return (
     <span className="text-2xl font-bold tabular-nums text-primary">
-      {value.toFixed(1)}
+      {value.toFixed(digits)}
     </span>
   );
 }

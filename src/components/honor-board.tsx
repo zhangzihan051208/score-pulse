@@ -97,9 +97,10 @@ const HonorCard = memo(function HonorCard({
         name: entry.name,
         shortName: initials(entry.name),
         photoUrl: entry.photoUrl,
+        jerseyNumber: entry.kitNumber,
       }}
       size="sm"
-      showJerseyBadge={false}
+      showJerseyBadge={Boolean(entry.kitNumber)}
     />
   );
 
@@ -134,7 +135,14 @@ const HonorCard = memo(function HonorCard({
             {entry.subtitle}
           </p>
         </div>
-        <Overall value={entry.overall} />
+        <div className="text-right">
+          <Overall value={entry.overall} digits={entry.overallDigits ?? 1} />
+          {entry.ratingCaption ? (
+            <p className="text-[10px] font-medium leading-none text-muted-foreground">
+              {entry.ratingCaption}
+            </p>
+          ) : null}
+        </div>
       </div>
       <p className="mt-2 text-sm leading-6">{honor}</p>
       <div className="mt-2 grid grid-cols-[148px_minmax(0,1fr)] items-center gap-2">

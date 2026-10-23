@@ -180,7 +180,7 @@ export function TeamPageInner({
                     }}
                     size="sm"
                   />
-                  <div className="min-w-0">
+                  <div className="min-w-0 flex-1">
                     <p className="truncate font-medium">{p.name}</p>
                     <p className="text-xs text-muted-foreground">
                       {[p.number ? `#${p.number}` : null, p.position?.split(".").pop()]
@@ -188,6 +188,11 @@ export function TeamPageInner({
                         .join(" · ")}
                     </p>
                   </div>
+                  {p.rating != null ? (
+                    <span className="shrink-0 text-sm font-bold tabular-nums text-primary">
+                      {p.rating}
+                    </span>
+                  ) : null}
                 </Link>
               </li>
             ))}

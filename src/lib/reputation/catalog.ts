@@ -14,6 +14,7 @@ import { extraLegendPlayers } from "./extra-legends";
 import { extraHonorTeams } from "./extra-teams";
 import { legendPlayers as seededLegendPlayers } from "./legends";
 import { honorTeams as seededHonorTeams } from "./teams";
+import { applyFc26 } from "./fc26";
 import { portraitFor } from "./portraits";
 import type { HonorPlayer, HonorTeam, ReputationCard } from "./types";
 import { fanTakes } from "./voice";
@@ -66,6 +67,7 @@ function rankWithinSport<T extends { sport: Sport; prestige: number }>(rows: T[]
   }
 }
 
+applyFc26(activePlayers);
 rankWithinSport(activePlayers);
 rankWithinSport(legendPlayers);
 rankWithinSport(honorTeams);
@@ -156,7 +158,14 @@ export function findHonorTeam(sport: Sport, idOrName: string): HonorTeam | undef
 }
 
 export function playersOnClub(clubId: string): HonorPlayer[] {
-  return activePlayers.filter((p) => p.clubId === clubId);
+  return activePlayers
+    .filter((p) => p.clubId === clubId)
+    .sort(
+      (a, b) =>
+        (b.fcRating ?? 0) - (a.fcRating ?? 0) ||
+        a.prestige - b.prestige ||
+        a.name.localeCompare(b.name),
+    );
 }
 
 export function seedMatchSamples(athleteId: string): ScoreMap[] {
@@ -210,14 +219,19 @@ export function presentPlayer(
     id: person.id,
     name: person.name,
     sport: person.sport,
-    subtitle: [person.team, person.country].filter(Boolean).join(" · "),
+    subtitle: [person.team, person.kitNumber ? `#${person.kitNumber}` : null, person.country]
+      .filter(Boolean)
+      .join(" · "),
     positionKey: person.positionKey,
     trait: person.trait,
     rank: person.prestige,
     honors: person.honors,
     scores,
     dimIds,
-    overall: playerOverall(scores, person.positionKey),
+    overall: person.fcRating ?? playerOverall(scores, person.positionKey),
+    overallDigits: person.fcRating != null ? 0 : undefined,
+    ratingCaption: person.fcRating != null ? "FC 26" : undefined,
+    kitNumber: person.kitNumber,
     seedWeight: person.seedWeight,
     matchSamples: samples.length,
     takes:

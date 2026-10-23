@@ -323,7 +323,7 @@ export async function buildPlayerEventRankings(
   if (honor) {
     const blended = blendScores(honor.scores, honor.seedWeight, matchAvgs, dimIds);
     careerAvg = blended;
-    careerOverall = playerOverall(blended, positionKey);
+    careerOverall = honor.fcRating ?? playerOverall(blended, positionKey);
     totalRatings = honor.seedWeight + matchAvgs.length;
     reputation = presentPlayer(honor, eventRankings.map((row) => row.avg));
   }

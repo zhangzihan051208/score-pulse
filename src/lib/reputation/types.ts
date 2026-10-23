@@ -25,6 +25,10 @@ export type HonorPlayer = {
   trait: Trait;
   /** 1 is the top of the honor list. */
   prestige: number;
+  /** EA FC overall, when the soccer board is rated from FC 26. */
+  fcRating?: number;
+  /** Club shirt number, without a hash. */
+  kitNumber?: string;
   honors: Bilingual;
   hook: Bilingual;
   scores: ScoreMap;
@@ -61,6 +65,11 @@ export type ReputationCard = {
   scores: ScoreMap;
   dimIds: string[];
   overall: number;
+  /** Digits for the headline number. FC 26 uses 0 so 91 stays 91. */
+  overallDigits?: number;
+  /** Short label under the headline, e.g. "FC 26". */
+  ratingCaption?: string;
+  kitNumber?: string;
   seedWeight: number;
   matchSamples: number;
   takes: FanTake[];

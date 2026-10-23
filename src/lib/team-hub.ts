@@ -17,6 +17,8 @@ export type TeamRosterMember = {
   position?: string;
   number?: string;
   photoUrl?: string;
+  /** FC overall, when the squad is drawn from the soccer honor board. */
+  rating?: number;
 };
 
 export type TeamHonor = {
