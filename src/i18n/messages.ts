@@ -159,6 +159,12 @@ type Dict = {
     ratingModeFull: string;
     ratingModeOverall: string;
     ratingOpenMatch: string;
+    myZonesTitle: string;
+    myZonesHint: string;
+    myZonesEmpty: string;
+    myZonesCreate: string;
+    myZonesHeatTotal: string;
+    myZonesCount: string;
     levelTitles: {
       rookie: string;
       regular: string;
@@ -492,6 +498,12 @@ const en: Dict = {
       ratingModeFull: "Five-axis",
       ratingModeOverall: "Overall only",
       ratingOpenMatch: "Open match",
+      myZonesTitle: "My DIY zones",
+      myZonesHint: "Zones you created, ranked by heat earned from ratings and approved comments.",
+      myZonesEmpty: "You have not created a zone yet. Launch a food or product board in one minute.",
+      myZonesCreate: "New zone",
+      myZonesHeatTotal: "Total heat",
+      myZonesCount: "Zones",
       levelTitles: {
         rookie: "Rookie",
         regular: "Regular",
@@ -928,6 +940,12 @@ export const messages: Record<Locale, Dict> = {
       ratingModeFull: "五维详评",
       ratingModeOverall: "仅总分",
       ratingOpenMatch: "打开比赛",
+      myZonesTitle: "我的 DIY 专区",
+      myZonesHint: "你创建的评分专区及累计热度（来自评分与通过审核的评论）。",
+      myZonesEmpty: "还没有专区，去创建一个美食或好物榜吧。",
+      myZonesCreate: "新建专区",
+      myZonesHeatTotal: "总热度",
+      myZonesCount: "专区数",
       levelTitles: {
         rookie: "新秀",
         regular: "常客",
@@ -1353,6 +1371,13 @@ export const messages: Record<Locale, Dict> = {
       ratingModeFull: "Cinco ejes",
       ratingModeOverall: "Solo total",
       ratingOpenMatch: "Ver partido",
+      myZonesTitle: "Mis zonas DIY",
+      myZonesHint:
+        "Zonas que creaste, ordenadas por heat acumulado (notas y comentarios aprobados).",
+      myZonesEmpty: "Aún no tienes zonas. Crea un ranking de comida o productos en un minuto.",
+      myZonesCreate: "Nueva zona",
+      myZonesHeatTotal: "Heat total",
+      myZonesCount: "Zonas",
       levelTitles: {
         rookie: "Novato",
         regular: "Habitual",
@@ -1779,6 +1804,12 @@ export const messages: Record<Locale, Dict> = {
       ratingModeFull: "五軸",
       ratingModeOverall: "総合のみ",
       ratingOpenMatch: "試合を開く",
+      myZonesTitle: "マイ DIY ゾーン",
+      myZonesHint: "作成した評価ゾーンと累計ヒート（採点と承認済みコメントから）。",
+      myZonesEmpty: "まだゾーンがありません。グルメや好物ランキングを作ってみましょう。",
+      myZonesCreate: "ゾーンを作成",
+      myZonesHeatTotal: "合計ヒート",
+      myZonesCount: "ゾーン数",
       levelTitles: {
         rookie: "ルーキー",
         regular: "レギュラー",

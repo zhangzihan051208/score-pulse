@@ -162,6 +162,12 @@ export const deOverrides = {
     ratingModeFull: "Fünf Achsen",
     ratingModeOverall: "Nur Gesamt",
     ratingOpenMatch: "Spiel öffnen",
+    myZonesTitle: "Meine DIY-Zonen",
+    myZonesHint: "Von dir erstellte Zonen mit Heat aus Bewertungen und freigegebenen Kommentaren.",
+    myZonesEmpty: "Noch keine Zone — jetzt anlegen.",
+    myZonesCreate: "Neue Zone",
+    myZonesHeatTotal: "Heat gesamt",
+    myZonesCount: "Zonen",
     levelTitles: {
       rookie: "Neuling",
       regular: "Stammgast",
