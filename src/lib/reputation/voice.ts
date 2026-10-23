@@ -193,20 +193,164 @@ const SOFT_DIG: Bilingual = {
   zh: "球迷非要找茬，最后不小心夸了他。",
 };
 
+/** Same axis name, different sport. Scoped lines win over the generic copy. */
+const SCOPED: Record<string, Bilingual> = {
+  "nba.center:finishing": {
+    en: "Deep seal, short jump hook. The help arrives late and loud.",
+    zh: "卡深位，短勾手。协防来得又晚又吵。",
+  },
+  "tennis.player:movement": {
+    en: "The extra step is already taken. The opponent is still choosing a side.",
+    zh: "多出来的那步已经迈完。对手还在选边。",
+  },
+  "tennis:movement": {
+    en: "They cover the extra ball and make the country look quick.",
+    zh: "多跑到的那一球，让这个国家看起来很快。",
+  },
+  "ufc.striker:defense": {
+    en: "The head moves. The counter is already on the way back.",
+    zh: "头闪开了。反击已经在回来的路上。",
+  },
+  "ufc.striker:composure": {
+    en: "Hurt, still walking forward. That is the whole personality.",
+    zh: "挨了打，还往前走。这就是全部性格。",
+  },
+  "ufc.grappler:composure": {
+    en: "Bottom position, no panic. The scramble stays his living room.",
+    zh: "在下面，不慌。缠斗仍是他的客厅。",
+  },
+  "ufc:composure": {
+    en: "A bad round does not become a meltdown. The camp priced that in.",
+    zh: "一个坏回合不会变成崩盘。训练营把这算进成本了。",
+  },
+  "f1.driver:pace": {
+    en: "The delta is personal. The radio can catch up later.",
+    zh: "圈速差是私人的。电台可以随后跟上。",
+  },
+  "f1.driver:composure": {
+    en: "Traffic, a restart, no novel on the radio.",
+    zh: "车流，重启，电台上没有小说。",
+  },
+  "f1:pace": {
+    en: "One-lap speed is the advertisement. Race pace is the invoice.",
+    zh: "单圈速度是广告。比赛配速是账单。",
+  },
+  "f1:composure": {
+    en: "A safety car used to be a crisis. They treat it as a procedure.",
+    zh: "安全车以前是危机。他们当成流程。",
+  },
+  "nfl.quarterback:passing": {
+    en: "The ball is out before the pocket becomes a meeting.",
+    zh: "口袋还没变成会议，球已经出手。",
+  },
+  "nfl.running_back:vision": {
+    en: "The hole is a rumour until he plants the foot.",
+    zh: "洞是传闻，直到他那只脚踩下去。",
+  },
+  "soccer.keeper:positioning": {
+    en: "He is already off his line, which is why the chip dies.",
+    zh: "他已经离开门线，所以挑射会死。",
+  },
+  "esports.player:consistency": {
+    en: "Same crosshair, same round, no identity crisis.",
+    zh: "同一个准星，同一个回合，没有身份危机。",
+  },
+  "esports:consistency": {
+    en: "They look the same on a Tuesday server and a final.",
+    zh: "星期二的服务器和决赛上，他们看起来一样。",
+  },
+};
+
+const SOFT_SCOPED: Record<string, Bilingual> = {
+  "nba.center:finishing": {
+    en: "The touch around the rim is a discussion the defence enjoys.",
+    zh: "篮下的手感是防守喜欢的那场讨论。",
+  },
+  "tennis.player:movement": {
+    en: "The first step is late. The court suddenly looks wide.",
+    zh: "第一步晚了。场地突然变宽。",
+  },
+  "tennis:movement": {
+    en: "The extra ball is where the tiebreak goes to live.",
+    zh: "多出来的那一球，是抢七决定搬家的地方。",
+  },
+  "ufc.striker:defense": {
+    en: "Pretty offence, a chin that keeps the judges employed.",
+    zh: "进攻好看，下巴让裁判一直有班上。",
+  },
+  "ufc.striker:composure": {
+    en: "One clean shot and the game plan leaves the building.",
+    zh: "一记干净的重击，战术离场。",
+  },
+  "ufc.grappler:composure": {
+    en: "Stand-up panic. The mat was supposed to be home.",
+    zh: "站立时慌了。垫子本来该是家。",
+  },
+  "f1.driver:pace": {
+    en: "Qualifying hero, Sunday accountant who lost the receipt.",
+    zh: "排位是英雄，正赛是弄丢收据的会计。",
+  },
+  "f1.driver:composure": {
+    en: "The radio gets a speech. The car gets a mistake.",
+    zh: "电台收到演讲。赛车收到一个失误。",
+  },
+  "f1:pace": {
+    en: "The show lap is fast. The stint is a negotiation.",
+    zh: "表演圈很快。一个 stint 是谈判。",
+  },
+  "nfl.quarterback:passing": {
+    en: "Hero ball, late, into a window that was already shut.",
+    zh: "英雄球，偏晚，扔进一扇已经关上的窗。",
+  },
+  "nfl.running_back:vision": {
+    en: "He hits the line where the hole was drawn, not where it is.",
+    zh: "他撞向图画上的洞，不是现在的洞。",
+  },
+  "soccer.keeper:positioning": {
+    en: "Off his line for the photo. The chip is the caption.",
+    zh: "离开门线是为了拍照。挑射是配文。",
+  },
+  "esports.player:consistency": {
+    en: "Two brilliant maps, then a vanish on the decider.",
+    zh: "两张精彩的图，决胜局失踪。",
+  },
+  "esports:consistency": {
+    en: "Group stage bullies, playoff ghosts.",
+    zh: "小组赛的恶霸，淘汰赛的鬼。",
+  },
+};
+
+function scopedLine(
+  table: Record<string, Bilingual>,
+  scoped: Record<string, Bilingual>,
+  scope: string | undefined,
+  dim: string | undefined,
+): Bilingual | undefined {
+  if (!dim) return undefined;
+  if (scope && scoped[`${scope}:${dim}`]) return scoped[`${scope}:${dim}`];
+  const sport = scope?.split(".")[0];
+  if (sport && scoped[`${sport}:${dim}`]) return scoped[`${sport}:${dim}`];
+  return table[dim];
+}
+
 export function fanTakes(opts: {
   id: string;
   scores: ScoreMap;
   hook: Bilingual;
   trait: Trait;
+  scope?: string;
 }): FanTake[] {
   const entries = Object.entries(opts.scores).filter(([, n]) => typeof n === "number");
   const ranked = [...entries].sort((a, b) => b[1]! - a[1]!);
   const best = ranked[0]?.[0];
   const worst = ranked[ranked.length - 1]?.[0];
   const worstValue = ranked[ranked.length - 1]?.[1] ?? 10;
-  const praise = (best && PRAISE[best]) || TRAIT[opts.trait];
+  const praise =
+    scopedLine(PRAISE, SCOPED, opts.scope, best) || TRAIT[opts.trait];
   const dig =
-    worst && worstValue < 7.4 && DIG[worst] ? DIG[worst] : SOFT_DIG;
+    worst && worstValue < 7.4
+      ? scopedLine(DIG, SOFT_SCOPED, opts.scope, worst) || SOFT_DIG
+      : SOFT_DIG;
   return [
     { id: `${opts.id}-hook`, ...opts.hook },
     { id: `${opts.id}-praise`, ...praise },

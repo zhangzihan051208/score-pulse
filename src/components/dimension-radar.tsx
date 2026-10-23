@@ -20,6 +20,7 @@ export function DimensionRadar({
   series,
   size = 240,
   baselineMean,
+  showLabels = true,
 }: {
   dimIds: string[];
   dimLabels: string[];
@@ -27,6 +28,8 @@ export function DimensionRadar({
   size?: number;
   /** Raw-score mean used as the center ring; defaults to first series average. */
   baselineMean?: number;
+  /** Vertex captions. Turn off when a full score list sits beside a small chart. */
+  showLabels?: boolean;
 }) {
   const cx = size / 2;
   const cy = size / 2;
@@ -99,7 +102,8 @@ export function DimensionRadar({
           />
         );
       })}
-      {dimLabels.map((label, i) => {
+      {showLabels
+        ? dimLabels.map((label, i) => {
         const raw = series[0]?.scores[dimIds[i]!];
         const p = point(i, 11.4);
         return (
@@ -120,7 +124,8 @@ export function DimensionRadar({
             ) : null}
           </text>
         );
-      })}
+      })
+        : null}
     </svg>
   );
 }

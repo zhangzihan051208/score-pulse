@@ -1,4 +1,5 @@
 import { dimensionIds, type PositionKey } from "@/lib/position-ratings";
+import { SPORT_DIMENSIONS } from "@/lib/sports";
 import type { Sport, ScoreMap } from "@/lib/types";
 import type { HonorPlayer, HonorTeam, Trait } from "./types";
 
@@ -56,14 +57,7 @@ export function team(row: {
   axes: number[];
   weight?: number;
 }): HonorTeam {
-  const dims =
-    row.sport === "nba"
-      ? ["scoring", "defense", "playmaking", "hustle", "clutch"]
-      : row.sport === "soccer"
-        ? ["attack", "creation", "defending", "workrate", "composure"]
-        : row.sport === "nfl"
-          ? ["execution", "physicality", "awareness", "consistency", "clutch"]
-          : ["pace", "racecraft", "tyres", "consistency", "composure"];
+  const dims = SPORT_DIMENSIONS[row.sport];
   if (dims.length !== row.axes.length) {
     throw new Error(`${row.id} axes`);
   }

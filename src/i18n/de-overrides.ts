@@ -125,7 +125,7 @@ export const deOverrides = {
     hallCommunity: "Community",
     hallAll: "Alle",
     hallLead:
-      "Die Reihenfolge folgt öffentlichen Titeln. Die fünf Achsen sind die Form; jede spätere Spielnote zieht den Schnitt.",
+      "Jede Sportart hat eine eigene aktive Top 100, Vereins-Top 50 und Legendenliste. Die Reihenfolge folgt den Titeln. Das Netz steht bei den Noten, jede spätere Spielnote zieht den Schnitt.",
     blendHint:
       "Die Ehren-Basis wiegt zuerst. Jede Spielnote zählt als eine Probe im Mittel.",
     fanTakes: "Fan-Stimmen",

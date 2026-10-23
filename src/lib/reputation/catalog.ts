@@ -1,7 +1,7 @@
 import { events } from "@/lib/data";
 import { SPORT_DIMENSIONS } from "@/lib/sports";
-import type { ScoreMap, Sport } from "@/lib/types";
-import { activePlayers } from "./active";
+import { SPORTS, type ScoreMap, type Sport } from "@/lib/types";
+import { activePlayers as seededActivePlayers } from "./active";
 import {
   blendScores,
   playerDimIds,
@@ -9,10 +9,23 @@ import {
   projectToSport,
   teamOverall,
 } from "./blend";
-import { legendPlayers } from "./legends";
-import { honorTeams } from "./teams";
+import { extraActivePlayers } from "./extra-players";
+import { extraLegendPlayers } from "./extra-legends";
+import { extraHonorTeams } from "./extra-teams";
+import { legendPlayers as seededLegendPlayers } from "./legends";
+import { honorTeams as seededHonorTeams } from "./teams";
 import type { HonorPlayer, HonorTeam, ReputationCard } from "./types";
 import { fanTakes } from "./voice";
+
+export const activePlayers: HonorPlayer[] = [
+  ...seededActivePlayers,
+  ...extraActivePlayers,
+];
+export const legendPlayers: HonorPlayer[] = [
+  ...seededLegendPlayers,
+  ...extraLegendPlayers,
+];
+export const honorTeams: HonorTeam[] = [...seededHonorTeams, ...extraHonorTeams];
 
 function norm(value: string) {
   return value
@@ -37,19 +50,42 @@ for (const t of honorTeams) {
   teamByName.set(`${t.sport}:${norm(t.name)}`, t);
 }
 
+function rankWithinSport<T extends { sport: Sport; prestige: number }>(rows: T[]) {
+  const grouped = new Map<Sport, T[]>();
+  for (const row of rows) {
+    const list = grouped.get(row.sport) ?? [];
+    list.push(row);
+    grouped.set(row.sport, list);
+  }
+  for (const list of grouped.values()) {
+    list.sort((a, b) => a.prestige - b.prestige || a.sport.localeCompare(b.sport));
+    list.forEach((row, index) => {
+      row.prestige = index + 1;
+    });
+  }
+}
+
+rankWithinSport(activePlayers);
+rankWithinSport(legendPlayers);
+rankWithinSport(honorTeams);
+
 function assertBoards() {
-  if (activePlayers.length !== 100) {
-    throw new Error(`active board is ${activePlayers.length}, expected 100`);
+  const ids = new Set<string>();
+  for (const person of [...activePlayers, ...legendPlayers]) {
+    const key = `${person.era}:${person.sport}:${person.id}`;
+    if (ids.has(key)) throw new Error(`duplicate ${key}`);
+    ids.add(key);
   }
-  if (honorTeams.length !== 50) {
-    throw new Error(`team board is ${honorTeams.length}, expected 50`);
-  }
-  const ids = new Set(activePlayers.map((p) => p.id));
-  if (ids.size !== activePlayers.length) throw new Error("duplicate active ids");
-  const prestige = new Set(activePlayers.map((p) => p.prestige));
-  if (prestige.size !== activePlayers.length) throw new Error("duplicate active prestige");
-  const teamIds = new Set(honorTeams.map((t) => t.id));
+  const teamIds = new Set(honorTeams.map((club) => club.id));
   if (teamIds.size !== honorTeams.length) throw new Error("duplicate team ids");
+  for (const sport of SPORTS) {
+    const active = activePlayers.filter((person) => person.sport === sport).length;
+    const clubs = honorTeams.filter((club) => club.sport === sport).length;
+    const legends = legendPlayers.filter((person) => person.sport === sport).length;
+    if (active !== 100) throw new Error(`${sport} active board is ${active}, expected 100`);
+    if (clubs !== 50) throw new Error(`${sport} team board is ${clubs}, expected 50`);
+    if (legends < 20) throw new Error(`${sport} legends board is ${legends}, expected at least 20`);
+  }
 }
 
 assertBoards();
@@ -182,7 +218,13 @@ export function presentPlayer(
     overall: playerOverall(scores, person.positionKey),
     seedWeight: person.seedWeight,
     matchSamples: samples.length,
-    takes: fanTakes({ id: person.id, scores, hook: person.hook, trait: person.trait }),
+    takes: fanTakes({
+      id: person.id,
+      scores,
+      hook: person.hook,
+      trait: person.trait,
+      scope: person.positionKey,
+    }),
     era: person.era,
     href: `/players/${person.sport}/${person.id}`,
   };
@@ -212,7 +254,13 @@ export function presentTeam(
     overall: teamOverall(scores, club.sport),
     seedWeight: club.seedWeight,
     matchSamples: samples.length,
-    takes: fanTakes({ id: club.id, scores, hook: club.hook, trait: club.trait }),
+    takes: fanTakes({
+      id: club.id,
+      scores,
+      hook: club.hook,
+      trait: club.trait,
+      scope: club.sport,
+    }),
     href,
   };
 }
@@ -225,23 +273,27 @@ export function honorBoard(
   extraById?: Map<string, ScoreMap[]>,
 ): ReputationCard[] {
   const want = !sport || sport === "all" ? null : sport;
+  const sports = want ? [want] : [...SPORTS];
   if (kind === "teams") {
-    const rows = honorTeams
-      .filter((t) => !want || t.sport === want)
-      .sort((a, b) => a.prestige - b.prestige);
-    return rows.map((t, i) => ({
-      ...presentTeam(t, extraById?.get(t.id) ?? []),
-      rank: i + 1,
-    }));
+    return sports.flatMap((boardSport) =>
+      honorTeams
+        .filter((club) => club.sport === boardSport)
+        .sort((a, b) => a.prestige - b.prestige)
+        .map((club, index) => ({
+          ...presentTeam(club, extraById?.get(club.id) ?? []),
+          rank: index + 1,
+        })),
+    );
   }
   const source = kind === "legends" ? legendPlayers : activePlayers;
-  const rows = source
-    .filter((p) => !want || p.sport === want)
-    .sort((a, b) => a.prestige - b.prestige);
-  return rows.map((p, i) => ({
-    ...presentPlayer(p, extraById?.get(p.id) ?? []),
-    rank: i + 1,
-  }));
+  return sports.flatMap((boardSport) =>
+    source
+      .filter((person) => person.sport === boardSport)
+      .sort((a, b) => a.prestige - b.prestige)
+      .map((person, index) => ({
+        ...presentPlayer(person, extraById?.get(person.id) ?? []),
+        rank: index + 1,
+      })),
+  );
 }
 
-export { activePlayers, legendPlayers, honorTeams };

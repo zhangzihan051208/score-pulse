@@ -126,7 +126,7 @@ const en: Dict = {
       hallCommunity: "Community board",
       hallAll: "All sports",
       hallLead:
-        "Order follows public honours. The five axes are the shape; every later match rating pulls that shape into the average.",
+        "Each sport has its own active top 100, club top 50, and legends list. Order follows public honours. The radar sits with the scores, and every later match rating pulls the average.",
       blendHint:
         "The honour baseline holds the early weight. Each match average counts as one sample and is folded into the mean.",
       fanTakes: "Fan takes",

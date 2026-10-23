@@ -126,7 +126,7 @@ const es: Dict = {
       hallCommunity: "Tablón comunitario",
       hallAll: "Todos",
       hallLead:
-        "El orden sigue los títulos públicos. Los cinco ejes son la forma; cada nota de partido entra en esa media.",
+        "Cada deporte tiene su top 100 en activo, top 50 de clubes y su lista de históricos. El orden sigue los títulos. El radar va con las notas, y cada partido tira de la media.",
       blendHint:
         "La base de palmarés pesa al inicio. Cada media de partido cuenta como una muestra en el promedio.",
       fanTakes: "Voces de afición",

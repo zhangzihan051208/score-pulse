@@ -33,11 +33,13 @@ export function RankingsPageInner() {
       : "players";
   const sportParam = searchParams.get("sport");
   const sport = (
-    sportParam && (SPORTS as readonly string[]).includes(sportParam)
-      ? sportParam
-      : hall === "community"
-        ? "nba"
-        : "all"
+    sportParam === "all"
+      ? "all"
+      : sportParam && (SPORTS as readonly string[]).includes(sportParam)
+        ? sportParam
+        : hall === "community"
+          ? "nba"
+          : "soccer"
   ) as Sport | "all";
   const communitySport: Sport = sport === "all" ? "nba" : sport;
   const teamId = searchParams.get("teamId")?.trim() || "";
@@ -147,7 +149,7 @@ export function RankingsPageInner() {
             onClick={() =>
               setParam({
                 hall: key,
-                sport: key === "community" && sport === "all" ? "nba" : sport === "all" ? null : sport,
+                sport: key === "community" && sport === "all" ? "nba" : sport,
                 teamId: null,
               })
             }
@@ -165,7 +167,7 @@ export function RankingsPageInner() {
         {hall !== "community" ? (
           <button
             type="button"
-            onClick={() => setParam({ sport: null, teamId: null })}
+            onClick={() => setParam({ sport: "all", teamId: null })}
             className={cn(
               "rounded-md px-2.5 py-1 text-xs font-medium",
               sport === "all" ? "bg-foreground text-background" : "bg-muted",
