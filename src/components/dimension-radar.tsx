@@ -98,7 +98,6 @@ export function DimensionRadar({
             stroke={s.stroke}
             strokeWidth={2.5}
             strokeLinejoin="round"
-            style={{ filter: "drop-shadow(0 1px 2px oklch(0 0 0 / 0.12))" }}
           />
         );
       })}

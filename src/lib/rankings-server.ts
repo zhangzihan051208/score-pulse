@@ -355,7 +355,7 @@ export async function buildPlayerEventRankings(
           display_name: honor.name,
           team_id: honor.clubId ? `honor-${honor.clubId}` : null,
           team_name: honor.team,
-          photo_url: portraitFor(honor.sport, honor.id, honor.name),
+          photo_url: portraitFor(honor.sport, honor.id) ?? null,
           position_key: honor.positionKey,
         }
       : null);

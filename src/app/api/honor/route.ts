@@ -3,6 +3,9 @@ import { loadLiveHonorSamples } from "@/lib/reputation/live-samples";
 import { SPORTS, type ScoreMap, type Sport } from "@/lib/types";
 import { NextResponse } from "next/server";
 
+const CACHE_MS = 30_000;
+const boardCache = new Map<string, { at: number; body: string }>();
+
 function parseKind(raw: string | null): HonorBoardKind {
   if (raw === "teams" || raw === "legends") return raw;
   return "players";
@@ -16,6 +19,16 @@ export async function GET(request: Request) {
     sportRaw && (SPORTS as readonly string[]).includes(sportRaw)
       ? (sportRaw as Sport)
       : "all";
+  const cacheKey = `${kind}:${sport}`;
+  const hit = boardCache.get(cacheKey);
+  if (hit && Date.now() - hit.at < CACHE_MS) {
+    return new NextResponse(hit.body, {
+      headers: {
+        "Content-Type": "application/json",
+        "Cache-Control": "public, max-age=30, stale-while-revalidate=120",
+      },
+    });
+  }
   let extras: { byPlayer: Map<string, ScoreMap[]>; byTeam: Map<string, ScoreMap[]> } = {
     byPlayer: new Map(),
     byTeam: new Map(),
@@ -30,12 +43,12 @@ export async function GET(request: Request) {
     sport,
     kind === "teams" ? extras.byTeam : extras.byPlayer,
   );
-  return NextResponse.json(
-    { kind, sport, entries },
-    {
-      headers: {
-        "Cache-Control": "public, s-maxage=60, stale-while-revalidate=300",
-      },
+  const body = JSON.stringify({ kind, sport, entries });
+  boardCache.set(cacheKey, { at: Date.now(), body });
+  return new NextResponse(body, {
+    headers: {
+      "Content-Type": "application/json",
+      "Cache-Control": "public, max-age=30, stale-while-revalidate=120",
     },
-  );
+  });
 }

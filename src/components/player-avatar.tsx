@@ -1,11 +1,7 @@
 "use client";
 
 import { cn } from "cn";
-import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage,
-} from "@/components/ui/avatar";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import type { Athlete } from "@/lib/types";
 
 /** Outer box — Avatar inside must use !size-full (ui/Avatar forces size-8 / size-10). */
@@ -29,26 +25,33 @@ export function PlayerAvatar({
   size = "lg",
   className,
   showJerseyBadge = true,
+  eager = false,
 }: {
   athlete: Pick<Athlete, "shortName" | "photoUrl" | "jerseyNumber" | "name">;
   size?: "sm" | "default" | "lg" | "xl";
   className?: string;
   showJerseyBadge?: boolean;
+  /** Load the photo immediately. Lists leave this off so off-screen portraits stay lazy. */
+  eager?: boolean;
 }) {
   const jersey = athlete.jerseyNumber?.replace(/^#/, "");
+  const photo =
+    athlete.photoUrl && !athlete.photoUrl.startsWith("data:") ? athlete.photoUrl : null;
 
   return (
     <div className={cn("relative shrink-0", FRAME[size], className)}>
       <Avatar
         className={cn(
-          "!size-full max-h-none max-w-none rounded-2xl after:rounded-2xl",
+          "!size-full max-h-none max-w-none overflow-hidden rounded-2xl after:rounded-2xl",
         )}
       >
-        {athlete.photoUrl ? (
-          <AvatarImage
-            src={athlete.photoUrl}
+        {photo ? (
+          <img
+            src={photo}
             alt={athlete.name}
-            className="size-full rounded-2xl object-cover object-top"
+            loading={eager ? "eager" : "lazy"}
+            decoding="async"
+            className="absolute inset-0 z-[1] size-full rounded-2xl object-cover object-top"
           />
         ) : null}
         <AvatarFallback

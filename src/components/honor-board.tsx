@@ -1,16 +1,173 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { memo, useEffect, useRef, useState, type ReactNode } from "react";
 import { DimensionRadar } from "@/components/dimension-radar";
 import { PlayerAvatar } from "@/components/player-avatar";
 import { Overall } from "@/components/score-rows";
-import { initials } from "@/lib/reputation/portraits";
+import { initials } from "@/lib/reputation/initials";
 import { useI18n } from "@/i18n/use-i18n";
 import { dimLabel } from "@/i18n/position-dims";
 import type { HonorBoardKind } from "@/lib/reputation/catalog";
 import type { ReputationCard } from "@/lib/reputation/types";
 import type { Sport } from "@/lib/types";
+
+const PAGE = 24;
+const CHART = 148;
+
+const listeners = new Map<Element, () => void>();
+let sharedObserver: IntersectionObserver | null = null;
+
+function watchNearView(el: Element, onVisible: () => void) {
+  if (typeof IntersectionObserver === "undefined") {
+    onVisible();
+    return () => {};
+  }
+  if (!sharedObserver) {
+    sharedObserver = new IntersectionObserver(
+      (observed) => {
+        for (const entry of observed) {
+          if (!entry.isIntersecting) continue;
+          const notify = listeners.get(entry.target);
+          if (!notify) continue;
+          listeners.delete(entry.target);
+          sharedObserver?.unobserve(entry.target);
+          notify();
+        }
+      },
+      { rootMargin: "480px 0px" },
+    );
+  }
+  listeners.set(el, onVisible);
+  sharedObserver.observe(el);
+  return () => {
+    listeners.delete(el);
+    sharedObserver?.unobserve(el);
+  };
+}
+
+function NearView({
+  children,
+  minHeight,
+  eager,
+}: {
+  children: ReactNode;
+  minHeight: number;
+  eager?: boolean;
+}) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [show, setShow] = useState(Boolean(eager));
+
+  useEffect(() => {
+    if (show) return;
+    const el = ref.current;
+    if (!el) return;
+    return watchNearView(el, () => setShow(true));
+  }, [show]);
+
+  return (
+    <div ref={ref} style={show ? undefined : { minHeight }}>
+      {show ? children : null}
+    </div>
+  );
+}
+
+const HonorCard = memo(function HonorCard({
+  entry,
+  showSport,
+  prefixSport,
+  eagerChart,
+}: {
+  entry: ReputationCard;
+  showSport: boolean;
+  prefixSport: boolean;
+  eagerChart: boolean;
+}) {
+  const { locale, t } = useI18n();
+  const labels = entry.dimIds.map((id) =>
+    entry.positionKey
+      ? dimLabel(locale, entry.positionKey, id)
+      : (t.dims[entry.sport]?.[id] ?? id),
+  );
+  const honor = locale === "zh" ? entry.honors.zh : entry.honors.en;
+  const sportName = t.sports[entry.sport];
+  const avatar = (
+    <PlayerAvatar
+      athlete={{
+        name: entry.name,
+        shortName: initials(entry.name),
+        photoUrl: entry.photoUrl,
+      }}
+      size="sm"
+      showJerseyBadge={false}
+    />
+  );
+
+  return (
+    <li className="rounded-lg border p-3">
+      {showSport ? (
+        <p className="mb-2 text-[11px] font-semibold tracking-widest text-muted-foreground uppercase">
+          {sportName}
+        </p>
+      ) : null}
+      <div className="flex items-start gap-3">
+        <span className="w-7 shrink-0 pt-1.5 text-center text-sm font-bold text-muted-foreground">
+          {entry.rank}
+        </span>
+        {entry.href ? (
+          <Link href={entry.href} className="shrink-0">
+            {avatar}
+          </Link>
+        ) : (
+          avatar
+        )}
+        <div className="min-w-0 flex-1">
+          {entry.href ? (
+            <Link href={entry.href} className="truncate font-medium hover:underline">
+              {entry.name}
+            </Link>
+          ) : (
+            <p className="truncate font-medium">{entry.name}</p>
+          )}
+          <p className="truncate text-xs text-muted-foreground">
+            {prefixSport ? `${sportName} · ` : ""}
+            {entry.subtitle}
+          </p>
+        </div>
+        <Overall value={entry.overall} />
+      </div>
+      <p className="mt-2 text-sm leading-6">{honor}</p>
+      <div className="mt-2 grid grid-cols-[148px_minmax(0,1fr)] items-center gap-2">
+        <NearView minHeight={CHART} eager={eagerChart}>
+          <DimensionRadar
+            dimIds={entry.dimIds}
+            dimLabels={labels}
+            size={CHART}
+            showLabels={false}
+            series={[
+              {
+                label: entry.name,
+                scores: entry.scores,
+                stroke: "oklch(0.58 0.19 38)",
+                fill: "oklch(0.58 0.19 38 / 0.22)",
+              },
+            ]}
+          />
+        </NearView>
+        <ul className="min-w-0 space-y-1.5">
+          {entry.dimIds.map((id, axis) => (
+            <li key={id} className="flex items-center justify-between gap-2 text-xs">
+              <span className="min-w-0 truncate text-muted-foreground">{labels[axis]}</span>
+              <span className="font-semibold tabular-nums">
+                {(entry.scores[id] ?? 0).toFixed(1)}
+              </span>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </li>
+  );
+});
 
 export function HonorBoard({
   kind,
@@ -19,8 +176,10 @@ export function HonorBoard({
   kind: HonorBoardKind;
   sport: Sport | "all";
 }) {
-  const { locale, t } = useI18n();
+  const { t } = useI18n();
   const [entries, setEntries] = useState<ReputationCard[] | null>(null);
+  const [limit, setLimit] = useState(PAGE);
+  const sentinel = useRef<HTMLLIElement>(null);
 
   useEffect(() => {
     const sp = new URLSearchParams({ kind });
@@ -29,7 +188,10 @@ export function HonorBoard({
     fetch(`/api/honor?${sp}`)
       .then((r) => (r.ok ? r.json() : null))
       .then((d: { entries?: ReputationCard[] } | null) => {
-        if (!cancelled) setEntries(d?.entries ?? []);
+        if (!cancelled) {
+          setEntries(d?.entries ?? []);
+          setLimit(PAGE);
+        }
       })
       .catch(() => {
         if (!cancelled) setEntries([]);
@@ -39,6 +201,20 @@ export function HonorBoard({
     };
   }, [kind, sport]);
 
+  useEffect(() => {
+    const el = sentinel.current;
+    if (!el || !entries || limit >= entries.length) return;
+    const io = new IntersectionObserver(
+      ([hit]) => {
+        if (!hit?.isIntersecting) return;
+        setLimit((current) => Math.min(entries.length, current + PAGE));
+      },
+      { rootMargin: "700px 0px" },
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, [entries, limit]);
+
   if (!entries) {
     return <p className="mt-6 text-sm text-muted-foreground">{t.common.loadingPage}</p>;
   }
@@ -46,102 +222,26 @@ export function HonorBoard({
     return <p className="mt-6 text-sm text-muted-foreground">{t.rankings.empty}</p>;
   }
 
-  const copy = (text: { en: string; zh: string }) =>
-    locale === "zh" ? text.zh : text.en;
+  const shown = entries.slice(0, limit);
 
   return (
     <div className="mt-4">
       <p className="text-xs leading-5 text-muted-foreground">{t.rankings.blendHint}</p>
       <ol className="mt-3 space-y-3">
-        {entries.map((entry, index) => {
-          const labels = entry.dimIds.map((id) =>
-            entry.positionKey
-              ? dimLabel(locale, entry.positionKey, id)
-              : (t.dims[entry.sport]?.[id] ?? id),
-          );
+        {shown.map((entry, index) => {
           const showSport =
-            sport === "all" && (index === 0 || entries[index - 1]?.sport !== entry.sport);
+            sport === "all" && (index === 0 || shown[index - 1]?.sport !== entry.sport);
           return (
-            <li key={`${entry.sport}:${entry.id}`} className="rounded-lg border p-3">
-              {showSport ? (
-                <p className="mb-2 text-[11px] font-semibold tracking-widest text-muted-foreground uppercase">
-                  {t.sports[entry.sport]}
-                </p>
-              ) : null}
-              <div className="flex items-start gap-3">
-                <span className="w-7 shrink-0 pt-1.5 text-center text-sm font-bold text-muted-foreground">
-                  {entry.rank}
-                </span>
-                {entry.photoUrl ? (
-                  entry.href ? (
-                    <Link href={entry.href} className="shrink-0">
-                      <PlayerAvatar
-                        athlete={{
-                          name: entry.name,
-                          shortName: initials(entry.name),
-                          photoUrl: entry.photoUrl,
-                        }}
-                        size="sm"
-                        showJerseyBadge={false}
-                      />
-                    </Link>
-                  ) : (
-                    <PlayerAvatar
-                      athlete={{
-                        name: entry.name,
-                        shortName: initials(entry.name),
-                        photoUrl: entry.photoUrl,
-                      }}
-                      size="sm"
-                      showJerseyBadge={false}
-                    />
-                  )
-                ) : null}
-                <div className="min-w-0 flex-1">
-                  {entry.href ? (
-                    <Link href={entry.href} className="truncate font-medium hover:underline">
-                      {entry.name}
-                    </Link>
-                  ) : (
-                    <p className="truncate font-medium">{entry.name}</p>
-                  )}
-                  <p className="truncate text-xs text-muted-foreground">
-                    {sport === "all" ? `${t.sports[entry.sport]} · ` : ""}
-                    {entry.subtitle}
-                  </p>
-                </div>
-                <Overall value={entry.overall} />
-              </div>
-              <p className="mt-2 text-sm leading-6">{copy(entry.honors)}</p>
-              <div className="mt-2 grid grid-cols-[148px_minmax(0,1fr)] items-center gap-2">
-                <DimensionRadar
-                  dimIds={entry.dimIds}
-                  dimLabels={labels}
-                  size={148}
-                  showLabels={false}
-                  series={[
-                    {
-                      label: entry.name,
-                      scores: entry.scores,
-                      stroke: "oklch(0.58 0.19 38)",
-                      fill: "oklch(0.58 0.19 38 / 0.22)",
-                    },
-                  ]}
-                />
-                <ul className="min-w-0 space-y-1.5">
-                  {entry.dimIds.map((id, axis) => (
-                    <li key={id} className="flex items-center justify-between gap-2 text-xs">
-                      <span className="min-w-0 truncate text-muted-foreground">{labels[axis]}</span>
-                      <span className="font-semibold tabular-nums">
-                        {(entry.scores[id] ?? 0).toFixed(1)}
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </li>
+            <HonorCard
+              key={`${entry.sport}:${entry.id}`}
+              entry={entry}
+              showSport={showSport}
+              prefixSport={sport === "all"}
+              eagerChart={index < 6}
+            />
           );
         })}
+        {limit < entries.length ? <li ref={sentinel} className="h-px" aria-hidden /> : null}
       </ol>
     </div>
   );

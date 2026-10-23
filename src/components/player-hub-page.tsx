@@ -12,7 +12,7 @@ import { dimensionIds, type PositionKey } from "@/lib/position-ratings";
 import type { PlayerEventRating } from "@/lib/rankings-server";
 import { blendScores, playerOverall } from "@/lib/reputation/blend";
 import type { DossierFixture, DossierRating } from "@/lib/reputation/dossier";
-import { initials } from "@/lib/reputation/portraits";
+import { initials } from "@/lib/reputation/initials";
 import type { ReputationCard } from "@/lib/reputation/types";
 import { rankingsHref } from "@/lib/player-routes";
 import type { ScoreMap, Sport } from "@/lib/types";
@@ -118,6 +118,7 @@ export function PlayerHubPageInner({
           }}
           size="xl"
           showJerseyBadge={false}
+          eager
         />
         <div className="min-w-0 flex-1">
           <p className="text-xs text-muted-foreground">{t.player.hubKicker}</p>

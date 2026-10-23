@@ -201,6 +201,7 @@ export function clubMatchSamples(team: HonorTeam): ScoreMap[] {
 export function presentPlayer(
   person: HonorPlayer,
   extraSamples: ScoreMap[] = [],
+  opts?: { withTakes?: boolean },
 ): ReputationCard {
   const dimIds = playerDimIds(person.positionKey);
   const samples = [...seedMatchSamples(person.id), ...extraSamples];
@@ -219,22 +220,26 @@ export function presentPlayer(
     overall: playerOverall(scores, person.positionKey),
     seedWeight: person.seedWeight,
     matchSamples: samples.length,
-    takes: fanTakes({
-      id: person.id,
-      scores,
-      hook: person.hook,
-      trait: person.trait,
-      scope: person.positionKey,
-    }),
+    takes:
+      opts?.withTakes === false
+        ? []
+        : fanTakes({
+            id: person.id,
+            scores,
+            hook: person.hook,
+            trait: person.trait,
+            scope: person.positionKey,
+          }),
     era: person.era,
     href: `/players/${person.sport}/${person.id}`,
-    photoUrl: portraitFor(person.sport, person.id, person.name),
+    photoUrl: portraitFor(person.sport, person.id),
   };
 }
 
 export function presentTeam(
   club: HonorTeam,
   extraSamples: ScoreMap[] = [],
+  opts?: { withTakes?: boolean },
 ): ReputationCard {
   const dimIds = [...SPORT_DIMENSIONS[club.sport]];
   const samples = [...clubMatchSamples(club), ...extraSamples];
@@ -253,13 +258,16 @@ export function presentTeam(
     overall: teamOverall(scores, club.sport),
     seedWeight: club.seedWeight,
     matchSamples: samples.length,
-    takes: fanTakes({
-      id: club.id,
-      scores,
-      hook: club.hook,
-      trait: club.trait,
-      scope: club.sport,
-    }),
+    takes:
+      opts?.withTakes === false
+        ? []
+        : fanTakes({
+            id: club.id,
+            scores,
+            hook: club.hook,
+            trait: club.trait,
+            scope: club.sport,
+          }),
     href,
   };
 }
@@ -279,7 +287,7 @@ export function honorBoard(
         .filter((club) => club.sport === boardSport)
         .sort((a, b) => a.prestige - b.prestige)
         .map((club, index) => ({
-          ...presentTeam(club, extraById?.get(club.id) ?? []),
+          ...presentTeam(club, extraById?.get(club.id) ?? [], { withTakes: false }),
           rank: index + 1,
         })),
     );
@@ -290,7 +298,7 @@ export function honorBoard(
       .filter((person) => person.sport === boardSport)
       .sort((a, b) => a.prestige - b.prestige)
       .map((person, index) => ({
-        ...presentPlayer(person, extraById?.get(person.id) ?? []),
+          ...presentPlayer(person, extraById?.get(person.id) ?? [], { withTakes: false }),
         rank: index + 1,
       })),
   );

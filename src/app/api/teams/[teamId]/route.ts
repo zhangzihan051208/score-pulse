@@ -78,7 +78,7 @@ export async function GET(
         id: p.id,
         name: p.name,
         position: p.positionKey,
-        photoUrl: portraitFor(p.sport, p.id, p.name),
+        photoUrl: portraitFor(p.sport, p.id),
       })),
       recent: fixtures.recent,
       upcoming: fixtures.upcoming,
