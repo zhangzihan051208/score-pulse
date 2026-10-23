@@ -146,6 +146,7 @@ type Dict = {
     finish: string;
     ratingsTitle: string;
     ratingsBullets: string[];
+    ratingsSeeGuide: string;
     zonesTitle: string;
     zonesBullets: string[];
   };
@@ -365,7 +366,7 @@ const en: Dict = {
       home: "Home",
       boards: "Boards",
       feed: "Feed",
-      guide: "Guide",
+      guide: "Rules",
       profile: "Profile",
       rankings: "Rankings",
       zones: "Zones",
@@ -511,6 +512,7 @@ const en: Dict = {
         "Free accounts have a daily limit on full five-axis posts; overall-only is always available. VIP removes the cap and doubles weight in community averages.",
         "Comments and ratings can be hidden automatically if they look like spam, ads, or unsafe content.",
       ],
+      ratingsSeeGuide: "Full scoring rules, VIP limits, and moderation are in the header link Rules (/guide).",
       zonesTitle: "DIY zone rules",
       zonesBullets: [
         "Anyone signed in can create a zone: pick a category, name 3–5 custom axes, and list items with HTTPS photo URLs.",
@@ -738,28 +740,40 @@ const en: Dict = {
       empty: "Nothing here yet. Grade a player.",
     },
     guide: {
-      title: "How to run this",
-      lead: "Same product as a Hupu-style board: sport rooms first, one simple rating card, five grades that change by sport.",
+      title: "Scoring & community rules",
+      lead: "How player ratings, favorite teams, and DIY zones work on Grandstand.",
       sections: [
         {
-          title: "Boards, not a blob",
+          title: "Player ratings",
           body: [
-            "Home should open into NBA, Soccer, NFL, F1, Tennis, UFC — not a mixed pile of matches.",
-            "Each board keeps the same rating layout so users never relearn the UI.",
+            "Open a match thread, pick a player, and score five axes that change by sport and on-pitch role.",
+            "Overall uses position weights (shown on each rating card) — not a flat average of the five sliders.",
+            "Signed-in scores sync to the cloud and appear on your profile history.",
+            "Free accounts have a daily cap on full five-axis posts; overall-only is always available. VIP removes the cap and doubles your weight in community averages.",
+            "Ratings and comments that look like spam, ads, or unsafe content are blocked automatically and will not publish.",
           ],
         },
         {
-          title: "Five grades, position-specific",
+          title: "Favorite teams (optional)",
           body: [
-            "Keep exactly five sliders. Labels and weights change by role (e.g. striker vs keeper, guard vs center).",
-            "Overall is a weighted sum for that position — not a flat average of the five.",
+            "Under My teams, turn on only the league boards you follow, then set primary and secondary clubs.",
+            "Skipped leagues stay out of home-feed priority; you can enable them anytime.",
           ],
         },
         {
-          title: "Overseas first",
+          title: "DIY rating zones",
           body: [
-            "Ship English as the default. Add Chinese, Spanish, Japanese for the same boards.",
-            "Player names stay in their common Latin form; UI and takes localize.",
+            "Separate boards for food, products, and anything you want fans to rank — not mixed with sports match threads.",
+            "Creators pick a category, name 3–5 custom axes, and list items with HTTPS photo URLs.",
+            "Heat ranks zones and items from ratings plus approved comments.",
+            "Zone comments use the same automatic moderation as sports threads.",
+          ],
+        },
+        {
+          title: "Boards & layout",
+          body: [
+            "Home and the header jump into NBA, Soccer, NFL, F1, Tennis, UFC, and esports — same rating card everywhere.",
+            "Per-match threads link to player hubs, team pages, and global or squad ranking boards.",
           ],
         },
       ],
@@ -839,7 +853,7 @@ export const messages: Record<Locale, Dict> = {
       home: "首页",
       boards: "分区",
       feed: "动态",
-      guide: "手册",
+      guide: "说明",
       profile: "我的",
       rankings: "评分榜",
       zones: "评分专区",
@@ -984,6 +998,7 @@ export const messages: Record<Locale, Dict> = {
         "非 VIP 每日五维详评有次数上限；「仅总分」不限。VIP 五维不限且社区均分权重 ×2。",
         "评论与评分若命中广告、违禁词或不良内容，会自动拦截，不会公开显示。",
       ],
+      ratingsSeeGuide: "完整评分规则、VIP 与审核说明请点网页右上角的「说明」。",
       zonesTitle: "自定义专区规则",
       zonesBullets: [
         "登录后可创建专区：选分类、自定义 3–5 个评分维度，用 HTTPS 图片链接添加条目。",
@@ -1203,28 +1218,40 @@ export const messages: Record<Locale, Dict> = {
       empty: "还没有动态。先去给球员打分。",
     },
     guide: {
-      title: "怎么做、准备什么",
-      lead: "虎扑式分区 + 一张统一的打分卡 + 按项目切换的五维。面向海外，多语言是默认能力。",
+      title: "评分与社区说明",
+      lead: "球员怎么打分、主队怎么设、自定义专区怎么玩——看台规则一览。",
       sections: [
         {
-          title: "先分区，再内容",
+          title: "球员评分规则",
           body: [
-            "首页点进 NBA / 足球 / NFL / F1 / 网球 / UFC，不要把所有比赛堆在一页。",
-            "每个分区的打分页布局必须一样，用户不用重新学。",
+            "进入比赛帖 → 选择球员 → 按该项目与场上位置打五个维度分。",
+            "总分按该位置的权重合成（打分页可展开「评分须知」查看各维占比），不是五个滑杆的简单平均。",
+            "登录后提交的评分会同步到云端，可在个人主页「我的评分记录」查看。",
+            "非 VIP 每日「五维详评」有次数上限；「仅总分」不限。VIP 五维不限次，且在社区均分里权重 ×2。",
+            "评论与评分若命中广告、违禁词或不良内容，会自动拦截，不会公开显示。",
           ],
         },
         {
-          title: "五维按项目换，控件不换",
+          title: "主队（可选）",
           body: [
-            "永远五个滑杆。只换名称。总分用平均，不再加第六项。",
-            "NBA 和 UFC 如果共用「技术/战术」，分数会失去意义。",
+            "在「我的主队」里只勾选你关注的联赛分区，再设置主队/副队即可。",
+            "未勾选的分区不参与首页「主队优先」排序，随时可以再打开。",
           ],
         },
         {
-          title: "海外赛事为主，语言跟上",
+          title: "自定义评分专区",
           body: [
-            "默认英语。同一套分区提供中文、西语、日语。",
-            "球员名保持国际通行写法，界面和短评随语言切换。",
+            "与体育赛事帖分开的 DIY 榜单，例如美食、好物等。",
+            "登录后可创建专区：选分类、自定义 3–5 个评分维度，用 HTTPS 图片链接添加条目。",
+            "热度来自评分与通过审核的评论，用于专区与条目排行榜。",
+            "专区评论与体育帖使用同一套自动审核规则。",
+          ],
+        },
+        {
+          title: "分区与页面",
+          body: [
+            "首页与顶栏可进入 NBA、足球、电竞、NFL、F1、网球、UFC 等分区，打分卡布局统一。",
+            "比赛帖可进入球员主页、球队页，以及总榜/队内评分榜。",
           ],
         },
       ],
@@ -1301,7 +1328,7 @@ export const messages: Record<Locale, Dict> = {
       home: "Inicio",
       boards: "Tablones",
       feed: "Feed",
-      guide: "Guía",
+      guide: "Reglas",
       profile: "Perfil",
       rankings: "Rankings",
       zones: "Zonas",
@@ -1447,6 +1474,7 @@ export const messages: Record<Locale, Dict> = {
         "Cuenta gratis: límite diario de notas completas; solo total sin límite. VIP: ilimitado y peso ×2.",
         "Comentarios con spam o contenido inseguro se bloquean automáticamente.",
       ],
+      ratingsSeeGuide: "Las reglas completas están en Reglas (arriba a la derecha) → /guide.",
       zonesTitle: "Reglas de zonas DIY",
       zonesBullets: [
         "Crea una zona con categoría, 3–5 ejes y items con URL HTTPS de foto.",
@@ -1668,28 +1696,40 @@ export const messages: Record<Locale, Dict> = {
       empty: "Nada aún. Puntúa a un jugador.",
     },
     guide: {
-      title: "Cómo montarlo",
-      lead: "Tablones por deporte, una tarjeta de nota simple, cinco ejes distintos por disciplina. Producto global.",
+      title: "Reglas de notas y comunidad",
+      lead: "Cómo puntuar jugadores, equipos favoritos y zonas DIY en Grandstand.",
       sections: [
         {
-          title: "Tablones, no un cajón",
+          title: "Notas a jugadores",
           body: [
-            "La home entra a NBA, fútbol, NFL, F1, tenis, UFC.",
-            "La pantalla de nota es la misma en todos los tablones.",
+            "En un hilo de partido, elige jugador y puntúa cinco ejes según deporte y posición.",
+            "La nota global usa pesos del rol (ver guía en la ficha) — no un promedio plano.",
+            "Con sesión iniciada, las notas van a la nube y aparecen en tu perfil.",
+            "Cuenta gratis: límite diario de fichas de cinco ejes; solo global ilimitado. VIP: sin límite y peso ×2 en medias.",
+            "Spam, anuncios o contenido inseguro se bloquean automáticamente.",
           ],
         },
         {
-          title: "Cinco notas, ejes distintos",
+          title: "Equipos favoritos (opcional)",
           body: [
-            "Siempre cinco deslizadores. Solo cambian las etiquetas. La media es el overall.",
-            "NBA no es UFC. Ejes genéricos = ruido.",
+            "En Mis equipos activa solo las ligas que sigues y elige club principal y secundario.",
+            "Las ligas omitidas no priorizan tu inicio; puedes activarlas cuando quieras.",
           ],
         },
         {
-          title: "Ultramar primero",
+          title: "Zonas DIY",
           body: [
-            "Inglés por defecto. Chino, español y japonés sobre los mismos tablones.",
-            "Los nombres de jugadores se quedan en forma internacional.",
+            "Tablones aparte (comida, productos…) separados de los hilos deportivos.",
+            "Categoría, 3–5 ejes personalizados, items con URL HTTPS de foto.",
+            "El heat sube con notas y comentarios aprobados.",
+            "Misma moderación automática que en deportes.",
+          ],
+        },
+        {
+          title: "Tablones",
+          body: [
+            "Inicio y cabecera: NBA, fútbol, esports, NFL, F1, tenis, UFC — misma tarjeta de nota.",
+            "Desde el partido: ficha de jugador, club y rankings global o de plantilla.",
           ],
         },
       ],
@@ -1766,7 +1806,7 @@ export const messages: Record<Locale, Dict> = {
       home: "ホーム",
       boards: "板",
       feed: "フィード",
-      guide: "ガイド",
+      guide: "ルール",
       profile: "プロフィール",
       rankings: "ランキング",
       zones: "専区",
@@ -1911,6 +1951,7 @@ export const messages: Record<Locale, Dict> = {
         "無料は五軸の1日上限あり。総合のみは無制限。VIP は五軸無制限・平均で2倍。",
         "スパムや不適切な内容は自動でブロックされます。",
       ],
+      ratingsSeeGuide: "詳しいルールは右上の「ルール」（/guide）にまとめています。",
       zonesTitle: "DIY ゾーンルール",
       zonesBullets: [
         "ログイン後、カテゴリと3〜5軸を決め、HTTPS 画像 URL でエントリを追加。",
@@ -2131,28 +2172,40 @@ export const messages: Record<Locale, Dict> = {
       empty: "まだありません。選手を採点してください。",
     },
     guide: {
-      title: "作り方",
-      lead: "種目ごとの板、一枚の採点カード、種目で変わる五つの軸。海外向けで、多言語が前提。",
+      title: "採点・コミュニティルール",
+      lead: "選手採点、マイチーム、DIY ゾーンのルール。",
       sections: [
         {
-          title: "板が先",
+          title: "選手採点",
           body: [
-            "ホームから NBA / サッカー / NFL / F1 / テニス / UFC に入る。",
-            "採点画面のレイアウトは全板で同じ。",
+            "試合スレッドで選手を選び、種目とポジションに合わせた五軸で採点。",
+            "総合点はポジションの重み付き（各カードの採点ガイド参照）— 五つの単純平均ではありません。",
+            "ログイン中の採点はクラウドに保存され、プロフィールの履歴に表示されます。",
+            "無料は五軸の1日上限あり。総合のみ無制限。VIP は五軸無制限・平均で2倍。",
+            "スパムや不適切な内容は自動でブロックされます。",
           ],
         },
         {
-          title: "軸は変える、UIは変えない",
+          title: "マイチーム（任意）",
           body: [
-            "スライダーは五つだけ。ラベルだけ差し替える。総合は平均。",
-            "NBA と UFC を同じ「技術」で採点すると意味がなくなる。",
+            "マイチームでフォローするリーグだけオンにし、主・副チームを設定。",
+            "オフのリーグはホーム優先対象外。いつでも変更できます。",
           ],
         },
         {
-          title: "海外リーグ、言語は後追いしない",
+          title: "DIY ゾーン",
           body: [
-            "デフォルト英語。同じ板を中国語・スペイン語・日本語でも出す。",
-            "選手名は国際表記のまま。",
+            "グルメや商品など、スポーツ試合とは別のランキング板。",
+            "カテゴリ、3〜5 軸、HTTPS 画像 URL でエントリ追加。",
+            "ヒートは採点と承認コメントで上昇。",
+            "スポーツと同じ自動モデレーション。",
+          ],
+        },
+        {
+          title: "板とナビ",
+          body: [
+            "ホームとヘッダーから NBA / サッカー / esports / NFL / F1 / テニス / UFC — 同じ採点カード。",
+            "試合から選手ハブ、チーム、総合・チーム内ランキングへ。",
           ],
         },
       ],

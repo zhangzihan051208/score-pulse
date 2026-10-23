@@ -9,9 +9,17 @@ export function GuidePage() {
     <div className="mx-auto max-w-2xl px-3 py-8">
       <h1 className="text-2xl font-bold">{t.guide.title}</h1>
       <p className="mt-2 leading-7 text-muted-foreground">{t.guide.lead}</p>
-      <Link href="/" className="mt-4 inline-block text-sm font-medium text-primary">
-        ← {t.nav.home}
-      </Link>
+      <div className="mt-4 flex flex-wrap gap-4 text-sm">
+        <Link href="/" className="font-medium text-primary hover:underline">
+          ← {t.nav.home}
+        </Link>
+        <Link href="/my-teams" className="text-primary hover:underline">
+          {t.teams.title}
+        </Link>
+        <Link href="/zones" className="text-primary hover:underline">
+          {t.zones.title}
+        </Link>
+      </div>
       <div className="mt-6 space-y-4">
         {t.guide.sections.map((section) => (
           <section key={section.title} className="rounded-xl border bg-card p-4">

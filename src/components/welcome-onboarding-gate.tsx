@@ -174,12 +174,10 @@ export function WelcomeOnboardingGate() {
           {step === "ratings" ? (
             <div className="space-y-3">
               <h3 className="font-semibold">{t.onboarding.ratingsTitle}</h3>
-              <ul className="list-disc space-y-2 pl-5 text-sm leading-6 text-muted-foreground">
-                {t.onboarding.ratingsBullets.map((line) => (
-                  <li key={line}>{line}</li>
-                ))}
-              </ul>
-              <Link href="/guide" className="inline-block text-sm text-primary hover:underline">
+              <p className="text-sm leading-6 text-muted-foreground">
+                {t.onboarding.ratingsSeeGuide}
+              </p>
+              <Link href="/guide" className="inline-block text-sm font-medium text-primary hover:underline">
                 {t.nav.guide} →
               </Link>
             </div>

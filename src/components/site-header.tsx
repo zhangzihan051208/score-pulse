@@ -56,6 +56,15 @@ export function SiteHeader() {
           </span>
         </Link>
         <div className="flex items-center gap-2">
+          <Link
+            href="/guide"
+            className={cn(
+              "rounded-md px-2 py-1 text-xs font-medium text-white/75 transition-colors hover:bg-white/10 hover:text-white sm:text-sm",
+              pathname.startsWith("/guide") && "bg-white/12 text-white",
+            )}
+          >
+            {t.nav.guide}
+          </Link>
           <AuthMenu />
           <LocaleSwitcher />
         </div>

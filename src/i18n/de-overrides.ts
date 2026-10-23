@@ -13,7 +13,7 @@ export const deOverrides = {
     home: "Start",
     boards: "Bereiche",
     feed: "Feed",
-    guide: "Guide",
+    guide: "Regeln",
     profile: "Profil",
     rankings: "Rangliste",
     zones: "Zonen",
@@ -159,6 +159,7 @@ export const deOverrides = {
       "Free: Tageslimit für volle Achsen; nur Gesamt unbegrenzt. VIP: unbegrenzt, doppeltes Gewicht.",
       "Spam und unsichere Inhalte werden automatisch blockiert.",
     ],
+    ratingsSeeGuide: "Alle Regeln findest du oben rechts unter Regeln (/guide).",
     zonesTitle: "DIY-Zonen",
     zonesBullets: [
       "Zone mit Kategorie, 3–5 Achsen, Einträge mit HTTPS-Foto-URL.",
@@ -377,28 +378,40 @@ export const deOverrides = {
     empty: "Noch leer. Einen Spieler bewerten.",
   },
   guide: {
-    title: "So funktioniert’s",
-    lead: "Wie ein Fan-Board: Sport zuerst, eine Karte, fünf Achsen je nach Rolle.",
+    title: "Bewertungs- & Community-Regeln",
+    lead: "Spielerbewertungen, Teams und DIY-Zonen auf Grandstand.",
     sections: [
       {
-        title: "Bereiche statt Mischmasch",
+        title: "Spielerbewertungen",
         body: [
-          "Start in NBA, Fußball, NFL, F1, Tennis, UFC — nicht alles in einem Topf.",
-          "Gleiche Karte überall — UI muss man nicht neu lernen.",
+          "Im Spielthread Spieler wählen, fünf achsenspezifische Noten je Sport und Rolle.",
+          "Gesamtnote mit Positionsgewichten (auf der Karte einsehbar) — kein flacher Mittelwert.",
+          "Mit Login landen Noten in der Cloud und im Profil-Verlauf.",
+          "Free: Tageslimit für volle Fünf-Achsen-Karten; nur Gesamt unbegrenzt. VIP: unbegrenzt, doppeltes Gewicht in Schnitten.",
+          "Spam, Werbung und unsichere Inhalte werden automatisch blockiert.",
         ],
       },
       {
-        title: "Fünf Achsen, rollenspezifisch",
+        title: "Teams (optional)",
         body: [
-          "Genau fünf Regler. Labels und Gewichte je Position (Stürmer vs Torwart).",
-          "Gesamt ist gewichtet — kein flacher Durchschnitt.",
+          "Unter Meine Teams nur Ligen aktivieren, die du verfolgst — Haupt- und Zweitverein wählen.",
+          "Ausgeschaltete Ligen priorisieren die Startseite nicht.",
         ],
       },
       {
-        title: "International zuerst",
+        title: "DIY-Zonen",
         body: [
-          "Englisch Standard; Deutsch, Chinesisch, Spanisch, Japanisch für dieselben Boards.",
-          "Spielernamen oft im Original; UI und Takes lokalisiert.",
+          "Eigene Boards (Essen, Produkte …) getrennt von Sport-Spielthreads.",
+          "Kategorie, 3–5 Achsen, Einträge mit HTTPS-Foto-URL.",
+          "Heat steigt durch Bewertungen und freigegebene Kommentare.",
+          "Gleiche Auto-Moderation wie im Sport.",
+        ],
+      },
+      {
+        title: "Bereiche",
+        body: [
+          "Start und Kopfzeile: NBA, Fußball, Esports, NFL, F1, Tennis, UFC — gleiche Bewertungskarte.",
+          "Vom Spiel zu Spieler-Hub, Team und globalen/Kader-Rankings.",
         ],
       },
     ],
