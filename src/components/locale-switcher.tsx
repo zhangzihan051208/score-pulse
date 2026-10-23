@@ -8,16 +8,17 @@ export function LocaleSwitcher() {
   const { locale, setLocale, t } = useI18n();
 
   return (
-    <label className="flex items-center gap-1.5 text-xs text-white/70">
+    <label className="flex h-8 items-center gap-1.5 rounded-lg border border-black/10 bg-white px-2 text-xs font-medium text-black">
       <span className="hidden sm:inline">{t.language}</span>
       <select
         aria-label={t.language}
         value={locale}
         onChange={(e) => setLocale(e.target.value as Locale)}
-        className="h-8 rounded-lg border border-white/15 bg-white/8 px-2 text-xs font-medium text-white outline-none hover:border-white/35 focus-visible:ring-2 focus-visible:ring-primary/80"
+        className="h-full bg-transparent pr-1 text-xs font-medium text-black outline-none"
+        style={{ colorScheme: "light" }}
       >
         {LOCALES.map((id) => (
-          <option key={id} value={id}>
+          <option key={id} value={id} className="bg-white text-black">
             {localeLabels[id]}
           </option>
         ))}
