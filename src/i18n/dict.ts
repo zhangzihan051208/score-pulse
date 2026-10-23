@@ -128,6 +128,7 @@ export type Dict = {
     hallLegends: string;
     hallCommunity: string;
     hallAll: string;
+    roleAll: string;
     hallLead: string;
     blendHint: string;
     fanTakes: string;

@@ -133,6 +133,7 @@ export const deOverrides = {
     hallLegends: "Legenden",
     hallCommunity: "Community",
     hallAll: "Alle",
+    roleAll: "Alle Positionen",
     hallLead:
       "Jede Sportart hat eine eigene aktive Top 100, Vereins-Top 50 und Legendenliste. Die Reihenfolge folgt den Titeln. Das Netz steht bei den Noten, jede spätere Spielnote zieht den Schnitt.",
     blendHint:

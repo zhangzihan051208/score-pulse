@@ -65,10 +65,8 @@ export type ReputationCard = {
   scores: ScoreMap;
   dimIds: string[];
   overall: number;
-  /** Digits for the headline number. FC 26 uses 0 so 91 stays 91. */
+  /** Digits for the headline number. Soccer ratings from the FC list stay whole numbers. */
   overallDigits?: number;
-  /** Short label under the headline, e.g. "FC 26". */
-  ratingCaption?: string;
   kitNumber?: string;
   seedWeight: number;
   matchSamples: number;

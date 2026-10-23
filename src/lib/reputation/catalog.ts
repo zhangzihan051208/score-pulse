@@ -230,7 +230,6 @@ export function presentPlayer(
     dimIds,
     overall: person.fcRating ?? playerOverall(scores, person.positionKey),
     overallDigits: person.fcRating != null ? 0 : undefined,
-    ratingCaption: person.fcRating != null ? "FC 26" : undefined,
     kitNumber: person.kitNumber,
     seedWeight: person.seedWeight,
     matchSamples: samples.length,

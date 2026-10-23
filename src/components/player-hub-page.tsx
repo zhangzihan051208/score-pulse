@@ -140,13 +140,11 @@ export function PlayerHubPageInner({
           {shown.overall != null && (
             <div className="mt-2 flex items-end gap-3">
               <div>
-                <p className="text-[11px] text-muted-foreground">
-                  {data?.reputation?.ratingCaption
-                    ? data.reputation.ratingCaption
-                    : data?.reputation
-                      ? t.player.fiveTitle
-                      : t.player.careerAvg}
-                </p>
+                {data?.reputation?.overallDigits === 0 ? null : (
+                  <p className="text-[11px] text-muted-foreground">
+                    {data?.reputation ? t.player.fiveTitle : t.player.careerAvg}
+                  </p>
+                )}
                 <Overall value={shown.overall} digits={data?.reputation?.overallDigits ?? 1} />
               </div>
               <p className="pb-1 text-xs text-muted-foreground">

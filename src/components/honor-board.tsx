@@ -1,16 +1,19 @@
 "use client";
 
 import Link from "next/link";
-import { memo, useEffect, useRef, useState, type ReactNode } from "react";
+import { memo, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { DimensionRadar } from "@/components/dimension-radar";
 import { PlayerAvatar } from "@/components/player-avatar";
 import { Overall } from "@/components/score-rows";
 import { initials } from "@/lib/reputation/initials";
 import { useI18n } from "@/i18n/use-i18n";
-import { dimLabel } from "@/i18n/position-dims";
+import { dimLabel, positionRoleLabel } from "@/i18n/position-dims";
 import type { HonorBoardKind } from "@/lib/reputation/catalog";
 import type { ReputationCard } from "@/lib/reputation/types";
+import type { PositionKey } from "@/lib/position-ratings";
+import { POSITION_PROFILES } from "@/lib/position-ratings";
 import type { Sport } from "@/lib/types";
+import { cn } from "cn";
 
 const PAGE = 24;
 const CHART = 148;
@@ -91,6 +94,7 @@ const HonorCard = memo(function HonorCard({
   );
   const honor = locale === "zh" ? entry.honors.zh : entry.honors.en;
   const sportName = t.sports[entry.sport];
+  const roleName = entry.positionKey ? positionRoleLabel(locale, entry.positionKey) : "";
   const avatar = (
     <PlayerAvatar
       athlete={{
@@ -132,17 +136,11 @@ const HonorCard = memo(function HonorCard({
           )}
           <p className="truncate text-xs text-muted-foreground">
             {prefixSport ? `${sportName} · ` : ""}
+            {roleName ? `${roleName} · ` : ""}
             {entry.subtitle}
           </p>
         </div>
-        <div className="text-right">
-          <Overall value={entry.overall} digits={entry.overallDigits ?? 1} />
-          {entry.ratingCaption ? (
-            <p className="text-[10px] font-medium leading-none text-muted-foreground">
-              {entry.ratingCaption}
-            </p>
-          ) : null}
-        </div>
+        <Overall value={entry.overall} digits={entry.overallDigits ?? 1} />
       </div>
       <p className="mt-2 text-sm leading-6">{honor}</p>
       <div className="mt-2 grid grid-cols-[148px_minmax(0,1fr)] items-center gap-2">
@@ -184,10 +182,15 @@ export function HonorBoard({
   kind: HonorBoardKind;
   sport: Sport | "all";
 }) {
-  const { t } = useI18n();
+  const { locale, t } = useI18n();
   const [entries, setEntries] = useState<ReputationCard[] | null>(null);
+  const [role, setRole] = useState<PositionKey | "all">("all");
   const [limit, setLimit] = useState(PAGE);
   const sentinel = useRef<HTMLLIElement>(null);
+
+  useEffect(() => {
+    setRole("all");
+  }, [kind, sport]);
 
   useEffect(() => {
     const sp = new URLSearchParams({ kind });
@@ -209,19 +212,36 @@ export function HonorBoard({
     };
   }, [kind, sport]);
 
+  const roles = useMemo(() => {
+    const present = new Set(entries?.map((entry) => entry.positionKey).filter(Boolean));
+    return (Object.keys(POSITION_PROFILES) as PositionKey[]).filter(
+      (key) => present.has(key) && (sport === "all" || POSITION_PROFILES[key].sport === sport),
+    );
+  }, [entries, sport]);
+
+  const ranked = useMemo(() => {
+    if (!entries) return [];
+    const list = role === "all" ? entries : entries.filter((entry) => entry.positionKey === role);
+    return list.map((entry, index) => ({ ...entry, rank: index + 1 }));
+  }, [entries, role]);
+
+  useEffect(() => {
+    setLimit(PAGE);
+  }, [role]);
+
   useEffect(() => {
     const el = sentinel.current;
-    if (!el || !entries || limit >= entries.length) return;
+    if (!el || limit >= ranked.length) return;
     const io = new IntersectionObserver(
       ([hit]) => {
         if (!hit?.isIntersecting) return;
-        setLimit((current) => Math.min(entries.length, current + PAGE));
+        setLimit((current) => Math.min(ranked.length, current + PAGE));
       },
       { rootMargin: "700px 0px" },
     );
     io.observe(el);
     return () => io.disconnect();
-  }, [entries, limit]);
+  }, [ranked.length, limit]);
 
   if (!entries) {
     return <p className="mt-6 text-sm text-muted-foreground">{t.common.loadingPage}</p>;
@@ -230,11 +250,44 @@ export function HonorBoard({
     return <p className="mt-6 text-sm text-muted-foreground">{t.rankings.empty}</p>;
   }
 
-  const shown = entries.slice(0, limit);
+  const shown = ranked.slice(0, limit);
+  const showRoles = sport !== "all" && kind !== "teams" && roles.length > 1;
 
   return (
     <div className="mt-4">
-      <p className="text-xs leading-5 text-muted-foreground">{t.rankings.blendHint}</p>
+      {showRoles ? (
+        <div className="flex flex-wrap gap-1.5">
+          <button
+            type="button"
+            onClick={() => setRole("all")}
+            className={cn(
+              "rounded-md px-2.5 py-1 text-xs font-medium",
+              role === "all" ? "bg-foreground text-background" : "bg-muted",
+            )}
+          >
+            {t.rankings.roleAll}
+          </button>
+          {roles.map((key) => (
+            <button
+              key={key}
+              type="button"
+              onClick={() => setRole(key)}
+              className={cn(
+                "rounded-md px-2.5 py-1 text-xs font-medium",
+                role === key ? "bg-primary text-primary-foreground" : "bg-muted",
+              )}
+            >
+              {positionRoleLabel(locale, key)}
+            </button>
+          ))}
+        </div>
+      ) : null}
+      <p className={cn("text-xs leading-5 text-muted-foreground", showRoles && "mt-3")}>
+        {t.rankings.blendHint}
+      </p>
+      {ranked.length === 0 ? (
+        <p className="mt-6 text-sm text-muted-foreground">{t.rankings.empty}</p>
+      ) : (
       <ol className="mt-3 space-y-3">
         {shown.map((entry, index) => {
           const showSport =
@@ -249,8 +302,9 @@ export function HonorBoard({
             />
           );
         })}
-        {limit < entries.length ? <li ref={sentinel} className="h-px" aria-hidden /> : null}
+        {limit < ranked.length ? <li ref={sentinel} className="h-px" aria-hidden /> : null}
       </ol>
+      )}
     </div>
   );
 }

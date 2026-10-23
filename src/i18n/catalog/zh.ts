@@ -133,6 +133,7 @@ const zh: Dict = {
       hallLegends: "历史名宿",
       hallCommunity: "社区评分",
       hallAll: "全部",
+      roleAll: "全部位置",
       hallLead: "每个分区单独排现役前 100、球队前 50 和历史名宿。名次按公开荣誉。五维图和分数放在一起，之后每一场评分会拉进平均。",
       blendHint: "荣誉底分先占着。每场比赛的均分算一份，跟底分一起平均。",
       fanTakes: "球迷短评",

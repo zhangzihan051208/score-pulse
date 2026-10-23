@@ -134,6 +134,7 @@ const es: Dict = {
       hallLegends: "Históricos",
       hallCommunity: "Tablón comunitario",
       hallAll: "Todos",
+      roleAll: "Todos los puestos",
       hallLead:
         "Cada deporte tiene su top 100 en activo, top 50 de clubes y su lista de históricos. El orden sigue los títulos. El radar va con las notas, y cada partido tira de la media.",
       blendHint:

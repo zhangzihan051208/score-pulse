@@ -134,6 +134,7 @@ const en: Dict = {
       hallLegends: "All-time greats",
       hallCommunity: "Community board",
       hallAll: "All sports",
+      roleAll: "All roles",
       hallLead:
         "Each sport has its own active top 100, club top 50, and legends list. Order follows public honours. The radar sits with the scores, and every later match rating pulls the average.",
       blendHint:
