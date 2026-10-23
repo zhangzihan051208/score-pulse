@@ -1,0 +1,50 @@
+import { StyleSheet } from "react-native";
+
+export const colors = {
+  bg: "#F6F1E8",
+  card: "#FFFCF7",
+  ink: "#2A2118",
+  muted: "#7A6A5A",
+  primary: "#E4572E",
+  header: "#12110F",
+  line: "#E6D9C8",
+  chip: "#EFE6DA",
+};
+
+export const ui = StyleSheet.create({
+  page: { flex: 1, backgroundColor: colors.bg },
+  content: { padding: 16, paddingBottom: 28, gap: 12 },
+  card: {
+    backgroundColor: colors.card,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: colors.line,
+    padding: 14,
+    gap: 6,
+  },
+  h1: { fontSize: 28, fontWeight: "800", color: colors.ink },
+  title: { fontSize: 16, fontWeight: "700", color: colors.ink },
+  muted: { color: colors.muted, fontSize: 13, lineHeight: 20 },
+  row: { flexDirection: "row", alignItems: "center", gap: 10 },
+  score: { color: colors.primary, fontWeight: "800", fontSize: 22 },
+  chip: { backgroundColor: colors.chip, borderRadius: 999, paddingHorizontal: 12, paddingVertical: 7 },
+  chipOn: { backgroundColor: colors.primary },
+  chipText: { color: colors.ink, fontSize: 13, fontWeight: "700" },
+  chipTextOn: { color: "#fff" },
+  input: {
+    backgroundColor: colors.card,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: colors.line,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    color: colors.ink,
+  },
+  primaryBtn: {
+    backgroundColor: colors.primary,
+    borderRadius: 12,
+    paddingVertical: 12,
+    alignItems: "center",
+  },
+  primaryBtnText: { color: "#fff", fontWeight: "800" },
+});

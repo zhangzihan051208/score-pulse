@@ -12,6 +12,8 @@ import {
   presentTeam,
 } from "../src/lib/reputation/catalog";
 import type { ReputationCard } from "../src/lib/reputation/types";
+import { athletes, events } from "../src/lib/data";
+import { POSITION_PROFILES } from "../src/lib/position-ratings";
 import { SPORTS, type Sport } from "../src/lib/types";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
@@ -175,6 +177,55 @@ const brandDir = join(root, "mobile", "assets");
 mkdirSync(brandDir, { recursive: true });
 copyFileSync(join(root, "public", "brand-mark.jpg"), join(brandDir, "brand-mark.jpg"));
 
+function pair(value: { zh?: string; en?: string } | undefined) {
+  return { zh: value?.zh ?? "", en: value?.en ?? "" };
+}
+
+const slimEvents = events.map((event) => ({
+  id: event.id,
+  slug: event.slug,
+  sport: event.sport,
+  leagueSlug: event.leagueSlug ?? null,
+  title: pair(event.title),
+  subtitle: pair(event.subtitle),
+  venue: pair(event.venue),
+  summary: pair(event.summary),
+  startAt: event.startAt,
+  status: event.status,
+  home: event.homeTeamName ?? null,
+  away: event.awayTeamName ?? null,
+  homeScore: event.homeScore ?? null,
+  awayScore: event.awayScore ?? null,
+  players: event.performances.map((performance) => {
+    const athlete = event.roster?.[performance.athleteId] ?? athletes[performance.athleteId];
+    return {
+      id: performance.athleteId,
+      name: athlete?.name ?? performance.athleteId,
+      team: athlete?.team ?? "",
+      positionKey: performance.positionKey,
+      role: pair(performance.role),
+      result: pair(performance.result),
+      highlight: pair(performance.highlight),
+      stats: performance.stats.map((stat) => ({ label: pair(stat.label), value: stat.value })),
+      scores: performance.communityAvg,
+      count: performance.ratingCount,
+    };
+  }),
+}));
+
+writeFileSync(join(outDir, "events.json"), JSON.stringify(slimEvents));
+writeFileSync(
+  join(outDir, "weights.json"),
+  JSON.stringify(
+    Object.fromEntries(
+      Object.entries(POSITION_PROFILES).map(([key, profile]) => [
+        key,
+        { dimensions: profile.dimensions, weights: profile.weights },
+      ]),
+    ),
+  ),
+);
+
 console.log(
-  `people ${Object.keys(people).length} teams ${Object.keys(teams).length} photos ${photos.size}`,
+  `people ${Object.keys(people).length} teams ${Object.keys(teams).length} photos ${photos.size} events ${slimEvents.length}`,
 );

@@ -10,35 +10,31 @@
 
 中文（80 字以内）：
 
-七个项目的现役、球队和名宿评分榜。按位置看名次，点进球员和阵容。名单在手机里，不用注册。
+比赛、评分榜、专区和主队，按手机比例排好。底部留着广告位。
 
 English (80 characters):
 
-Honor boards for seven sports. Rank by role, open a player or a squad. No account.
+Matches, boards, zones, and your clubs, at phone size. Ad space reserved.
 
 ## 完整说明
 
 中文：
 
-看台把评分榜放进手机。NBA、足球、电竞、NFL、F1、网球、UFC，每个项目都有现役榜、球队榜和名宿榜。足球、篮球、美式橄榄球和 UFC 还可以按位置再排一次，名次会在这个位置里从 1 重新数。
+看台把网页上的看台收成手机比例。首页有比赛、主队和热门球员。NBA、足球、电竞、NFL、F1、网球、UFC 都有现役榜、球队榜和名宿榜，能按位置再排。比赛帖可以给上场的人打五维分，也可以把两个人放在一起比。搜索、评分专区、我的主队、动态和说明都在。
 
-点开一个人，能看到评分、历史荣誉、五维和几条评论。点开一支球队，能看到荣誉、五维和阵容；阵容里有评分的球员会标出那个数字。
-
-这个版本不登录、不看赛程、也不给当场比赛打分。那些仍在网站上。应用不读取通讯录，不投放广告，不接入统计。
+屏幕底部留着广告位，和网页上的是同一块位置。这一版只留空位，没有接入广告 SDK，不读取通讯录。
 
 English:
 
-Grandstand puts the honor boards on your phone. NBA, soccer, esports, NFL, F1, tennis, and UFC each have an active list, a club list, and a legends list. Soccer, basketball, American football, and UFC can be ranked again by role, and the places restart at 1 inside that role.
+Grandstand on a phone: matches, clubs, and the players people are talking about. NBA, soccer, esports, NFL, F1, tennis, and UFC each have active, club, and legend boards, and the bigger sports can be ranked again by role. Open a match to grade five axes or compare two players. Search, DIY zones, your clubs, a feed, and the rules are included.
 
-Open a person for the rating, honors, five axes, and a few comments. Open a club for its honors, axes, and squad. Players who carry a published rating show that number on the squad.
-
-This version does not sign you in, list fixtures, or grade a live match. That stays on the website. The app does not read contacts, show ads, or include an analytics SDK.
+A banner is reserved at the bottom of the app and under the header on the web. This version leaves that space empty. It does not include an ad SDK and does not read contacts.
 
 ## 新功能
 
-中文：评分榜上架。七个项目，按位置筛选，球员页和球队阵容可离线查看。
+中文：和网页同一套功能的手机比例：比赛帖、五维评分、对比、专区、主队，以及三端广告位。
 
-English: Honor boards for seven sports, role filters, player pages, and club squads, all offline.
+English: Phone-scale parity with the site: matches, five-axis grades, comparisons, zones, clubs, and a shared ad slot.
 
 ## 隐私政策
 
@@ -46,17 +42,17 @@ English: Honor boards for seven sports, role filters, player pages, and club squ
 
 中文：
 
-看台的应用版把评分榜放在你的手机里。这个版本不注册账号，不上传通讯录，不投放广告，也不接入统计 SDK。名单、评分和头像都随安装包一起提供。系统可能记录应用崩溃日志，那部分由 Google Play 或 App Store 按它们自己的政策处理。
+看台在 iOS、Android 和网页留出同一块广告位。这一版只留空位，没有接入广告 SDK，不会因广告读取设备标识。比赛样例、评分榜和头像在安装包里。登录名、主队、评分和专区保存在这台设备上，不上传通讯录。系统崩溃日志由 Google Play 或 App Store 按它们自己的政策处理。
 
 English:
 
-The Grandstand app keeps the honor boards on your phone. This version has no account, no contact upload, no ads, and no analytics SDK. Rosters, ratings, and portraits ship inside the install. The store may keep crash logs under its own policy.
+Grandstand reserves the same ad space on iOS, Android, and the web. This build leaves the space empty and does not include an ad SDK, so ads do not read a device id. Sample matches, boards, and portraits ship in the install. Your name, clubs, ratings, and zones stay on this device. The store may keep crash logs under its own policy.
 
 ## 数据安全（Play Console）
 
-- 不收集用户数据，不共享数据。
-- 无账号，无广告 ID，无定位，无通讯录。
-- 应用内评论是随包附带的文字，用户不能在这个版本里发帖。
+- 不向开发者服务器上传数据。登录名、评分、主队和专区只存在这台设备上。
+- 广告位为空，未接入广告 ID，无定位，无通讯录。
+- 用户可以在本机写评论。带联系方式或导流的专区评论会先待审核，不会公开。
 
 ## 提交前你需要自己准备
 

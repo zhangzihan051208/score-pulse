@@ -45,7 +45,7 @@ Save **Secrets** in the Secrets tab separately (names like `PANDASCORE_API_TOKEN
 
 ## Phone apps
 
-The Google Play and App Store client lives in `mobile/`. It ships the honor boards (sport, role, player, club) on the device. See `mobile/README.md` for local runs and store builds.
+The phone client lives in `mobile/`. It follows the website at phone scale: matches, boards, zones, clubs, grading, and search. iOS, Android, and the website each keep an empty ad slot. See `mobile/README.md`.
 
 ## What you get
 

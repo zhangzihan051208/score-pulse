@@ -3,6 +3,7 @@ import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { Avatar } from "../components/Avatar";
 import { Radar } from "../components/Radar";
 import { dimLabel, formatScore, roleLabel, team } from "../catalog";
+import { eventsForTeam, pairText } from "../events";
 import { useLocale } from "../i18n";
 import type { RootStackParamList } from "../navigation";
 
@@ -40,6 +41,14 @@ export function TeamScreen({
         <View key={take.zh} style={styles.take}>
           <Text style={styles.body}>{locale === "zh" ? take.zh : take.en}</Text>
         </View>
+      ))}
+
+      <Text style={styles.section}>{t.schedule}</Text>
+      {eventsForTeam(card.name).length === 0 ? <Text style={styles.sub}>{t.scheduleEmpty}</Text> : null}
+      {eventsForTeam(card.name).map((event) => (
+        <Pressable key={event.slug} style={styles.row} onPress={() => navigation.navigate("Event", { slug: event.slug })}>
+          <Text style={styles.member}>{pairText(locale, event.title)}</Text>
+        </Pressable>
       ))}
 
       <Text style={styles.section}>{t.roster}</Text>

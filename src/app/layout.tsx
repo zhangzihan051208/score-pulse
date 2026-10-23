@@ -3,6 +3,7 @@ import { Inter, Plus_Jakarta_Sans } from "next/font/google";
 import { LocaleBody } from "@/components/locale-body";
 import { DegradedBanner } from "@/components/degraded-banner";
 import { NavigationProgress } from "@/components/navigation-progress";
+import { AdSlot } from "@/components/ad-slot";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { ClientChromeExtras } from "@/components/client-chrome-extras";
@@ -41,6 +42,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           <NavigationProgress />
           <DegradedBanner />
           <SiteHeader />
+          <AdSlot />
           <ClientChromeExtras />
           <main className="flex-1">
             <LocaleBody>{children}</LocaleBody>

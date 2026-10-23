@@ -1,12 +1,13 @@
-import { ScrollView, StyleSheet, Text, View } from "react-native";
+import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { Avatar } from "../components/Avatar";
 import { Radar } from "../components/Radar";
 import { dimLabel, formatScore, person, roleLabel } from "../catalog";
+import { eventsForAthlete, pairText } from "../events";
 import { useLocale } from "../i18n";
 import type { RootStackParamList } from "../navigation";
 
-export function PlayerScreen({ route }: NativeStackScreenProps<RootStackParamList, "Player">) {
+export function PlayerScreen({ route, navigation }: NativeStackScreenProps<RootStackParamList, "Player">) {
   const { sport, id } = route.params;
   const { locale, t } = useLocale();
   const card = person(sport, id);
@@ -42,6 +43,14 @@ export function PlayerScreen({ route }: NativeStackScreenProps<RootStackParamLis
         <Text style={styles.section}>{t.axes}</Text>
         <Radar labels={labels} values={values} />
       </View>
+
+      <Text style={styles.section}>{t.schedule}</Text>
+      {eventsForAthlete(card.id).length === 0 ? <Text style={styles.sub}>{t.scheduleEmpty}</Text> : null}
+      {eventsForAthlete(card.id).map((event) => (
+        <Pressable key={event.slug} style={styles.take} onPress={() => navigation.navigate("Event", { slug: event.slug })}>
+          <Text style={styles.body}>{pairText(locale, event.title)}</Text>
+        </Pressable>
+      ))}
 
       <Text style={styles.section}>{t.comments}</Text>
       {card.takes.map((take) => (
