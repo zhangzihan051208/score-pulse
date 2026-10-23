@@ -41,6 +41,7 @@ export function useProfile() {
     avatarUrl?: string | null;
     bio?: string | null;
     favoriteTeams?: FavoriteTeamsMap;
+    completeOnboarding?: boolean;
   }) {
     if (!cloud || !user) return { ok: false as const, error: "Not signed in" };
     const res = await fetch("/api/profile", {

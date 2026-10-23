@@ -57,6 +57,7 @@ export type UserProfile = {
   favoriteTeams: FavoriteTeamsMap;
   vipUntil: string | null;
   isVip: boolean;
+  onboardingCompletedAt: string | null;
   updatedAt: string | null;
 };
 

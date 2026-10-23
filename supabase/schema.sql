@@ -7,6 +7,7 @@ create table if not exists public.profiles (
   bio text,
   favorite_teams jsonb not null default '{}'::jsonb,
   vip_until timestamptz,
+  onboarding_completed_at timestamptz,
   updated_at timestamptz not null default now()
 );
 

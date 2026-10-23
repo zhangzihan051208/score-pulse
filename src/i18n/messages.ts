@@ -133,6 +133,22 @@ type Dict = {
     allFixtures: string;
     noFixturesYet: string;
   };
+  onboarding: {
+    kicker: string;
+    title: string;
+    welcomeLead: string;
+    welcomeBullets: string[];
+    teamsLead: string;
+    leagueSkipped: string;
+    skipTeams: string;
+    next: string;
+    back: string;
+    finish: string;
+    ratingsTitle: string;
+    ratingsBullets: string[];
+    zonesTitle: string;
+    zonesBullets: string[];
+  };
   profile: {
     title: string;
     lead: string;
@@ -453,7 +469,7 @@ const en: Dict = {
     },
     teams: {
       title: "My teams",
-      lead: "Pick a primary and secondary team in each league board. Home prioritizes your primary team's matches.",
+      lead: "Turn on only the league boards you follow, then pick primary and secondary teams. Skip the rest — home still works.",
       primary: "Primary team",
       secondary: "Secondary team",
       searchPlaceholder: "Search club name…",
@@ -470,6 +486,38 @@ const en: Dict = {
       manage: "Manage teams",
       allFixtures: "All fixtures",
       noFixturesYet: "No synced matches for your teams yet — try syncing fixtures.",
+    },
+    onboarding: {
+      kicker: "Welcome",
+      title: "Set up your Grandstand",
+      welcomeLead:
+        "Thanks for joining. A quick tour: optional favorite teams, how player ratings work, and DIY rating zones.",
+      welcomeBullets: [
+        "Favorite teams are optional and per league board — only enable partitions you care about.",
+        "Ratings sync to the cloud when you are signed in.",
+        "DIY zones are separate boards for food, products, and anything you want fans to rank.",
+      ],
+      teamsLead:
+        "Check a league to follow it, then search for your primary and secondary club. Unchecked leagues stay out of your home feed priority.",
+      leagueSkipped: "Not following this league — you can turn it on anytime under My teams.",
+      skipTeams: "Skip for now",
+      next: "Next",
+      back: "Back",
+      finish: "Start browsing",
+      ratingsTitle: "Player rating rules",
+      ratingsBullets: [
+        "Open a match thread, pick a player, and rate on five axes that change by sport and position.",
+        "Overall score uses role weights for that position — not a flat average of the five sliders.",
+        "Free accounts have a daily limit on full five-axis posts; overall-only is always available. VIP removes the cap and doubles weight in community averages.",
+        "Comments and ratings can be hidden automatically if they look like spam, ads, or unsafe content.",
+      ],
+      zonesTitle: "DIY zone rules",
+      zonesBullets: [
+        "Anyone signed in can create a zone: pick a category, name 3–5 custom axes, and list items with HTTPS photo URLs.",
+        "Heat ranks zones and items from ratings plus approved comments — more activity climbs the board.",
+        "Comments in zones run through the same automatic moderation as sports threads; blocked posts never publish.",
+        "Manage your zones from the zone page or your profile under My DIY zones.",
+      ],
     },
     profile: {
       title: "Your profile",
@@ -895,7 +943,7 @@ export const messages: Record<Locale, Dict> = {
     },
     teams: {
       title: "我的主队",
-      lead: "每个联赛分区可设一支主队、一支副队。首页优先展示主队比赛。",
+      lead: "只勾选你关注的联赛分区，再设主/副队；不看的分区可跳过，首页仍会正常展示。",
       primary: "主队",
       secondary: "副队",
       searchPlaceholder: "搜索球队…",
@@ -912,6 +960,37 @@ export const messages: Record<Locale, Dict> = {
       manage: "管理主队",
       allFixtures: "全部赛程",
       noFixturesYet: "还没有主队的同步比赛，请先同步赛程。",
+    },
+    onboarding: {
+      kicker: "欢迎",
+      title: "欢迎来到看台",
+      welcomeLead: "注册成功！下面快速说明：可选主队、球员评分规则，以及 DIY 自定义专区。",
+      welcomeBullets: [
+        "主队按联赛分区设置，只勾选你感兴趣的分区即可，不必每个联赛都填。",
+        "登录后提交的评分会同步到云端，可在个人主页查看记录。",
+        "DIY 专区是独立榜单（美食、好物等），与体育赛事分区互不冲突。",
+      ],
+      teamsLead:
+        "勾选要跟进的联赛，再搜索设置主队/副队。未勾选的分区不会参与首页「主队优先」排序。",
+      leagueSkipped: "未关注该联赛 — 随时可在「我的主队」里打开。",
+      skipTeams: "暂时跳过",
+      next: "下一步",
+      back: "上一步",
+      finish: "开始逛看台",
+      ratingsTitle: "球员评分规则",
+      ratingsBullets: [
+        "进入比赛帖 → 选择球员 → 按该项目与位置的五个维度打分。",
+        "总分按该位置的权重计算，不是五个滑杆的简单平均。",
+        "非 VIP 每日五维详评有次数上限；「仅总分」不限。VIP 五维不限且社区均分权重 ×2。",
+        "评论与评分若命中广告、违禁词或不良内容，会自动拦截，不会公开显示。",
+      ],
+      zonesTitle: "自定义专区规则",
+      zonesBullets: [
+        "登录后可创建专区：选分类、自定义 3–5 个评分维度，用 HTTPS 图片链接添加条目。",
+        "热度来自评分与通过审核的评论，用于专区与条目排行榜。",
+        "专区评论同样走自动审核，与体育帖一致。",
+        "可在专区页或个人主页「我的 DIY 专区」查看与管理。",
+      ],
     },
     profile: {
       title: "个人主页",
@@ -1326,7 +1405,7 @@ export const messages: Record<Locale, Dict> = {
     },
     teams: {
       title: "Mis equipos",
-      lead: "Elige equipo principal y secundario por liga. Inicio prioriza al principal.",
+      lead: "Activa solo las ligas que sigues y elige equipos principal y secundario. Omite el resto.",
       primary: "Principal",
       secondary: "Secundario",
       searchPlaceholder: "Buscar club…",
@@ -1343,6 +1422,38 @@ export const messages: Record<Locale, Dict> = {
       manage: "Gestionar",
       allFixtures: "Todos los partidos",
       noFixturesYet: "Aún no hay partidos sincronizados para tus equipos.",
+    },
+    onboarding: {
+      kicker: "Bienvenida",
+      title: "Configura Grandstand",
+      welcomeLead:
+        "Gracias por unirte. Equipos opcionales, reglas de notas y zonas DIY en un minuto.",
+      welcomeBullets: [
+        "Equipos favoritos son opcionales por liga — activa solo las que te interesan.",
+        "Las notas se guardan en la nube con sesión iniciada.",
+        "Las zonas DIY son tablones aparte (comida, productos, etc.).",
+      ],
+      teamsLead:
+        "Marca una liga para seguirla y busca tu club principal y secundario. Las demás no afectan tu inicio.",
+      leagueSkipped: "No sigues esta liga — puedes activarla en Mis equipos.",
+      skipTeams: "Omitir por ahora",
+      next: "Siguiente",
+      back: "Atrás",
+      finish: "Empezar",
+      ratingsTitle: "Reglas de notas a jugadores",
+      ratingsBullets: [
+        "En un hilo de partido, elige jugador y puntúa cinco ejes según deporte y posición.",
+        "El total usa pesos del rol, no un promedio plano.",
+        "Cuenta gratis: límite diario de notas completas; solo total sin límite. VIP: ilimitado y peso ×2.",
+        "Comentarios con spam o contenido inseguro se bloquean automáticamente.",
+      ],
+      zonesTitle: "Reglas de zonas DIY",
+      zonesBullets: [
+        "Crea una zona con categoría, 3–5 ejes y items con URL HTTPS de foto.",
+        "El heat sube con notas y comentarios aprobados.",
+        "Misma moderación automática que en deportes.",
+        "Gestiona desde la zona o tu perfil (Mis zonas DIY).",
+      ],
     },
     profile: {
       title: "Tu perfil",
@@ -1759,7 +1870,7 @@ export const messages: Record<Locale, Dict> = {
     },
     teams: {
       title: "マイチーム",
-      lead: "リーグごとに主・副チームを設定。ホームで主チームの試合を優先表示。",
+      lead: "フォローするリーグだけオンにして主・副チームを設定。他はスキップで OK。",
       primary: "主チーム",
       secondary: "副チーム",
       searchPlaceholder: "クラブを検索…",
@@ -1776,6 +1887,37 @@ export const messages: Record<Locale, Dict> = {
       manage: "管理",
       allFixtures: "全試合",
       noFixturesYet: "主チームの同期試合がまだありません。",
+    },
+    onboarding: {
+      kicker: "ようこそ",
+      title: "Grandstand をセットアップ",
+      welcomeLead: "登録ありがとうございます。主チーム（任意）・採点ルール・DIY ゾーンをご案内します。",
+      welcomeBullets: [
+        "主チームはリーグごと。興味のある分区だけオンにしてください。",
+        "ログイン中の採点はクラウドに保存されます。",
+        "DIY ゾーンはグルメや商品など別ボードです。",
+      ],
+      teamsLead:
+        "フォローするリーグにチェックを入れ、主・副チームを検索。オフのリーグはホーム優先対象外です。",
+      leagueSkipped: "このリーグは未フォロー — 「マイチーム」でいつでもオンにできます。",
+      skipTeams: "あとで",
+      next: "次へ",
+      back: "戻る",
+      finish: "始める",
+      ratingsTitle: "選手採点ルール",
+      ratingsBullets: [
+        "試合スレッドで選手を選び、種目・ポジションに合わせた五軸で採点。",
+        "総合点はポジションの重み付き — 五つの単純平均ではありません。",
+        "無料は五軸の1日上限あり。総合のみは無制限。VIP は五軸無制限・平均で2倍。",
+        "スパムや不適切な内容は自動でブロックされます。",
+      ],
+      zonesTitle: "DIY ゾーンルール",
+      zonesBullets: [
+        "ログイン後、カテゴリと3〜5軸を決め、HTTPS 画像 URL でエントリを追加。",
+        "ヒートは採点と承認コメントで上がりランキングに反映。",
+        "スポーツスレッドと同じ自動モデレーション。",
+        "ゾーンページまたはプロフィールの「マイ DIY ゾーン」で管理。",
+      ],
     },
     profile: {
       title: "プロフィール",

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { TeamPicker } from "@/components/team-picker";
+import { FavoritePartitionEditors } from "@/components/favorite-partition-editors";
 import { useFavoriteTeams } from "@/hooks/use-favorite-teams";
 import { useI18n } from "@/i18n/use-i18n";
 import { leagueLabel } from "@/i18n/league-labels";
@@ -10,7 +10,6 @@ import {
   favoritePartitions,
   partitionToPath,
 } from "@/lib/favorite-teams";
-import type { FavoritePair } from "@/lib/types";
 
 export function MyTeamsPageInner() {
   const { locale, t } = useI18n();
@@ -55,7 +54,7 @@ export function MyTeamsPageInner() {
                   </Link>
                 ) : null}
               </div>
-              <PartitionEditors
+              <FavoritePartitionEditors
                 pair={pair}
                 sport={league.sport === "nba" ? "nba" : "soccer"}
                 leagueSlug={leagueSlug}
@@ -74,49 +73,6 @@ export function MyTeamsPageInner() {
       ) : null}
 
       <p className="mt-4 text-xs text-muted-foreground">{t.teams.localHint}</p>
-    </div>
-  );
-}
-
-function PartitionEditors({
-  pair,
-  sport,
-  leagueSlug,
-  onChange,
-}: {
-  pair: FavoritePair;
-  sport: "nba" | "soccer";
-  leagueSlug?: string;
-  onChange: (pair: FavoritePair | null) => void;
-}) {
-  const { t } = useI18n();
-
-  return (
-    <div className="grid gap-4 sm:grid-cols-2">
-      <TeamPicker
-        label={t.teams.primary}
-        value={pair.primary}
-        sport={sport}
-        leagueSlug={leagueSlug}
-        onSelect={(team) => onChange({ ...pair, primary: team })}
-        onClear={() => {
-          const next = { ...pair };
-          delete next.primary;
-          onChange(next.primary || next.secondary ? next : null);
-        }}
-      />
-      <TeamPicker
-        label={t.teams.secondary}
-        value={pair.secondary}
-        sport={sport}
-        leagueSlug={leagueSlug}
-        onSelect={(team) => onChange({ ...pair, secondary: team })}
-        onClear={() => {
-          const next = { ...pair };
-          delete next.secondary;
-          onChange(next.primary || next.secondary ? next : null);
-        }}
-      />
     </div>
   );
 }

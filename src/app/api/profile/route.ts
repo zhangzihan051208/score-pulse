@@ -11,6 +11,7 @@ function rowToProfile(row: {
   bio: string | null;
   favorite_teams?: unknown;
   vip_until?: string | null;
+  onboarding_completed_at?: string | null;
   updated_at: string;
 }) {
   const vipUntil = row.vip_until ?? null;
@@ -22,6 +23,7 @@ function rowToProfile(row: {
     favoriteTeams: normalizeFavorites(row.favorite_teams),
     vipUntil,
     isVip: isVipActive(vipUntil),
+    onboardingCompletedAt: row.onboarding_completed_at ?? null,
     updatedAt: row.updated_at,
   };
 }
@@ -42,7 +44,9 @@ export async function GET() {
 
   const { data, error } = await supabase
     .from("profiles")
-    .select("id, display_name, avatar_url, bio, favorite_teams, vip_until, updated_at")
+    .select(
+      "id, display_name, avatar_url, bio, favorite_teams, vip_until, onboarding_completed_at, updated_at",
+    )
     .eq("id", user.id)
     .maybeSingle();
 
@@ -63,6 +67,7 @@ export async function GET() {
         favoriteTeams: {},
         vipUntil: null,
         isVip: false,
+        onboardingCompletedAt: null,
         updatedAt: null,
       },
     });
@@ -76,6 +81,7 @@ type PatchBody = {
   avatarUrl?: string | null;
   bio?: string | null;
   favoriteTeams?: Record<string, unknown>;
+  completeOnboarding?: boolean;
 };
 
 export async function PATCH(request: Request) {
@@ -126,11 +132,16 @@ export async function PATCH(request: Request) {
   if (body.favoriteTeams !== undefined) {
     patch.favorite_teams = normalizeFavorites(body.favoriteTeams);
   }
+  if (body.completeOnboarding === true) {
+    patch.onboarding_completed_at = new Date().toISOString();
+  }
 
   const { data, error } = await supabase
     .from("profiles")
     .upsert({ id: user.id, ...patch })
-    .select("id, display_name, avatar_url, bio, favorite_teams, vip_until, updated_at")
+    .select(
+      "id, display_name, avatar_url, bio, favorite_teams, vip_until, onboarding_completed_at, updated_at",
+    )
     .single();
 
   if (error) {

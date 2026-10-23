@@ -135,6 +135,38 @@ export const deOverrides = {
     allFixtures: "Alle Spiele",
     noFixturesYet: "Noch keine synchronisierten Spiele für deine Teams.",
   },
+  onboarding: {
+    kicker: "Willkommen",
+    title: "Grandstand einrichten",
+    welcomeLead:
+      "Kurzüberblick: optionale Teams, Spielerbewertungen und DIY-Zonen.",
+    welcomeBullets: [
+      "Teams sind pro Liga optional — nur Bereiche aktivieren, die dich interessieren.",
+      "Bewertungen landen in der Cloud, wenn du angemeldet bist.",
+      "DIY-Zonen sind eigene Boards (Essen, Produkte, …).",
+    ],
+    teamsLead:
+      "Liga ankreuzen, dann Haupt- und Zweitverein suchen. Ausgeschaltete Ligen beeinflussen die Startseite nicht.",
+    leagueSkipped: "Diese Liga nicht aktiv — jederzeit unter Meine Teams einschalten.",
+    skipTeams: "Später",
+    next: "Weiter",
+    back: "Zurück",
+    finish: "Loslegen",
+    ratingsTitle: "Spielerbewertungen",
+    ratingsBullets: [
+      "Im Spielthread Spieler wählen, fünf achsenspezifische Noten je Sport/Position.",
+      "Gesamtnote mit Rollengewichten — kein flacher Mittelwert.",
+      "Free: Tageslimit für volle Achsen; nur Gesamt unbegrenzt. VIP: unbegrenzt, doppeltes Gewicht.",
+      "Spam und unsichere Inhalte werden automatisch blockiert.",
+    ],
+    zonesTitle: "DIY-Zonen",
+    zonesBullets: [
+      "Zone mit Kategorie, 3–5 Achsen, Einträge mit HTTPS-Foto-URL.",
+      "Heat steigt durch Bewertungen und freigegebene Kommentare.",
+      "Gleiche Auto-Moderation wie im Sport.",
+      "Verwalten auf der Zonen-Seite oder im Profil unter Meine DIY-Zonen.",
+    ],
+  },
   profile: {
     title: "Dein Profil",
     lead: "Name, Avatar und Signatur erscheinen bei Bewertungen und Kommentaren.",
