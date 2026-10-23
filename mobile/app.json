@@ -1,0 +1,32 @@
+{
+  "expo": {
+    "name": "看台",
+    "slug": "grandstand",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "scheme": "grandstand",
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.grandstand.tribune",
+      "buildNumber": "1",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
+    },
+    "android": {
+      "package": "com.grandstand.tribune",
+      "versionCode": 1,
+      "adaptiveIcon": {
+        "backgroundColor": "#12110F",
+        "foregroundImage": "./assets/adaptive-icon.png"
+      },
+      "predictiveBackGestureEnabled": false
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": ["expo-status-bar"]
+  }
+}
