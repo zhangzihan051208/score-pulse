@@ -14,7 +14,7 @@ export type SpotlightPick = {
   merged: NonNullable<ReturnType<typeof mergedAverages>>;
 };
 
-function athleteSide(
+export function athleteSide(
   event: MatchEvent,
   athlete: Athlete,
 ): "home" | "away" | null {

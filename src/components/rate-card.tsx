@@ -9,6 +9,7 @@ import {
 import { mergeTakes } from "@/lib/community-takes";
 import { GradeSlider } from "@/components/grade-slider";
 import { PlayerAvatar } from "@/components/player-avatar";
+import { PlayerCardTabs } from "@/components/player-card-tabs";
 import {
   DimensionChips,
   RatingGuidePanel,
@@ -222,6 +223,8 @@ export function RateCard({
       >
         ← {t.rate.back}
       </Link>
+
+      <PlayerCardTabs slug={event.slug} athleteId={athlete.id} active="card" />
 
       <div className="mt-4 flex gap-4">
         <PlayerAvatar athlete={athlete} size="lg" />

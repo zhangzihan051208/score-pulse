@@ -295,6 +295,23 @@ export type Dict = {
     squadEmpty: string;
     viewPlayer: string;
   };
+  matchup: {
+    tab: string;
+    title: string;
+    lead: string;
+    noCounterpart: string;
+    radarTitle: string;
+    radarHint: string;
+    vs: string;
+    vsLabel: string;
+    you: string;
+    slot: string;
+    allInMatch: string;
+    eventLead: string;
+    viewCompare: string;
+    openHome: string;
+    openAway: string;
+  };
   rate: {
     title: string;
     back: string;

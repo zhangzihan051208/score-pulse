@@ -94,14 +94,11 @@ export function LocaleProvider({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const locale = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
   const [t, setT] = useState<Dict>(en);
-  const [messagesReady, setMessagesReady] = useState(true);
-
   useEffect(() => {
     let cancelled = false;
     void loadMessages(locale).then((dict) => {
       if (!cancelled) {
         setT(dict);
-        setMessagesReady(true);
       }
     });
     return () => {
@@ -122,9 +119,8 @@ export function LocaleProvider({ children }: { children: React.ReactNode }) {
       locale,
       setLocale,
       t,
-      messagesReady,
     }),
-    [locale, setLocale, t, messagesReady],
+    [locale, setLocale, t],
   );
 
   return <I18nContext.Provider value={value}>{children}</I18nContext.Provider>;

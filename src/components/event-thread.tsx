@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { EventMatchupsPanel } from "@/components/event-matchups-panel";
 import { EventRosterColumns } from "@/components/event-roster-columns";
 import { MatchScoreboard } from "@/components/match-scoreboard";
 import { StatusPill } from "@/components/status-pill";
@@ -39,6 +40,7 @@ export function EventThread({ event }: { event: MatchEvent }) {
       </section>
 
       <div className="mx-auto max-w-6xl space-y-3 px-3 py-6">
+        <EventMatchupsPanel event={event} />
         <EventRosterColumns event={event} state={state} />
       </div>
     </div>
