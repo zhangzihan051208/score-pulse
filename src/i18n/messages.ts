@@ -18,6 +18,7 @@ type Dict = {
     guide: string;
     profile: string;
     rankings: string;
+    zones: string;
     search: string;
   };
   search: {
@@ -56,6 +57,50 @@ type Dict = {
     noRatingsYet: string;
     matchFallback: string;
     profileLink: string;
+  };
+  zones: {
+    title: string;
+    lead: string;
+    create: string;
+    createTitle: string;
+    createLead: string;
+    publish: string;
+    allCategories: string;
+    categories: Record<
+      "food" | "drink" | "snack" | "restaurant" | "product" | "custom",
+      string
+    >;
+    empty: string;
+    heat: string;
+    items: string;
+    notFound: string;
+    manage: string;
+    hotItems: string;
+    noItems: string;
+    addItem: string;
+    addItemBtn: string;
+    itemNamePh: string;
+    itemPhotoPh: string;
+    signInToAdd: string;
+    signInToRate: string;
+    rateItem: string;
+    commentPending: string;
+    pending: string;
+    fieldTitle: string;
+    fieldTitlePh: string;
+    fieldCategory: string;
+    fieldDims: string;
+    fieldDimsHint: string;
+    fieldCover: string;
+    fieldDesc: string;
+    moderationTitle: string;
+    moderationLead: string;
+    moderationEmpty: string;
+    approve: string;
+    reject: string;
+    viewItem: string;
+    homeStrip: string;
+    homeStripCta: string;
   };
   rankings: {
     title: string;
@@ -292,7 +337,56 @@ const en: Dict = {
       guide: "Guide",
       profile: "Profile",
       rankings: "Rankings",
+      zones: "Zones",
       search: "Search",
+    },
+    zones: {
+      title: "Rating zones",
+      lead: "Create or browse DIY boards — food, products, and more. Each zone has custom axes; items rank by heat.",
+      create: "Create zone",
+      createTitle: "Launch a rating zone",
+      createLead: "Pick a category, name up to five scoring axes, and start listing items with photos.",
+      publish: "Publish zone",
+      allCategories: "All",
+      categories: {
+        food: "Food",
+        drink: "Drinks",
+        snack: "Snacks",
+        restaurant: "Restaurants",
+        product: "Products",
+        custom: "Custom",
+      },
+      empty: "No zones yet. Be the first to create a food or product board.",
+      heat: "Heat",
+      items: "items",
+      notFound: "Zone not found.",
+      manage: "Moderation queue",
+      hotItems: "Hot rankings",
+      noItems: "No items yet — add the first entry below.",
+      addItem: "List something to rate",
+      addItemBtn: "Add item",
+      itemNamePh: "Name (e.g. spicy chicken sandwich)",
+      itemPhotoPh: "Photo URL (optional)",
+      signInToAdd: "Sign in to add items.",
+      signInToRate: "Sign in to rate and comment.",
+      rateItem: "Your scores",
+      commentPending: "Comment submitted — waiting for zone owner approval.",
+      pending: "Pending review",
+      fieldTitle: "Zone title",
+      fieldTitlePh: "e.g. Office snack rankings",
+      fieldCategory: "Category",
+      fieldDims: "Scoring axes (one per line, 3–5)",
+      fieldDimsHint: "Default food preset shown. Edit labels freely.",
+      fieldCover: "Cover image URL",
+      fieldDesc: "Short description",
+      moderationTitle: "Comment review",
+      moderationLead: "Approve or reject takes in your zone. Approved comments boost item heat.",
+      moderationEmpty: "No comments waiting for review.",
+      approve: "Approve",
+      reject: "Reject",
+      viewItem: "View item",
+      homeStrip: "DIY rating zones",
+      homeStripCta: "Browse hot boards →",
     },
     search: {
       title: "Search",
@@ -669,7 +763,56 @@ export const messages: Record<Locale, Dict> = {
       guide: "手册",
       profile: "我的",
       rankings: "评分榜",
+      zones: "评分专区",
       search: "搜索",
+    },
+    zones: {
+      title: "评分专区",
+      lead: "自建或浏览 DIY 榜单：美食、好物等。每个专区自定义评分项，条目按热度排序推送。",
+      create: "创建专区",
+      createTitle: "上架你的评分区",
+      createLead: "选分类、自定义最多五个评分维度，上传可评分的条目与配图链接。",
+      publish: "发布专区",
+      allCategories: "全部",
+      categories: {
+        food: "美食",
+        drink: "饮品",
+        snack: "零食",
+        restaurant: "餐厅",
+        product: "好物",
+        custom: "自定义",
+      },
+      empty: "还没有专区，来创建第一个美食/好物榜吧。",
+      heat: "热度",
+      items: "条目",
+      notFound: "专区不存在",
+      manage: "评论审核",
+      hotItems: "热度排行",
+      noItems: "还没有条目，在下方添加第一个。",
+      addItem: "上架可评分条目",
+      addItemBtn: "添加",
+      itemNamePh: "名称（如：某某奶茶）",
+      itemPhotoPh: "配图 URL（可选）",
+      signInToAdd: "登录后可添加条目。",
+      signInToRate: "登录后可评分、评论。",
+      rateItem: "你的评分",
+      commentPending: "评论已提交，等待专区主审核。",
+      pending: "待审核",
+      fieldTitle: "专区名称",
+      fieldTitlePh: "如：公司零食榜",
+      fieldCategory: "分类",
+      fieldDims: "评分项（每行一个，3–5 项）",
+      fieldDimsHint: "默认是美食品项，可随意改。",
+      fieldCover: "封面图 URL",
+      fieldDesc: "简介",
+      moderationTitle: "评论审核",
+      moderationLead: "通过或拒绝本专区评论；通过后计入热度。",
+      moderationEmpty: "暂无待审核评论。",
+      approve: "通过",
+      reject: "拒绝",
+      viewItem: "查看条目",
+      homeStrip: "自定义评分专区",
+      homeStripCta: "去看热门专区 →",
     },
     search: {
       title: "搜索",
@@ -1035,7 +1178,56 @@ export const messages: Record<Locale, Dict> = {
       guide: "Guía",
       profile: "Perfil",
       rankings: "Rankings",
+      zones: "Zonas",
       search: "Buscar",
+    },
+    zones: {
+      title: "Zonas de notas",
+      lead: "Tablones DIY — comida, productos y más. Ejes personalizados; ranking por heat.",
+      create: "Crear zona",
+      createTitle: "Abrir una zona",
+      createLead: "Elige categoría, hasta cinco ejes, lista items con foto URL.",
+      publish: "Publicar",
+      allCategories: "Todas",
+      categories: {
+        food: "Comida",
+        drink: "Bebidas",
+        snack: "Snacks",
+        restaurant: "Restaurantes",
+        product: "Productos",
+        custom: "Custom",
+      },
+      empty: "Sin zonas aún.",
+      heat: "Heat",
+      items: "items",
+      notFound: "Zona no encontrada.",
+      manage: "Moderación",
+      hotItems: "Ranking hot",
+      noItems: "Sin items aún.",
+      addItem: "Añadir item",
+      addItemBtn: "Añadir",
+      itemNamePh: "Nombre",
+      itemPhotoPh: "URL foto",
+      signInToAdd: "Inicia sesión para añadir.",
+      signInToRate: "Inicia sesión para votar.",
+      rateItem: "Tus notas",
+      commentPending: "Comentario en revisión.",
+      pending: "Pendiente",
+      fieldTitle: "Título",
+      fieldTitlePh: "ej. Snacks oficina",
+      fieldCategory: "Categoría",
+      fieldDims: "Ejes (uno por línea)",
+      fieldDimsHint: "Preset comida editable.",
+      fieldCover: "URL portada",
+      fieldDesc: "Descripción",
+      moderationTitle: "Revisión",
+      moderationLead: "Aprueba o rechaza comentarios.",
+      moderationEmpty: "Nada pendiente.",
+      approve: "Aprobar",
+      reject: "Rechazar",
+      viewItem: "Ver item",
+      homeStrip: "Zonas DIY",
+      homeStripCta: "Ver hot →",
     },
     search: {
       title: "Buscar",
@@ -1403,7 +1595,56 @@ export const messages: Record<Locale, Dict> = {
       guide: "ガイド",
       profile: "プロフィール",
       rankings: "ランキング",
+      zones: "専区",
       search: "検索",
+    },
+    zones: {
+      title: "採点ゾーン",
+      lead: "食べ物・商品など DIY 板。軸は自由、Heat 順に表示。",
+      create: "ゾーン作成",
+      createTitle: "採点ゾーンを開設",
+      createLead: "カテゴリと最大5軸、画像URL付きエントリを追加。",
+      publish: "公開",
+      allCategories: "すべて",
+      categories: {
+        food: "フード",
+        drink: "ドリンク",
+        snack: "スナック",
+        restaurant: "レストラン",
+        product: "商品",
+        custom: "カスタム",
+      },
+      empty: "まだゾーンがありません。",
+      heat: "Heat",
+      items: "件",
+      notFound: "ゾーンが見つかりません。",
+      manage: "モデレーション",
+      hotItems: "人気ランキング",
+      noItems: "エントリなし",
+      addItem: "エントリ追加",
+      addItemBtn: "追加",
+      itemNamePh: "名前",
+      itemPhotoPh: "画像 URL",
+      signInToAdd: "追加にはログイン",
+      signInToRate: "採点にはログイン",
+      rateItem: "あなたの採点",
+      commentPending: "コメントは承認待ちです。",
+      pending: "審査中",
+      fieldTitle: "ゾーン名",
+      fieldTitlePh: "例：オフィスおやつ",
+      fieldCategory: "カテゴリ",
+      fieldDims: "採点軸（1行1つ）",
+      fieldDimsHint: "フード初期値を編集可。",
+      fieldCover: "カバー URL",
+      fieldDesc: "説明",
+      moderationTitle: "コメント審査",
+      moderationLead: "承認・拒否。承認で Heat 加算。",
+      moderationEmpty: "保留コメントなし",
+      approve: "承認",
+      reject: "拒否",
+      viewItem: "エントリ",
+      homeStrip: "DIY 採点ゾーン",
+      homeStripCta: "人気ゾーン →",
     },
     search: {
       title: "検索",

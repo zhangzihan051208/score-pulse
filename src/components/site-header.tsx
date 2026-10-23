@@ -79,6 +79,12 @@ export function SiteHeader() {
             active={pathname.startsWith("/rankings")}
             className="text-xs sm:text-sm"
           />
+          <NavLink
+            href="/zones"
+            label={t.nav.zones}
+            active={pathname.startsWith("/zones")}
+            className="text-xs sm:text-sm"
+          />
           {SPORTS.map((sport) => {
             const href = `/boards/${sport}`;
             return (

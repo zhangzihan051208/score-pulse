@@ -76,9 +76,20 @@ export function HomeBoards({ initialEvents = [] }: { initialEvents?: MatchEvent[
         </p>
         <p className="relative mt-2 text-xs text-white/45">{t.tagline}</p>
         {syncedAt && (
-          <p className="mt-3 text-xs text-white/50">{t.home.liveSyncHint}</p>
+          <p className="relative mt-3 text-xs text-white/50">{t.home.liveSyncHint}</p>
         )}
       </section>
+
+      <Link
+        href="/zones"
+        className="mt-4 flex items-center justify-between rounded-2xl border border-primary/25 bg-gradient-to-r from-primary/10 to-orange-500/10 px-4 py-3 transition-colors hover:border-primary/40"
+      >
+        <div>
+          <p className="text-sm font-semibold">{t.zones.homeStrip}</p>
+          <p className="text-xs text-muted-foreground">{t.zones.lead}</p>
+        </div>
+        <span className="shrink-0 text-xs font-medium text-primary">{t.zones.homeStripCta}</span>
+      </Link>
 
       <HomeMyTeams events={sortedAll} />
 
