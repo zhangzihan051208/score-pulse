@@ -5,7 +5,7 @@ import { DegradedBanner } from "@/components/degraded-banner";
 import { NavigationProgress } from "@/components/navigation-progress";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
-import { WelcomeOnboardingGate } from "@/components/welcome-onboarding-gate";
+import { ClientChromeExtras } from "@/components/client-chrome-extras";
 import { LocaleProvider } from "@/i18n/locale-provider";
 import "./globals.css";
 
@@ -37,7 +37,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           <NavigationProgress />
           <DegradedBanner />
           <SiteHeader />
-          <WelcomeOnboardingGate />
+          <ClientChromeExtras />
           <main className="flex-1">
             <LocaleBody>{children}</LocaleBody>
           </main>

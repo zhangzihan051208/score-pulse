@@ -4,11 +4,15 @@ import {
   createContext,
   useCallback,
   useContext,
+  useEffect,
   useMemo,
+  useState,
   useSyncExternalStore,
 } from "react";
 import { useRouter } from "next/navigation";
-import { messages } from "./messages";
+import type { Dict } from "@/i18n/dict";
+import en from "@/i18n/catalog/en";
+import { loadMessages } from "@/i18n/load-messages";
 import { LOCALES, type Locale } from "@/lib/types";
 
 const STORAGE_KEY = "sideline-locale";
@@ -17,7 +21,7 @@ const COOKIE_KEY = "sideline-locale";
 type I18nValue = {
   locale: Locale;
   setLocale: (next: Locale) => void;
-  t: (typeof messages)[Locale];
+  t: Dict;
 };
 
 const I18nContext = createContext<I18nValue | null>(null);
@@ -89,6 +93,21 @@ function writeLocale(next: Locale) {
 export function LocaleProvider({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const locale = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
+  const [t, setT] = useState<Dict>(en);
+  const [messagesReady, setMessagesReady] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+    void loadMessages(locale).then((dict) => {
+      if (!cancelled) {
+        setT(dict);
+        setMessagesReady(true);
+      }
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [locale]);
 
   const setLocale = useCallback(
     (next: Locale) => {
@@ -102,9 +121,10 @@ export function LocaleProvider({ children }: { children: React.ReactNode }) {
     () => ({
       locale,
       setLocale,
-      t: messages[locale],
+      t,
+      messagesReady,
     }),
-    [locale, setLocale],
+    [locale, setLocale, t, messagesReady],
   );
 
   return <I18nContext.Provider value={value}>{children}</I18nContext.Provider>;

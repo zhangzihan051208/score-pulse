@@ -1,6 +1,6 @@
-import type { messages } from "@/i18n/messages";
+import type { Dict } from "@/i18n/dict";
 
-type ModerationDict = (typeof messages)["en"]["moderation"];
+type ModerationDict = Dict["moderation"];
 
 const KEY_MAP: Record<string, keyof ModerationDict> = {
   "moderation.blockAd": "blockAd",

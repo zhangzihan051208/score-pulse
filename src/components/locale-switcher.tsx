@@ -1,6 +1,6 @@
 "use client";
 
-import { localeLabels } from "@/i18n/messages";
+import { localeLabels } from "@/i18n/locale-labels";
 import { useI18n } from "@/i18n/use-i18n";
 import { LOCALES, type Locale } from "@/lib/types";
 
