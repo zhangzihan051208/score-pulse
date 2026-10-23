@@ -55,7 +55,7 @@ export function MatchScoreboard({
   size?: "sm" | "md" | "lg";
   className?: string;
   inverted?: boolean;
-  /** Match thread. Score block links here; team names stay separate. */
+  /** Whole board opens this match thread. Only the team name opens the club page. */
   matchHref?: string;
 }) {
   const { t } = useI18n();
@@ -101,43 +101,35 @@ export function MatchScoreboard({
           className="size-7 shrink-0 rounded-sm object-contain"
         />
       ) : null;
-    const row = (
+    const nameNode = href ? (
+      <Link
+        href={href}
+        className="pointer-events-auto relative z-20 max-w-full hover:underline"
+      >
+        {inner}
+      </Link>
+    ) : (
+      inner
+    );
+    return (
       <div
         className={cn(
-          "flex items-center gap-2",
+          "pointer-events-none flex items-center gap-2",
+          nameClass,
           side === "home" ? "justify-end" : "justify-start",
         )}
       >
         {side === "home" ? (
           <>
-            {inner}
+            {nameNode}
             {logo}
           </>
         ) : (
           <>
             {logo}
-            {inner}
+            {nameNode}
           </>
         )}
-      </div>
-    );
-    return (
-      <div className={cn("flex flex-col gap-1", side === "home" ? "items-end" : "items-start")}>
-        <div className={nameClass}>{row}</div>
-        {href ? (
-          <Link
-            href={href}
-            onClick={(e) => e.stopPropagation()}
-            className={cn(
-              "inline-flex max-w-full items-center rounded-md border px-1.5 py-0.5 text-[10px] font-medium leading-none",
-              inverted
-                ? "border-white/25 text-white/80 hover:bg-white/10"
-                : "border-border bg-background text-muted-foreground hover:border-primary/40 hover:text-primary",
-            )}
-          >
-            {t.search.clubPage}
-          </Link>
-        ) : null}
       </div>
     );
   }
@@ -170,43 +162,31 @@ export function MatchScoreboard({
           {event.statusDetail}
         </span>
       ) : null}
-      {matchHref ? (
-        <span className="mt-1 text-[10px] font-semibold tracking-wide text-primary">
-          {t.team.openMatch}
-        </span>
-      ) : null}
     </>
   );
 
   return (
     <div
       className={cn(
-        "grid grid-cols-[1fr_auto_1fr] items-center gap-3",
+        "relative grid grid-cols-[1fr_auto_1fr] items-center gap-3",
         inverted && "text-white [&_.text-muted-foreground]:text-white/65",
         className,
       )}
     >
-      <div className="text-right">
+      {matchHref ? (
+        <Link
+          href={matchHref}
+          aria-label={t.team.openMatch}
+          className="absolute inset-0 z-10 rounded-lg hover:bg-foreground/5"
+        />
+      ) : null}
+      <div className="pointer-events-none relative z-20 text-right">
         <TeamName side="home" name={home} win={homeWin} />
       </div>
-      <div className="flex min-w-[5.5rem] flex-col items-center">
-        {matchHref ? (
-          <Link
-            href={matchHref}
-            className={cn(
-              "flex flex-col items-center rounded-lg border px-3 py-1.5 text-center transition-colors",
-              inverted
-                ? "border-white/30 bg-white/10 hover:bg-white/15"
-                : "border-primary/35 bg-primary/10 hover:bg-primary/15",
-            )}
-          >
-            {scoreBlock}
-          </Link>
-        ) : (
-          <div className="flex flex-col items-center">{scoreBlock}</div>
-        )}
+      <div className="pointer-events-none relative z-20 flex min-w-[5.5rem] flex-col items-center">
+        {scoreBlock}
       </div>
-      <div className="text-left">
+      <div className="pointer-events-none relative z-20 text-left">
         <TeamName side="away" name={away} win={awayWin} />
       </div>
     </div>
