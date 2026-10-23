@@ -80,8 +80,30 @@ export function usePlayerCommunity({
         ? localMine
         : undefined;
 
+  const editorialTakes = useMemo((): CommunityTake[] => {
+    return localComments.flatMap((c) => {
+      if (!c.scores || ("local" in c && c.local)) return [];
+      return [
+        {
+          userId: c.id,
+          author: c.author,
+          body: tx(c.body as Localized, locale),
+          updatedAt: c.createdAt,
+          scores: c.scores,
+          isYou: false as const,
+        },
+      ];
+    });
+  }, [localComments, locale]);
+
   const panelTakes = useMemo((): CommunityTake[] => {
-    if (cloudReads) return remoteTakes;
+    if (cloudReads) {
+      const authors = new Set(remoteTakes.map((row) => row.author));
+      return [
+        ...remoteTakes,
+        ...editorialTakes.filter((row) => !authors.has(row.author)),
+      ];
+    }
     const entry = getUserRating(state, event.id, athlete.id);
     const ratingRows = entry
       ? [
@@ -119,6 +141,7 @@ export function usePlayerCommunity({
   }, [
     athlete.id,
     cloudReads,
+    editorialTakes,
     event.id,
     localComments,
     locale,

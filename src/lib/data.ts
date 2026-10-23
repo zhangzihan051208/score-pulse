@@ -1,4 +1,5 @@
 import { L } from "./copy";
+import { bayernArsenalEvent } from "./featured/bayern-arsenal";
 import type { Athlete, MatchEvent } from "./types";
 
 export { seedComments } from "./seed-comments";
@@ -123,6 +124,7 @@ const pts = (en: string, zh: string, es: string, ja: string, value: string) => (
 });
 
 export const events: MatchEvent[] = [
+  bayernArsenalEvent,
   {
     id: "lal-bos",
     slug: "lakers-celtics",

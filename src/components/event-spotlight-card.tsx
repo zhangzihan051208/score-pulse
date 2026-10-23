@@ -64,8 +64,9 @@ export function EventSpotlightCard({
     [dimIds, takes],
   );
 
-  const avgForRadar =
-    takes.length > 0 && communityAvg ? communityAvg : pick.merged.avg;
+  const takeSample =
+    takes.length > 0 && communityAvg && takes.length * 20 >= pick.merged.count;
+  const avgForRadar = takeSample && communityAvg ? communityAvg : pick.merged.avg;
   const topTake = topEngagementTake(takes, positionKey);
   const dimLabels = dimIds.map((id) => dimLabel(locale, positionKey, id));
 

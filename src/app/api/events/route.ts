@@ -1,3 +1,4 @@
+import { pinBayernArsenal } from "@/lib/featured/bayern-arsenal";
 import { listLiveMatchEvents, refreshLiveFixturesFromTsdb } from "@/lib/fixtures-sync";
 import { cachedLiveMatchEvents } from "@/lib/live-data-cache";
 import { getDegradedMode } from "@/lib/service-degraded";
@@ -30,10 +31,12 @@ export async function GET(request: Request) {
   const limit = Number(searchParams.get("limit") ?? "12");
   const capped = Math.min(limit, 48);
   const readLive = () => listLiveMatchEvents([...sports], capped, league);
-  const events =
+  const loaded =
     liveTick || liveRefreshed
       ? await readLive()
       : await cachedLiveMatchEvents([...sports], capped, league);
+  const events =
+    !sport || sport === "soccer" ? pinBayernArsenal(loaded, league) : loaded;
 
   return NextResponse.json(
     {

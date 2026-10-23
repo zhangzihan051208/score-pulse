@@ -33,7 +33,15 @@ export function athleteSide(
 
 function isStarter(performance: Performance, locale: Locale): boolean {
   const sub = performance.result ? tx(performance.result, locale) : "";
-  return !sub.toLowerCase().includes("substitut") && sub !== "替补";
+  const folded = sub.toLowerCase();
+  if (!folded) return true;
+  return !(
+    folded.includes("substitut") ||
+    folded.includes("suplent") ||
+    folded.includes("ersatz") ||
+    sub.includes("替补") ||
+    sub.includes("途中")
+  );
 }
 
 function pickScore(

@@ -9,6 +9,7 @@ import { useLiveEvents } from "@/hooks/use-live-events";
 import { useI18n } from "@/i18n/use-i18n";
 import { tx } from "@/lib/copy";
 import { eventsBySport, formatWhen } from "@/lib/data";
+import { pinBayernArsenal } from "@/lib/featured/bayern-arsenal";
 import { SPORT_ACCENT } from "@/lib/sports";
 import { EventSpotlightGrid } from "@/components/event-spotlight-card";
 import { LeagueTabs } from "@/components/league-tabs";
@@ -75,11 +76,12 @@ export function BoardPage({
     }));
   }, [esportsGame, esportsList, isEsports]);
 
-  const list = isEsports
+  const rawList = isEsports
     ? esportsFiltered
     : isTsdbLive
       ? tsdbList
       : eventsBySport(sport);
+  const list = sport === "soccer" ? pinBayernArsenal(rawList, leagueSlug) : rawList;
   const loading = isEsports ? esportsLoading : tsdbLoading;
   const showLiveBoard = isTsdbLive || isEsports;
 

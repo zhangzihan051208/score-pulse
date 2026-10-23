@@ -24,6 +24,7 @@ import {
   HOME_LIVE_CHIP_PER_SPORT,
   HOME_MATCH_ROWS_PER_SPORT,
 } from "@/lib/display-limits";
+import { pinBayernArsenal } from "@/lib/featured/bayern-arsenal";
 import { SPORTS, type MatchEvent, type Sport } from "@/lib/types";
 
 const LegacyBoardBlock = dynamic(
@@ -43,10 +44,10 @@ export function HomeBoards({ initialEvents = [] }: { initialEvents?: MatchEvent[
     initialEvents,
   );
   const { favorites, hydrated } = useFavoriteTeams();
-  const sortedAll = useMemo(
-    () => (hydrated ? sortEventsForHome(liveAll, favorites) : liveAll),
-    [favorites, hydrated, liveAll],
-  );
+  const sortedAll = useMemo(() => {
+    const pinned = pinBayernArsenal(liveAll);
+    return hydrated ? sortEventsForHome(pinned, favorites) : pinned;
+  }, [favorites, hydrated, liveAll]);
   const live = sortedAll.filter((e) => e.status === "live");
   const liveChips = useMemo(() => {
     const caps: Partial<Record<Sport, number>> = {};
@@ -142,7 +143,11 @@ export function HomeBoards({ initialEvents = [] }: { initialEvents?: MatchEvent[
               <LiveSportBlock
                 key={sport}
                 sport={sport as "nba" | "soccer"}
-                list={sortedAll.filter((e) => e.sport === sport)}
+                list={
+                  sport === "soccer"
+                    ? pinBayernArsenal(sortedAll.filter((e) => e.sport === sport))
+                    : sortedAll.filter((e) => e.sport === sport)
+                }
                 loading={liveLoading}
               />
             ))
@@ -156,7 +161,7 @@ export function HomeBoards({ initialEvents = [] }: { initialEvents?: MatchEvent[
             {t.home.hot}
           </div>
           <ul>
-            {liveAll
+            {pinBayernArsenal(liveAll)
               .flatMap((event) =>
                 pickEventSpotlights(event, state, locale).map((pick) => ({
                   event,
