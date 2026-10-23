@@ -15,6 +15,7 @@ type Dict = {
     feed: string;
     guide: string;
     profile: string;
+    rankings: string;
     search: string;
   };
   search: {
@@ -39,6 +40,31 @@ type Dict = {
     honorsEmpty: string;
     since: string;
     openMatch: string;
+    squadRankings: string;
+  };
+  player: {
+    hubKicker: string;
+    noTeam: string;
+    careerAvg: string;
+    careerAxes: string;
+    teamRankLink: string;
+    globalRankLink: string;
+    eventRankTitle: string;
+    eventRankHint: string;
+    noRatingsYet: string;
+    matchFallback: string;
+    profileLink: string;
+  };
+  rankings: {
+    title: string;
+    lead: string;
+    scopeGlobal: string;
+    scopeTeam: string;
+    teamSearchPlaceholder: string;
+    applyTeam: string;
+    boardOverall: string;
+    boardDimension: string;
+    empty: string;
   };
   teams: {
     title: string;
@@ -258,6 +284,7 @@ export const messages: Record<Locale, Dict> = {
       feed: "Feed",
       guide: "Guide",
       profile: "Profile",
+      rankings: "Rankings",
       search: "Search",
     },
     search: {
@@ -282,6 +309,31 @@ export const messages: Record<Locale, Dict> = {
       honorsEmpty: "No honours returned for this club (API tier may omit trophies).",
       since: "Since",
       openMatch: "Open match thread",
+      squadRankings: "Squad rating board",
+    },
+    player: {
+      hubKicker: "Player hub",
+      noTeam: "Team not linked yet",
+      careerAvg: "Community average",
+      careerAxes: "Career axis average (VIP-weighted)",
+      teamRankLink: "Squad rankings",
+      globalRankLink: "Sport leaderboard",
+      eventRankTitle: "Per-match ratings",
+      eventRankHint: "Each row is community average for one fixture, sorted high to low.",
+      noRatingsYet: "No community ratings yet — rate this player from a match thread.",
+      matchFallback: "Match",
+      profileLink: "Player hub",
+    },
+    rankings: {
+      title: "Rating boards",
+      lead: "Community scores with VIP weighting. Switch sport, squad, overall vs single axis.",
+      scopeGlobal: "All players",
+      scopeTeam: "By squad",
+      teamSearchPlaceholder: "Club name…",
+      applyTeam: "Apply",
+      boardOverall: "Overall",
+      boardDimension: "By axis",
+      empty: "No ratings in this board yet. Post scores from match threads to populate ranks.",
     },
     teams: {
       title: "My teams",
@@ -598,6 +650,7 @@ export const messages: Record<Locale, Dict> = {
       feed: "动态",
       guide: "手册",
       profile: "我的",
+      rankings: "评分榜",
       search: "搜索",
     },
     search: {
@@ -622,6 +675,31 @@ export const messages: Record<Locale, Dict> = {
       honorsEmpty: "暂无荣誉数据（可能与 API 套餐有关）。",
       since: "成立于",
       openMatch: "进入比赛帖",
+      squadRankings: "全队评分榜",
+    },
+    player: {
+      hubKicker: "选手主页",
+      noTeam: "暂未关联战队",
+      careerAvg: "社区综合均分",
+      careerAxes: "五维生涯均值（含 VIP 权重）",
+      teamRankLink: "本队评分榜",
+      globalRankLink: "分项总榜",
+      eventRankTitle: "单场评分排行",
+      eventRankHint: "每一行是一场比赛的社区均分，从高到低排序。",
+      noRatingsYet: "还没有社区评分，请从比赛帖为 TA 打分。",
+      matchFallback: "比赛",
+      profileLink: "选手主页",
+    },
+    rankings: {
+      title: "评分排行专区",
+      lead: "社区评分（VIP 权重更高）。可切换运动、战队、总榜与单维榜。",
+      scopeGlobal: "全站选手",
+      scopeTeam: "按战队",
+      teamSearchPlaceholder: "输入俱乐部名称…",
+      applyTeam: "确定",
+      boardOverall: "总榜",
+      boardDimension: "分类榜",
+      empty: "该榜单暂无评分，请先在比赛帖提交评分。",
     },
     teams: {
       title: "我的主队",
@@ -930,6 +1008,7 @@ export const messages: Record<Locale, Dict> = {
       feed: "Feed",
       guide: "Guía",
       profile: "Perfil",
+      rankings: "Rankings",
       search: "Buscar",
     },
     search: {
@@ -954,6 +1033,31 @@ export const messages: Record<Locale, Dict> = {
       honorsEmpty: "Sin trofeos en la API para este club.",
       since: "Desde",
       openMatch: "Ver hilo del partido",
+      squadRankings: "Ranking del plantel",
+    },
+    player: {
+      hubKicker: "Ficha del jugador",
+      noTeam: "Equipo no vinculado",
+      careerAvg: "Media comunitaria",
+      careerAxes: "Media por eje (con peso VIP)",
+      teamRankLink: "Ranking del equipo",
+      globalRankLink: "Clasificación del deporte",
+      eventRankTitle: "Notas por partido",
+      eventRankHint: "Cada fila es la media comunitaria de un partido, de mayor a menor.",
+      noRatingsYet: "Sin notas aún — puntúa desde el hilo del partido.",
+      matchFallback: "Partido",
+      profileLink: "Ficha",
+    },
+    rankings: {
+      title: "Tablones de notas",
+      lead: "Puntuaciones comunitarias con peso VIP. Cambia deporte, plantel, global o eje.",
+      scopeGlobal: "Todos",
+      scopeTeam: "Por plantel",
+      teamSearchPlaceholder: "Nombre del club…",
+      applyTeam: "Aplicar",
+      boardOverall: "Global",
+      boardDimension: "Por eje",
+      empty: "Sin datos en este tablón. Publica notas en los partidos.",
     },
     teams: {
       title: "Mis equipos",
@@ -1264,6 +1368,7 @@ export const messages: Record<Locale, Dict> = {
       feed: "フィード",
       guide: "ガイド",
       profile: "プロフィール",
+      rankings: "ランキング",
       search: "検索",
     },
     search: {
@@ -1288,6 +1393,31 @@ export const messages: Record<Locale, Dict> = {
       honorsEmpty: "荣誉データがありません。",
       since: "創設",
       openMatch: "試合スレッドへ",
+      squadRankings: "チーム内ランキング",
+    },
+    player: {
+      hubKicker: "選手ページ",
+      noTeam: "チーム未連携",
+      careerAvg: "コミュニティ平均",
+      careerAxes: "五軸キャリア平均（VIP 加重）",
+      teamRankLink: "チーム内榜",
+      globalRankLink: "種目総合榜",
+      eventRankTitle: "試合別スコア",
+      eventRankHint: "各行は1試合のコミュニティ平均。高い順。",
+      noRatingsYet: "まだ採点がありません。試合スレッドから採点してください。",
+      matchFallback: "試合",
+      profileLink: "選手ページ",
+    },
+    rankings: {
+      title: "採点ランキング",
+      lead: "VIP 加重のコミュニティスコア。種目・チーム・総合／単軸を切替。",
+      scopeGlobal: "全選手",
+      scopeTeam: "チーム別",
+      teamSearchPlaceholder: "クラブ名…",
+      applyTeam: "適用",
+      boardOverall: "総合",
+      boardDimension: "単軸",
+      empty: "この榜にはまだデータがありません。試合から採点を投稿してください。",
     },
     teams: {
       title: "マイチーム",

@@ -14,7 +14,7 @@ import { useI18n } from "@/i18n/use-i18n";
 import { dimLabel } from "@/i18n/position-dims";
 import { tx } from "@/lib/copy";
 import { emptyScores, overallFromScores } from "@/lib/store";
-import { playerRoleSubtitle } from "@/lib/player-meta";
+import { athletePostMeta, playerRoleSubtitle } from "@/lib/player-meta";
 import { dimensionIds } from "@/lib/position-ratings";
 import type { Athlete, MatchEvent, Performance, ScoreMap } from "@/lib/types";
 
@@ -131,6 +131,7 @@ export function PlayerPostCard({
                 scores,
                 comment: body,
                 displayName: name,
+                ...athletePostMeta(event, athlete),
               }),
             });
             if (!res.ok) {

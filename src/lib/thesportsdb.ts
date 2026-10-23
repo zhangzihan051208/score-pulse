@@ -211,6 +211,16 @@ export async function fetchTeamRoster(idTeam: string) {
   return data?.player ?? [];
 }
 
+type PlayerLookupResponse = { players: TsdbLineupPlayer[] | null };
+
+export async function fetchPlayerById(idPlayer: string) {
+  const data = await tsdb<PlayerLookupResponse>(
+    `lookupplayer.php?id=${encodeURIComponent(idPlayer)}`,
+    { optional: true },
+  );
+  return data?.players?.[0] ?? null;
+}
+
 export function mapTsdbStatus(strStatus?: string): "live" | "upcoming" | "ended" {
   const s = (strStatus ?? "").toLowerCase();
   if (s.includes("live") || s.includes("1h") || s.includes("2h") || s.includes("ht"))

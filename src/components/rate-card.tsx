@@ -24,6 +24,8 @@ import { useI18n } from "@/i18n/use-i18n";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 import { tx } from "@/lib/copy";
 import { overallScore } from "@/lib/data";
+import { athletePostMeta } from "@/lib/player-meta";
+import { playerHubHref } from "@/lib/player-routes";
 import { dimLabel, positionRoleLabel } from "@/i18n/position-dims";
 import {
   commentsFor,
@@ -229,6 +231,12 @@ export function RateCard({
           <div className="flex flex-wrap items-start justify-between gap-2">
             <div>
               <h1 className="text-2xl font-bold leading-tight">{athlete.name}</h1>
+              <Link
+                href={playerHubHref(event.sport, athlete.id)}
+                className="text-xs text-primary hover:underline"
+              >
+                {t.player.profileLink}
+              </Link>
               <p className="text-sm text-muted-foreground">
                 {athlete.team ? `${athlete.team} · ` : ""}
                 {tx(performance.role, locale)}
@@ -301,6 +309,7 @@ export function RateCard({
                 overall: overallFromScores(scores, positionKey),
                 comment: body,
                 displayName: name,
+                ...athletePostMeta(event, athlete),
               }),
             });
             if (!res.ok) {

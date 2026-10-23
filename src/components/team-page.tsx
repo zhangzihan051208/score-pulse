@@ -6,6 +6,7 @@ import { MatchScoreboard } from "@/components/match-scoreboard";
 import { PlayerAvatar } from "@/components/player-avatar";
 import { StatusPill } from "@/components/status-pill";
 import { useI18n } from "@/i18n/use-i18n";
+import { playerHubHref } from "@/lib/player-routes";
 import type { TeamHub } from "@/lib/team-hub";
 import type { MatchEvent } from "@/lib/types";
 
@@ -87,30 +88,45 @@ export function TeamPageInner({
       ) : null}
 
       <section className="mt-8">
-        <h2 className="text-xs font-semibold tracking-widest text-muted-foreground uppercase">
-          {t.team.roster}
-        </h2>
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <h2 className="text-xs font-semibold tracking-widest text-muted-foreground uppercase">
+            {t.team.roster}
+          </h2>
+          <Link
+            href={`/rankings?sport=${sport}&teamId=${encodeURIComponent(teamId)}`}
+            className="text-xs font-medium text-primary hover:underline"
+          >
+            {t.team.squadRankings}
+          </Link>
+        </div>
         {hub.roster.length === 0 ? (
           <p className="mt-2 text-sm text-muted-foreground">{t.team.rosterEmpty}</p>
         ) : (
           <ul className="mt-3 grid gap-2 sm:grid-cols-2">
             {hub.roster.map((p) => (
-              <li key={p.id} className="flex items-center gap-3 rounded-lg border px-3 py-2">
-                <PlayerAvatar
-                  athlete={{
-                    name: p.name,
-                    shortName: p.name.slice(0, 2),
-                    photoUrl: p.photoUrl,
-                    jerseyNumber: p.number,
-                  }}
-                  size="sm"
-                />
-                <div className="min-w-0">
-                  <p className="truncate font-medium">{p.name}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {[p.number ? `#${p.number}` : null, p.position].filter(Boolean).join(" · ")}
-                  </p>
-                </div>
+              <li key={p.id}>
+                <Link
+                  href={playerHubHref(sport, p.id)}
+                  className="flex items-center gap-3 rounded-lg border px-3 py-2 transition-colors hover:border-primary/40 hover:bg-muted/30"
+                >
+                  <PlayerAvatar
+                    athlete={{
+                      name: p.name,
+                      shortName: p.name.slice(0, 2),
+                      photoUrl: p.photoUrl,
+                      jerseyNumber: p.number,
+                    }}
+                    size="sm"
+                  />
+                  <div className="min-w-0">
+                    <p className="truncate font-medium">{p.name}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {[p.number ? `#${p.number}` : null, p.position]
+                        .filter(Boolean)
+                        .join(" · ")}
+                    </p>
+                  </div>
+                </Link>
               </li>
             ))}
           </ul>

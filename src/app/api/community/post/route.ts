@@ -8,6 +8,7 @@ import {
   scoresFromOverall,
   type RatingMode,
 } from "@/lib/vip";
+import { upsertAthleteProfile } from "@/lib/athlete-profile-server";
 import { createClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 import { NextResponse } from "next/server";
@@ -23,6 +24,10 @@ type Body = {
   overall?: number;
   comment?: string;
   displayName?: string;
+  athleteName?: string;
+  teamId?: string;
+  teamName?: string;
+  photoUrl?: string;
 };
 
 export async function POST(request: Request) {
@@ -136,6 +141,19 @@ export async function POST(request: Request) {
 
   if (ratingError) {
     return NextResponse.json({ error: ratingError.message }, { status: 500 });
+  }
+
+  const athleteLabel = body.athleteName?.trim();
+  if (athleteLabel) {
+    await upsertAthleteProfile(supabase, {
+      sport,
+      athleteId,
+      displayName: athleteLabel,
+      teamId: body.teamId,
+      teamName: body.teamName,
+      photoUrl: body.photoUrl,
+      positionKey: positionKey as PositionKey,
+    });
   }
 
   const { error: deleteError } = await supabase

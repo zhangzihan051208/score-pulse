@@ -14,6 +14,7 @@ import { useI18n } from "@/i18n/use-i18n";
 import { tx } from "@/lib/copy";
 import { overallScore } from "@/lib/data";
 import { playerRoleSubtitle } from "@/lib/player-meta";
+import { playerHubHref } from "@/lib/player-routes";
 import { dimensionIds } from "@/lib/position-ratings";
 import type { Athlete, MatchEvent, Performance } from "@/lib/types";
 
@@ -56,6 +57,12 @@ export function PlayerDetailCard({
           <div className="flex items-start justify-between gap-2">
             <div className="min-w-0 flex-1">
               <h1 className="truncate text-2xl font-bold leading-tight">{athlete.name}</h1>
+              <Link
+                href={playerHubHref(event.sport, athlete.id)}
+                className="text-xs text-primary hover:underline"
+              >
+                {t.player.profileLink}
+              </Link>
               <p
                 className="truncate text-sm text-muted-foreground"
                 title={playerRoleSubtitle(locale, athlete, performance, positionKey)}

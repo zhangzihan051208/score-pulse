@@ -8,6 +8,7 @@ import { MatchScoreboard } from "@/components/match-scoreboard";
 import { StatusPill } from "@/components/status-pill";
 import { Input } from "@/components/ui/input";
 import { useI18n } from "@/i18n/use-i18n";
+import { playerHubHref } from "@/lib/player-routes";
 import { leagueLabel } from "@/i18n/league-labels";
 import { groupTeamsByLeague } from "@/lib/team-league";
 import { tx } from "@/lib/copy";
@@ -193,7 +194,7 @@ export function SearchPageInner() {
             {players.map((p) => (
               <li key={`${p.eventSlug}-${p.athleteId}`}>
                 <Link
-                  href={`/events/${p.eventSlug}/${p.athleteId}`}
+                  href={playerHubHref(p.sport, p.athleteId)}
                   className="flex items-center justify-between rounded-xl border bg-card px-4 py-3 hover:bg-muted/40"
                 >
                   <div>
@@ -203,7 +204,7 @@ export function SearchPageInner() {
                       {p.team ? ` · ${p.team}` : ""} · {p.leagueLabel}
                     </p>
                   </div>
-                  <span className="text-xs font-medium text-primary">{t.home.rate}</span>
+                  <span className="text-xs font-medium text-primary">{t.player.profileLink}</span>
                 </Link>
               </li>
             ))}
