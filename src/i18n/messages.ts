@@ -519,7 +519,8 @@ export const messages: Record<Locale, Dict> = {
       filterAll: "All",
       filterMine: "Mine",
       filterOthers: "Others",
-      radarLegend: "Orange = community avg · Blue = your card",
+      radarLegend:
+        "Spikes vs dimension average (dashed ring = avg). Orange = community · Blue = you",
       allRatings: "Every rating",
       noCommunityYet: "No cloud ratings yet. Sign in and post the first card.",
       noCommentsInFilter: "No comments in this filter.",
@@ -879,7 +880,8 @@ export const messages: Record<Locale, Dict> = {
       filterAll: "全部",
       filterMine: "我的",
       filterOthers: "他人",
-      radarLegend: "橙色 = 社区均分 · 蓝色 = 你的评分",
+      radarLegend:
+        "相对五维均分放大（虚线环 = 均分基准）。橙 = 社区 · 蓝 = 你的评分",
       allRatings: "全部评分卡",
       noCommunityYet: "还没有云端评分，登录后发布第一条。",
       noCommentsInFilter: "该筛选下暂无评论。",
@@ -1239,7 +1241,8 @@ export const messages: Record<Locale, Dict> = {
       filterAll: "Todos",
       filterMine: "Mías",
       filterOthers: "Otros",
-      radarLegend: "Naranja = media · Azul = tu tarjeta",
+      radarLegend:
+        "Picos vs media por eje (anillo = media). Naranja = comunidad · Azul = tú",
       allRatings: "Cada nota",
       noCommunityYet: "Aún no hay notas en la nube.",
       noCommentsInFilter: "Sin comentarios en este filtro.",
@@ -1599,7 +1602,8 @@ export const messages: Record<Locale, Dict> = {
       filterAll: "すべて",
       filterMine: "自分",
       filterOthers: "他人",
-      radarLegend: "橙 = 平均 · 青 = あなた",
+      radarLegend:
+        "五軸平均からの偏差を強調（破線 = 平均）。橙 = コミュニティ · 青 = あなた",
       allRatings: "すべての採点",
       noCommunityYet: "クラウド採点はまだありません。",
       noCommentsInFilter: "このフィルターにコメントはありません。",

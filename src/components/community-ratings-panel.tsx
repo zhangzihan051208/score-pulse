@@ -57,7 +57,7 @@ export function CommunityRatingsPanel({
         label: t.rate.community,
         scores: communityAvg,
         stroke: "oklch(0.58 0.19 38)",
-        fill: "oklch(0.58 0.19 38 / 0.2)",
+        fill: "oklch(0.58 0.19 38 / 0.32)",
       });
     }
     if (mineTake) {
@@ -65,7 +65,7 @@ export function CommunityRatingsPanel({
         label: t.rate.you,
         scores: mineTake.scores,
         stroke: "oklch(0.45 0.12 250)",
-        fill: "oklch(0.45 0.12 250 / 0.25)",
+        fill: "oklch(0.45 0.12 250 / 0.38)",
       });
     }
     return out;
