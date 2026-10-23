@@ -53,6 +53,19 @@ const labels: Record<Locale, Record<string, string>> = {
     "ligue-1": "リーグ1",
     "champions-league": "UCL",
   },
+  de: {
+    nba: "NBA",
+    lol: "LoL",
+    cs2: "CS2",
+    dota2: "Dota 2",
+    valorant: "Valorant",
+    "premier-league": "Premier League",
+    "la-liga": "La Liga",
+    bundesliga: "Bundesliga",
+    "serie-a": "Serie A",
+    "ligue-1": "Ligue 1",
+    "champions-league": "Champions League",
+  },
 };
 
 export function leagueLabel(locale: Locale, slug: string): string {

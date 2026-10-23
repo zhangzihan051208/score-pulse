@@ -42,13 +42,15 @@ function detectLocale(): Locale {
   if (nav.startsWith("zh")) return "zh";
   if (nav.startsWith("ja")) return "ja";
   if (nav.startsWith("es")) return "es";
+  if (nav.startsWith("de")) return "de";
   return "en";
 }
 
 function persist(next: Locale) {
   window.localStorage.setItem(STORAGE_KEY, next);
   document.cookie = `${COOKIE_KEY}=${next};path=/;max-age=31536000;samesite=lax`;
-  document.documentElement.lang = next === "zh" ? "zh-CN" : next;
+  document.documentElement.lang =
+    next === "zh" ? "zh-CN" : next === "de" ? "de" : next;
 }
 
 function emit() {

@@ -9,7 +9,8 @@ export const L = (
   zh: string,
   es: string,
   ja: string,
-): Localized => ({ en, zh, es, ja });
+  de = en,
+): Localized => ({ en, zh, es, ja, de });
 
 /** Same copy in every locale (live API names). */
 export const S = (text: string): Localized => ({
@@ -17,4 +18,5 @@ export const S = (text: string): Localized => ({
   zh: text,
   es: text,
   ja: text,
+  de: text,
 });

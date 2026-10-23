@@ -249,8 +249,9 @@ const zh: DimMap = {
 
 const es: DimMap = JSON.parse(JSON.stringify(en)) as DimMap;
 const ja: DimMap = JSON.parse(JSON.stringify(en)) as DimMap;
+const de: DimMap = JSON.parse(JSON.stringify(en)) as DimMap;
 
-export const positionDimLabels: Record<Locale, DimMap> = { en, zh, es, ja };
+export const positionDimLabels: Record<Locale, DimMap> = { en, zh, es, ja, de };
 
 export const positionRoleLabels: Record<
   Locale,
@@ -312,6 +313,25 @@ export const positionRoleLabels: Record<
     "ufc.striker": "Striking",
     "ufc.grappler": "Grappling",
     "esports.player": "Jugador",
+  },
+  de: {
+    "nba.guard": "Guard",
+    "nba.forward": "Forward",
+    "nba.center": "Center",
+    "soccer.striker": "Stürmer",
+    "soccer.winger": "Flügel",
+    "soccer.midfielder": "Mittelfeld",
+    "soccer.fullback": "Außenverteidiger",
+    "soccer.centerback": "Innenverteidiger",
+    "soccer.keeper": "Torwart",
+    "nfl.quarterback": "Quarterback",
+    "nfl.running_back": "Running Back",
+    "nfl.receiver": "Receiver",
+    "f1.driver": "Fahrer",
+    "tennis.player": "Einzel",
+    "ufc.striker": "Stand",
+    "ufc.grappler": "Boden",
+    "esports.player": "Spieler",
   },
   ja: {
     "nba.guard": "ガード",

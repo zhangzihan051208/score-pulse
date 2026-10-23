@@ -7,6 +7,7 @@ import { PlayerAvatar } from "@/components/player-avatar";
 import { StatusPill } from "@/components/status-pill";
 import { useI18n } from "@/i18n/use-i18n";
 import { playerHubHref } from "@/lib/player-routes";
+import { S } from "@/lib/copy";
 import type { TeamHub } from "@/lib/team-hub";
 import type { MatchEvent } from "@/lib/types";
 
@@ -187,13 +188,13 @@ function TeamEventsSection({
             id: ev.id,
             slug: ev.slug ?? ev.id,
             sport,
-            title: { en: ev.title, zh: ev.title, es: ev.title, ja: ev.title },
-            subtitle: { en: "", zh: "", es: "", ja: "" },
-            venue: { en: "", zh: "", es: "", ja: "" },
+            title: S(ev.title),
+            subtitle: S(""),
+            venue: S(""),
             startAt: ev.date ?? "",
             status: ev.status,
             statusDetail: ev.statusDetail,
-            summary: { en: "", zh: "", es: "", ja: "" },
+            summary: S(""),
             cover: "",
             performances: [],
             homeTeamName: ev.homeTeam,

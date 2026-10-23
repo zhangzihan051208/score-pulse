@@ -42,10 +42,18 @@ export function SiteHeader() {
   const [searchQ, setSearchQ] = useState("");
 
   return (
-    <header className="sticky top-0 z-40 border-b border-white/10 bg-[#141414] text-white">
-      <div className="mx-auto flex h-11 max-w-6xl items-center justify-between gap-3 px-3">
-        <Link href="/" className="shrink-0 text-base font-bold tracking-tight">
-          {t.brand}
+    <header className="sticky top-0 z-40 border-b border-white/10 bg-gradient-to-b from-[#0a0a0d] to-[#121218] text-white shadow-md shadow-black/25 backdrop-blur-md">
+      <div className="mx-auto flex h-12 max-w-6xl items-center justify-between gap-3 px-3 sm:px-4">
+        <Link href="/" className="flex shrink-0 items-center gap-2.5">
+          <span
+            className="flex size-8 items-center justify-center rounded-lg bg-gradient-to-br from-primary to-orange-600 text-sm font-extrabold text-white shadow-sm"
+            aria-hidden
+          >
+            G
+          </span>
+          <span className="font-display text-base font-bold tracking-tight sm:text-lg">
+            {t.brand}
+          </span>
         </Link>
         <div className="flex items-center gap-2">
           <AuthMenu />
@@ -53,7 +61,7 @@ export function SiteHeader() {
         </div>
       </div>
 
-      <div className="mx-auto flex max-w-6xl items-center gap-2 border-t border-white/10 px-3 py-1.5">
+      <div className="mx-auto flex max-w-6xl items-center gap-2 border-t border-white/8 px-3 py-2 sm:px-4">
         <nav
           className="flex min-w-0 shrink gap-0.5 overflow-x-auto [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
           aria-label={t.nav.boards}

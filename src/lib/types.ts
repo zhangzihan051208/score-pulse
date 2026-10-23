@@ -1,4 +1,4 @@
-export const LOCALES = ["en", "zh", "es", "ja"] as const;
+export const LOCALES = ["en", "zh", "es", "ja", "de"] as const;
 export type Locale = (typeof LOCALES)[number];
 
 export type Localized = Record<Locale, string>;

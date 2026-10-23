@@ -1,6 +1,6 @@
-# Sideline
+# Grandstand（看台）
 
-A Hupu-style sports forum for **overseas leagues**. Home opens into boards (NBA, Soccer, **Esports**, NFL, F1, Tennis, UFC). Every board uses the **same rating card**; only the five axes change. English is the default. Chinese, Spanish, and Japanese ship in the language strip.
+A fan tribune for **overseas leagues**. Home opens into boards (NBA, Soccer, **Esports**, NFL, F1, Tennis, UFC). Every board uses the **same rating card**; only the five axes change. English is the default. Chinese, Spanish, Japanese, and **German** ship in the language strip.
 
 ## Run
 

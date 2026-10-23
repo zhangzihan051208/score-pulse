@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Inter, Plus_Jakarta_Sans } from "next/font/google";
 import { LocaleBody } from "@/components/locale-body";
 import { DegradedBanner } from "@/components/degraded-banner";
 import { NavigationProgress } from "@/components/navigation-progress";
@@ -13,18 +13,24 @@ const inter = Inter({
   subsets: ["latin"],
 });
 
+const display = Plus_Jakarta_Sans({
+  variable: "--font-display",
+  subsets: ["latin"],
+  weight: ["600", "700", "800"],
+});
+
 export const metadata: Metadata = {
   title: {
-    default: "Sideline",
-    template: "%s · Sideline",
+    default: "Grandstand",
+    template: "%s · Grandstand",
   },
   description:
-    "Hupu-style sports boards for overseas leagues. Five grades per match, one simple card, four languages.",
+    "Fan tribune for overseas leagues. Five-axis player ratings, community boards, six languages.",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="en" className={`${inter.variable} h-full antialiased`}>
+    <html lang="en" className={`${inter.variable} ${display.variable} h-full antialiased`}>
       <body className="flex min-h-full flex-col bg-background text-foreground">
         <LocaleProvider>
           <NavigationProgress />

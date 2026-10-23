@@ -56,16 +56,25 @@ export function HomeBoards({ initialEvents = [] }: { initialEvents?: MatchEvent[
 
   return (
     <div className="mx-auto max-w-6xl px-3 py-6">
-      <section className="rounded-xl bg-[#141414] px-5 py-8 text-white sm:px-8">
-        <p className="text-xs font-semibold tracking-widest text-primary uppercase">
+      <section className="relative overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-[#0c0c10] via-[#16120e] to-[#101014] px-5 py-10 text-white shadow-xl shadow-black/15 sm:px-10 sm:py-12">
+        <div
+          className="pointer-events-none absolute -right-16 -top-16 size-56 rounded-full bg-primary/25 blur-3xl"
+          aria-hidden
+        />
+        <div
+          className="pointer-events-none absolute -bottom-20 -left-10 size-48 rounded-full bg-orange-600/15 blur-3xl"
+          aria-hidden
+        />
+        <p className="relative text-xs font-semibold tracking-[0.2em] text-primary uppercase">
           {t.home.kicker}
         </p>
-        <h1 className="mt-2 max-w-xl text-3xl font-bold tracking-tight sm:text-4xl">
+        <h1 className="font-display relative mt-3 max-w-xl text-3xl font-bold tracking-tight sm:text-4xl lg:text-[2.65rem] lg:leading-tight">
           {t.home.title}
         </h1>
-        <p className="mt-3 max-w-2xl text-sm leading-6 text-white/70 sm:text-base">
+        <p className="relative mt-4 max-w-2xl text-sm leading-7 text-white/75 sm:text-base">
           {t.home.lead}
         </p>
+        <p className="relative mt-2 text-xs text-white/45">{t.tagline}</p>
         {syncedAt && (
           <p className="mt-3 text-xs text-white/50">{t.home.liveSyncHint}</p>
         )}

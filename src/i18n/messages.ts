@@ -1,3 +1,5 @@
+import { deOverrides } from "@/i18n/de-overrides";
+import { deepMerge } from "@/lib/deep-merge";
 import type { Locale, Sport } from "@/lib/types";
 
 type Dict = {
@@ -273,10 +275,9 @@ type Dict = {
   dims: Record<Sport, Record<string, string>>;
 };
 
-export const messages: Record<Locale, Dict> = {
-  en: {
-    brand: "Sideline",
-    tagline: "Rate the night, not the reputation",
+const en: Dict = {
+  brand: "Grandstand",
+  tagline: "Rate the game, not the highlight reel",
     common: {
       loadingPage: "Loading…",
       loadingSearch: "Searching…",
@@ -379,7 +380,7 @@ export const messages: Record<Locale, Dict> = {
       likesStat: "Likes received",
       crestsTitle: "My teams",
       crestsEmpty: "Set primary teams to show crests here.",
-      vipEntry: "Sideline VIP",
+      vipEntry: "Grandstand VIP",
       vipEntryHint: "Unlimited five-axis ratings · 2× weight in averages",
       ratingsTitle: "Your rating history",
       ratingsHint:
@@ -404,7 +405,7 @@ export const messages: Record<Locale, Dict> = {
       sendReply: "Send",
     },
     vip: {
-      title: "Sideline VIP",
+      title: "Grandstand VIP",
       badge: "VIP",
       member: "VIP member",
       guest: "Free member",
@@ -433,7 +434,7 @@ export const messages: Record<Locale, Dict> = {
       checkEmail: "Check your email to confirm, then sign in.",
       failed: "Something went wrong.",
       notConfigured: "Supabase keys are missing. Add them to .env.local.",
-      signInToPost: "Sign in to post your rating to Sideline cloud.",
+      signInToPost: "Sign in to post your rating to Grandstand cloud.",
     },
     language: "Language",
     sports: {
@@ -458,8 +459,8 @@ export const messages: Record<Locale, Dict> = {
     status: { live: "LIVE", upcoming: "UPCOMING", ended: "FINAL" },
     home: {
       kicker: "International boards",
-      title: "Pick a board. Grade a player.",
-      lead: "Sideline is a Hupu-style sports forum built around one action: five scores for this match, plus a take on what you actually saw. Overseas leagues first.",
+      title: "From the stands — rate the night.",
+      lead: "Grandstand is your fan tribune: five axes per match plus what you actually saw. Overseas leagues first.",
       enter: "Enter board",
       hot: "Hot now",
       boardsTitle: "Boards",
@@ -590,7 +591,7 @@ export const messages: Record<Locale, Dict> = {
         },
       ],
     },
-    footer: "Sideline · Prototype. Ratings stay in your browser. No account required.",
+    footer: "Grandstand · Fan ratings for leagues worldwide. Cloud with sign-in · local without account.",
     notFound: {
       title: "Thread not found",
       body: "This match or player is not on the board.",
@@ -647,10 +648,13 @@ export const messages: Record<Locale, Dict> = {
         composure: "Composure",
       },
     },
-  },
+};
+
+export const messages: Record<Locale, Dict> = {
+  en,
   zh: {
-    brand: "Sideline",
-    tagline: "评这场，而不是评名气",
+    brand: "看台",
+    tagline: "评这一夜，不看名气",
     common: {
       loadingPage: "加载中…",
       loadingSearch: "正在搜索…",
@@ -753,7 +757,7 @@ export const messages: Record<Locale, Dict> = {
       likesStat: "获赞",
       crestsTitle: "我的主队",
       crestsEmpty: "在「我的主队」里设置后会显示队徽。",
-      vipEntry: "Sideline VIP",
+      vipEntry: "看台 VIP",
       vipEntryHint: "五维详评不限次 · 均分权重 ×2",
       ratingsTitle: "我的评分记录",
       ratingsHint:
@@ -778,7 +782,7 @@ export const messages: Record<Locale, Dict> = {
       sendReply: "发送",
     },
     vip: {
-      title: "Sideline VIP",
+      title: "看台 VIP",
       badge: "VIP",
       member: "VIP 会员",
       guest: "普通会员",
@@ -831,8 +835,8 @@ export const messages: Record<Locale, Dict> = {
     status: { live: "进行中", upcoming: "未开赛", ended: "已结束" },
     home: {
       kicker: "海外赛事分区",
-      title: "先选分区，再给球员打分",
-      lead: "Sideline 做成虎扑式看台：首页按 NBA、足球、NFL、F1、网球、UFC 分区。同一套打分卡，五个指标随项目变化。默认面向海外联赛。",
+      title: "看台视角，评这一夜",
+      lead: "看台（Grandstand）是球迷视角的评分社区：每场比赛五维打分，加上你真实看到的。默认面向海外联赛。",
       enter: "进入分区",
       hot: "正在热评",
       boardsTitle: "赛事分区",
@@ -956,7 +960,7 @@ export const messages: Record<Locale, Dict> = {
         },
       ],
     },
-    footer: "Sideline · 原型。评分存在浏览器本地，无需登录。",
+    footer: "看台 Grandstand · 全球联赛球迷评分。登录走云端 · 不登录可本地体验。",
     notFound: {
       title: "帖子不存在",
       body: "这场或这名球员不在分区里。",
@@ -1015,7 +1019,7 @@ export const messages: Record<Locale, Dict> = {
     },
   },
   es: {
-    brand: "Sideline",
+    brand: "Grandstand",
     tagline: "Nota la noche, no la fama",
     common: {
       loadingPage: "Cargando…",
@@ -1119,7 +1123,7 @@ export const messages: Record<Locale, Dict> = {
       likesStat: "Me gusta",
       crestsTitle: "Mis equipos",
       crestsEmpty: "Configura equipos para ver escudos aquí.",
-      vipEntry: "Sideline VIP",
+      vipEntry: "Grandstand VIP",
       vipEntryHint: "Notas de cinco ejes ilimitadas · peso ×2",
       ratingsTitle: "Historial de notas",
       ratingsHint:
@@ -1144,7 +1148,7 @@ export const messages: Record<Locale, Dict> = {
       sendReply: "Enviar",
     },
     vip: {
-      title: "Sideline VIP",
+      title: "Grandstand VIP",
       badge: "VIP",
       member: "Miembro VIP",
       guest: "Miembro gratis",
@@ -1198,7 +1202,7 @@ export const messages: Record<Locale, Dict> = {
     home: {
       kicker: "Tablones internacionales",
       title: "Elige tablón. Puntúa al jugador.",
-      lead: "Sideline es un foro estilo Hupu: primero el deporte, luego cinco notas de este partido y un comentario de lo que viste. Ligas de ultramar primero.",
+      lead: "Grandstand es tu grada: cinco ejes por partido y lo que viste de verdad. Ligas internacionales primero.",
       enter: "Entrar",
       hot: "Ahora",
       boardsTitle: "Tablones",
@@ -1324,7 +1328,7 @@ export const messages: Record<Locale, Dict> = {
         },
       ],
     },
-    footer: "Sideline · Prototipo. Las notas viven en tu navegador.",
+    footer: "Grandstand · Notas de afición. Nube con sesión · local sin cuenta.",
     notFound: {
       title: "Hilo no encontrado",
       body: "Este partido o jugador no está en el tablón.",
@@ -1383,7 +1387,7 @@ export const messages: Record<Locale, Dict> = {
     },
   },
   ja: {
-    brand: "Sideline",
+    brand: "Grandstand",
     tagline: "名声ではなく、この一戦を採点する",
     common: {
       loadingPage: "読み込み中…",
@@ -1487,7 +1491,7 @@ export const messages: Record<Locale, Dict> = {
       likesStat: "いいね",
       crestsTitle: "マイチーム",
       crestsEmpty: "マイチームで設定するとエンブレムが表示されます。",
-      vipEntry: "Sideline VIP",
+      vipEntry: "Grandstand VIP",
       vipEntryHint: "五軸無制限 · 平均で 2 倍の重み",
       ratingsTitle: "採点履歴",
       ratingsHint:
@@ -1512,7 +1516,7 @@ export const messages: Record<Locale, Dict> = {
       sendReply: "送信",
     },
     vip: {
-      title: "Sideline VIP",
+      title: "Grandstand VIP",
       badge: "VIP",
       member: "VIP 会員",
       guest: "無料会員",
@@ -1566,7 +1570,7 @@ export const messages: Record<Locale, Dict> = {
     home: {
       kicker: "海外リーグの板",
       title: "板を選んで、選手を採点する",
-      lead: "Sideline は虎扑型のスポーツ板。NBA・サッカー・NFL・F1・テニス・UFC。同じ採点カードで、五つの軸だけが種目で変わる。海外リーグが主戦場。",
+      lead: "Grandstand はファンのスタンド視点。試合ごとに五軸採点と本当に見たプレイ。海外リーグ中心。",
       enter: "板へ",
       hot: "注目",
       boardsTitle: "板",
@@ -1692,7 +1696,7 @@ export const messages: Record<Locale, Dict> = {
         },
       ],
     },
-    footer: "Sideline · 試作。採点はこのブラウザに保存されます。",
+    footer: "Grandstand · ファン採点コミュニティ。ログインでクラウド · 未ログインはローカル。",
     notFound: {
       title: "スレがありません",
       body: "この試合または選手は板にありません。",
@@ -1750,6 +1754,7 @@ export const messages: Record<Locale, Dict> = {
       },
     },
   },
+  de: deepMerge(en, deOverrides as unknown as Partial<Dict>),
 };
 
 export const localeLabels: Record<Locale, string> = {
@@ -1757,4 +1762,5 @@ export const localeLabels: Record<Locale, string> = {
   zh: "中文",
   es: "Español",
   ja: "日本語",
+  de: "Deutsch",
 };
