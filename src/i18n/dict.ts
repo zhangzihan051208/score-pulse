@@ -42,6 +42,9 @@ export type Dict = {
     since: string;
     openMatch: string;
     squadRankings: string;
+    fiveTitle: string;
+    fiveHint: string;
+    fanTakes: string;
   };
   player: {
     hubKicker: string;
@@ -55,6 +58,8 @@ export type Dict = {
     noRatingsYet: string;
     matchFallback: string;
     profileLink: string;
+    fiveTitle: string;
+    fiveHint: string;
   };
   zones: {
     title: string;
@@ -110,6 +115,14 @@ export type Dict = {
     boardOverall: string;
     boardDimension: string;
     empty: string;
+    hallPlayers: string;
+    hallTeams: string;
+    hallLegends: string;
+    hallCommunity: string;
+    hallAll: string;
+    hallLead: string;
+    blendHint: string;
+    fanTakes: string;
   };
   teams: {
     title: string;

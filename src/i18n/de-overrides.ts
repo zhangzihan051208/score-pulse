@@ -90,6 +90,9 @@ export const deOverrides = {
     since: "Seit",
     openMatch: "Spielthread öffnen",
     squadRankings: "Kader-Rangliste",
+    fiveTitle: "Fünf-Achsen-Gesamt",
+    fiveHint: "Titel setzen die Basis. Jede Spielnote zieht den Schnitt.",
+    fanTakes: "Fan-Stimmen",
   },
   player: {
     hubKicker: "Spielerprofil",
@@ -103,6 +106,8 @@ export const deOverrides = {
     noRatingsYet: "Noch keine Bewertungen — im Spielthread abstimmen.",
     matchFallback: "Spiel",
     profileLink: "Spielerprofil",
+    fiveTitle: "Fünf-Achsen-Gesamt",
+    fiveHint: "Titel setzen die Basis. Jede Spielnote zieht den Schnitt.",
   },
   rankings: {
     title: "Bewertungs-Ranglisten",
@@ -114,6 +119,16 @@ export const deOverrides = {
     boardOverall: "Gesamt",
     boardDimension: "Nach Achse",
     empty: "Noch keine Daten. Bewertungen in Spielthreads posten.",
+    hallPlayers: "Aktive Top 100",
+    hallTeams: "Vereine Top 50",
+    hallLegends: "Legenden",
+    hallCommunity: "Community",
+    hallAll: "Alle",
+    hallLead:
+      "Die Reihenfolge folgt öffentlichen Titeln. Die fünf Achsen sind die Form; jede spätere Spielnote zieht den Schnitt.",
+    blendHint:
+      "Die Ehren-Basis wiegt zuerst. Jede Spielnote zählt als eine Probe im Mittel.",
+    fanTakes: "Fan-Stimmen",
   },
   teams: {
     title: "Meine Teams",

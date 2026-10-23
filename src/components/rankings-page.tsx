@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { HonorBoard } from "@/components/honor-board";
 import { PlayerAvatar } from "@/components/player-avatar";
 import { Overall } from "@/components/score-rows";
 import { useI18n } from "@/i18n/use-i18n";
@@ -25,21 +26,34 @@ export function RankingsPageInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  const sport = (searchParams.get("sport") as Sport) || "nba";
+  const hallRaw = searchParams.get("hall");
+  const hall =
+    hallRaw === "teams" || hallRaw === "legends" || hallRaw === "community"
+      ? hallRaw
+      : "players";
+  const sportParam = searchParams.get("sport");
+  const sport = (
+    sportParam && (SPORTS as readonly string[]).includes(sportParam)
+      ? sportParam
+      : hall === "community"
+        ? "nba"
+        : "all"
+  ) as Sport | "all";
+  const communitySport: Sport = sport === "all" ? "nba" : sport;
   const teamId = searchParams.get("teamId")?.trim() || "";
   const board =
     searchParams.get("board") === "dimension" ? "dimension" : "overall";
 
   const positionKey = useMemo((): PositionKey => {
-    if (sport === "esports") return "esports.player";
-    if (sport === "soccer") return "soccer.striker";
-    if (sport === "nba") return "nba.guard";
-    if (sport === "nfl") return "nfl.quarterback";
-    if (sport === "f1") return "f1.driver";
-    if (sport === "tennis") return "tennis.player";
-    if (sport === "ufc") return "ufc.striker";
+    if (communitySport === "esports") return "esports.player";
+    if (communitySport === "soccer") return "soccer.striker";
+    if (communitySport === "nba") return "nba.guard";
+    if (communitySport === "nfl") return "nfl.quarterback";
+    if (communitySport === "f1") return "f1.driver";
+    if (communitySport === "tennis") return "tennis.player";
+    if (communitySport === "ufc") return "ufc.striker";
     return "nba.guard";
-  }, [sport]);
+  }, [communitySport]);
 
   const dimIds = useMemo(
     () => [
@@ -60,7 +74,7 @@ export function RankingsPageInner() {
   const load = useCallback(() => {
     setLoading(true);
     const sp = new URLSearchParams();
-    sp.set("sport", sport);
+    sp.set("sport", communitySport);
     sp.set("board", board);
     if (board === "dimension") sp.set("dim", dimId);
     if (teamId) sp.set("teamId", teamId);
@@ -68,11 +82,15 @@ export function RankingsPageInner() {
       .then((r) => (r.ok ? r.json() : null))
       .then((d: Payload | null) => setData(d))
       .finally(() => setLoading(false));
-  }, [board, dimId, sport, teamId]);
+  }, [board, communitySport, dimId, teamId]);
 
   useEffect(() => {
+    if (hall !== "community") {
+      setLoading(false);
+      return;
+    }
     load();
-  }, [load]);
+  }, [hall, load]);
 
   const setParam = (patch: Record<string, string | null>) => {
     const sp = new URLSearchParams(searchParams.toString());
@@ -84,7 +102,7 @@ export function RankingsPageInner() {
   };
 
   const teamSearchSport =
-    sport === "soccer" ? "soccer" : sport === "nba" ? "nba" : null;
+    communitySport === "soccer" ? "soccer" : communitySport === "nba" ? "nba" : null;
 
   const searchTeam = async () => {
     const q = teamQuery.trim();
@@ -110,9 +128,52 @@ export function RankingsPageInner() {
         ← {t.nav.home}
       </Link>
       <h1 className="mt-3 text-2xl font-bold">{t.rankings.title}</h1>
-      <p className="mt-1 text-sm text-muted-foreground">{t.rankings.lead}</p>
+      <p className="mt-1 text-sm text-muted-foreground">
+        {hall === "community" ? t.rankings.lead : t.rankings.hallLead}
+      </p>
 
-      <div className="mt-5 flex flex-wrap gap-1.5">
+      <div className="mt-4 flex flex-wrap gap-1.5">
+        {(
+          [
+            ["players", t.rankings.hallPlayers],
+            ["teams", t.rankings.hallTeams],
+            ["legends", t.rankings.hallLegends],
+            ["community", t.rankings.hallCommunity],
+          ] as const
+        ).map(([key, label]) => (
+          <button
+            key={key}
+            type="button"
+            onClick={() =>
+              setParam({
+                hall: key,
+                sport: key === "community" && sport === "all" ? "nba" : sport === "all" ? null : sport,
+                teamId: null,
+              })
+            }
+            className={cn(
+              "rounded-md px-2.5 py-1 text-xs font-medium",
+              hall === key ? "bg-primary text-primary-foreground" : "border",
+            )}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+
+      <div className="mt-3 flex flex-wrap gap-1.5">
+        {hall !== "community" ? (
+          <button
+            type="button"
+            onClick={() => setParam({ sport: null, teamId: null })}
+            className={cn(
+              "rounded-md px-2.5 py-1 text-xs font-medium",
+              sport === "all" ? "bg-foreground text-background" : "bg-muted",
+            )}
+          >
+            {t.rankings.hallAll}
+          </button>
+        ) : null}
         {SPORTS.map((s) => (
           <button
             key={s}
@@ -127,6 +188,13 @@ export function RankingsPageInner() {
           </button>
         ))}
       </div>
+
+      {hall !== "community" ? (
+        <HonorBoard kind={hall} sport={sport} />
+      ) : null}
+
+      {hall === "community" ? (
+        <>
 
       <div className="mt-4 flex gap-2">
         <button
@@ -218,7 +286,7 @@ export function RankingsPageInner() {
                 dimId === id ? "bg-muted font-semibold" : "text-muted-foreground",
               )}
             >
-              {t.dims[sport]?.[id] ?? id}
+              {t.dims[communitySport]?.[id] ?? id}
             </button>
           ))}
         </div>
@@ -263,7 +331,7 @@ export function RankingsPageInner() {
                           {e.highlightValue.toFixed(1)}
                         </p>
                         <p className="text-[10px] text-muted-foreground">
-                          {t.dims[sport]?.[dimId] ?? dimId}
+                          {t.dims[communitySport]?.[dimId] ?? dimId}
                         </p>
                       </>
                     ) : (
@@ -276,6 +344,8 @@ export function RankingsPageInner() {
           </ol>
         )}
       </section>
+        </>
+      ) : null}
     </div>
   );
 }

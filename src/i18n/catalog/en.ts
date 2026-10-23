@@ -91,6 +91,9 @@ const en: Dict = {
       since: "Since",
       openMatch: "Open match thread",
       squadRankings: "Squad rating board",
+      fiveTitle: "Five-axis overall",
+      fiveHint: "Trophies set the baseline. Every match rating pulls the average.",
+      fanTakes: "Fan takes",
     },
     player: {
       hubKicker: "Player hub",
@@ -104,6 +107,8 @@ const en: Dict = {
       noRatingsYet: "No community ratings yet — rate this player from a match thread.",
       matchFallback: "Match",
       profileLink: "Player hub",
+      fiveTitle: "Five-axis overall",
+      fiveHint: "Trophies set the baseline. Every match rating pulls the average.",
     },
     rankings: {
       title: "Rating boards",
@@ -115,6 +120,16 @@ const en: Dict = {
       boardOverall: "Overall",
       boardDimension: "By axis",
       empty: "No ratings in this board yet. Post scores from match threads to populate ranks.",
+      hallPlayers: "Active top 100",
+      hallTeams: "Club top 50",
+      hallLegends: "All-time greats",
+      hallCommunity: "Community board",
+      hallAll: "All sports",
+      hallLead:
+        "Order follows public honours. The five axes are the shape; every later match rating pulls that shape into the average.",
+      blendHint:
+        "The honour baseline holds the early weight. Each match average counts as one sample and is folded into the mean.",
+      fanTakes: "Fan takes",
     },
     teams: {
       title: "My teams",

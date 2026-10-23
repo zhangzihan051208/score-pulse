@@ -2,12 +2,15 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { DimensionRadar } from "@/components/dimension-radar";
 import { MatchScoreboard } from "@/components/match-scoreboard";
 import { PlayerAvatar } from "@/components/player-avatar";
+import { Overall } from "@/components/score-rows";
 import { StatusPill } from "@/components/status-pill";
 import { useI18n } from "@/i18n/use-i18n";
 import { playerHubHref } from "@/lib/player-routes";
 import { S } from "@/lib/copy";
+import type { ReputationCard } from "@/lib/reputation/types";
 import type { TeamHub } from "@/lib/team-hub";
 import type { MatchEvent } from "@/lib/types";
 
@@ -20,8 +23,9 @@ export function TeamPageInner({
   sport: "nba" | "soccer";
   nameHint?: string;
 }) {
-  const { t } = useI18n();
+  const { locale, t } = useI18n();
   const [hub, setHub] = useState<TeamHub | null>(null);
+  const [reputation, setReputation] = useState<ReputationCard | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -29,7 +33,10 @@ export function TeamPageInner({
     if (nameHint) params.set("name", nameHint);
     fetch(`/api/teams/${encodeURIComponent(teamId)}?${params}`)
       .then((r) => (r.ok ? r.json() : null))
-      .then((d: { team?: TeamHub } | null) => setHub(d?.team ?? null))
+      .then((d: { team?: TeamHub; reputation?: ReputationCard | null } | null) => {
+        setHub(d?.team ?? null);
+        setReputation(d?.reputation ?? null);
+      })
       .finally(() => setLoading(false));
   }, [nameHint, sport, teamId]);
 
@@ -84,7 +91,61 @@ export function TeamPageInner({
         </div>
       </header>
 
-      {hub.description ? (
+      {reputation ? (
+        <section className="mt-4 rounded-xl border bg-card p-4">
+          <div className="flex items-end justify-between gap-3">
+            <div>
+              <p className="text-[11px] font-medium text-muted-foreground">{t.team.fiveTitle}</p>
+              <p className="mt-1 text-sm leading-6">
+                {locale === "zh" ? reputation.honors.zh : reputation.honors.en}
+              </p>
+            </div>
+            <Overall value={reputation.overall} />
+          </div>
+          <p className="mt-2 text-[11px] text-muted-foreground">{t.team.fiveHint}</p>
+          <div className="mt-3 grid gap-3 sm:grid-cols-[200px_1fr] sm:items-center">
+            <DimensionRadar
+              dimIds={reputation.dimIds}
+              dimLabels={reputation.dimIds.map((id) => t.dims[sport][id] ?? id)}
+              size={200}
+              series={[
+                {
+                  label: hub.name,
+                  scores: reputation.scores,
+                  stroke: "oklch(0.58 0.19 38)",
+                  fill: "oklch(0.58 0.19 38 / 0.22)",
+                },
+              ]}
+            />
+            <ul className="space-y-2">
+              {reputation.dimIds.map((id) => (
+                <li key={id} className="flex items-center justify-between text-xs">
+                  <span className="text-muted-foreground">{t.dims[sport][id] ?? id}</span>
+                  <span className="font-semibold tabular-nums">
+                    {(reputation.scores[id] ?? 0).toFixed(1)}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </div>
+          {reputation.takes.length ? (
+            <>
+              <p className="mt-3 text-[11px] font-semibold tracking-wide text-muted-foreground uppercase">
+                {t.team.fanTakes}
+              </p>
+              <ul className="mt-2 space-y-2">
+                {reputation.takes.map((take) => (
+                  <li key={take.id} className="rounded-md bg-muted/40 px-3 py-2 text-sm leading-6">
+                    {locale === "zh" ? take.zh : take.en}
+                  </li>
+                ))}
+              </ul>
+            </>
+          ) : null}
+        </section>
+      ) : null}
+
+      {hub.description && !reputation ? (
         <p className="mt-4 text-sm leading-relaxed text-muted-foreground">{hub.description}</p>
       ) : null}
 

@@ -1,12 +1,18 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { DimensionRadar } from "@/components/dimension-radar";
 import { DimensionChips } from "@/components/rating-guide-panel";
 import { PlayerAvatar } from "@/components/player-avatar";
 import { Overall } from "@/components/score-rows";
+import { useCommunity } from "@/hooks/use-community";
 import { useI18n } from "@/i18n/use-i18n";
+import { dimLabel } from "@/i18n/position-dims";
 import type { PlayerEventRating } from "@/lib/rankings-server";
+import { dimensionIds, type PositionKey } from "@/lib/position-ratings";
+import { blendScores, playerOverall } from "@/lib/reputation/blend";
+import type { ReputationCard } from "@/lib/reputation/types";
 import { playerHubHref, rankingsHref } from "@/lib/player-routes";
 import type { ScoreMap, Sport } from "@/lib/types";
 
@@ -22,6 +28,7 @@ type HubPayload = {
   careerAvg: ScoreMap | null;
   totalRatings: number;
   byEvent: PlayerEventRating[];
+  reputation: ReputationCard | null;
 };
 
 export function PlayerHubPageInner({
@@ -31,7 +38,8 @@ export function PlayerHubPageInner({
   sport: Sport;
   playerId: string;
 }) {
-  const { t } = useI18n();
+  const { locale, t } = useI18n();
+  const { state } = useCommunity();
   const [data, setData] = useState<HubPayload | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -44,6 +52,39 @@ export function PlayerHubPageInner({
       .finally(() => setLoading(false));
   }, [playerId, sport]);
 
+  const positionKey = (data?.profile?.position_key ??
+    data?.reputation?.positionKey ??
+    "nba.guard") as PositionKey;
+  const radarIds = data?.reputation?.dimIds?.length
+    ? data.reputation.dimIds
+    : [...dimensionIds(positionKey)];
+
+  const shown = useMemo(() => {
+    if (!data?.careerAvg || !data.reputation) {
+      return { scores: data?.careerAvg ?? null, overall: data?.careerOverall ?? null };
+    }
+    const seen = new Set(data.byEvent.map((row) => row.eventId));
+    const locals: ScoreMap[] = [];
+    for (const rating of Object.values(state.ratings)) {
+      if (rating.athleteId !== playerId && rating.athleteId !== data.reputation.id) continue;
+      if (seen.has(rating.eventId)) continue;
+      locals.push(rating.scores);
+    }
+    if (!locals.length) {
+      return { scores: data.careerAvg, overall: data.careerOverall };
+    }
+    const scores = blendScores(
+      data.careerAvg,
+      data.reputation.seedWeight + data.reputation.matchSamples,
+      locals,
+      data.reputation.dimIds,
+    );
+    return {
+      scores,
+      overall: playerOverall(scores, data.reputation.positionKey ?? positionKey),
+    };
+  }, [data, playerId, positionKey, state.ratings]);
+
   if (loading) {
     return (
       <div className="mx-auto max-w-2xl px-3 py-10 text-sm text-muted-foreground">
@@ -55,7 +96,6 @@ export function PlayerHubPageInner({
   const name = data?.profile?.display_name ?? playerId;
   const teamId = data?.profile?.team_id ?? undefined;
   const teamName = data?.profile?.team_name ?? undefined;
-  const positionKey = (data?.profile?.position_key ?? "nba.guard") as import("@/lib/position-ratings").PositionKey;
   const teamHref =
     teamId && (sport === "nba" || sport === "soccer")
       ? `/teams/${encodeURIComponent(teamId)}?sport=${sport}${teamName ? `&name=${encodeURIComponent(teamName)}` : ""}`
@@ -92,26 +132,59 @@ export function PlayerHubPageInner({
           ) : (
             <p className="text-sm text-muted-foreground">{t.player.noTeam}</p>
           )}
-          {data?.careerOverall != null && (
+          {shown.overall != null && (
             <div className="mt-2 flex items-end gap-3">
               <div>
-                <p className="text-[11px] text-muted-foreground">{t.player.careerAvg}</p>
-                <Overall value={data.careerOverall} />
+                <p className="text-[11px] text-muted-foreground">
+                  {data?.reputation ? t.player.fiveTitle : t.player.careerAvg}
+                </p>
+                <Overall value={shown.overall} />
               </div>
               <p className="pb-1 text-xs text-muted-foreground">
-                {data.totalRatings.toLocaleString()} {t.event.ratings}
+                {data?.totalRatings.toLocaleString()} {t.event.ratings}
               </p>
             </div>
           )}
         </div>
       </header>
 
-      {data?.careerAvg && (
-        <div className="mt-4 rounded-lg bg-muted/45 px-3 py-2">
-          <p className="mb-1 text-[11px] font-medium text-muted-foreground">
-            {t.player.careerAxes}
+      {shown.scores && (
+        <div className="mt-4 rounded-xl border bg-card p-4">
+          <p className="text-[11px] font-medium text-muted-foreground">
+            {data?.reputation ? t.player.fiveHint : t.player.careerAxes}
           </p>
-          <DimensionChips positionKey={positionKey} scores={data.careerAvg} />
+          {data?.reputation ? (
+            <p className="mt-1 text-sm leading-6">
+              {locale === "zh" ? data.reputation.honors.zh : data.reputation.honors.en}
+            </p>
+          ) : null}
+          <div className="mt-3 flex justify-center">
+            <DimensionRadar
+              dimIds={radarIds}
+              dimLabels={radarIds.map((id) => dimLabel(locale, positionKey, id))}
+              size={220}
+              series={[
+                {
+                  label: name,
+                  scores: shown.scores,
+                  stroke: "oklch(0.58 0.19 38)",
+                  fill: "oklch(0.58 0.19 38 / 0.22)",
+                },
+              ]}
+            />
+          </div>
+          <div className="mt-2">
+            <DimensionChips positionKey={positionKey} scores={shown.scores} />
+          </div>
+          {data?.reputation?.takes?.length ? (
+            <ul className="mt-4 space-y-2">
+              {data.reputation.takes.map((take) => (
+                <li key={take.id} className="rounded-md bg-muted/40 px-3 py-2 text-sm leading-6">
+                  {locale === "zh" ? take.zh : take.en}
+                </li>
+              ))}
+            </ul>
+          ) : null}
         </div>
       )}
 

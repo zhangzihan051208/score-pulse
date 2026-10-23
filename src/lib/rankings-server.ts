@@ -1,5 +1,11 @@
 import { overallScore } from "@/lib/data";
 import {
+  findHonorPlayer,
+  presentPlayer,
+  seedMatchSamples,
+} from "@/lib/reputation/catalog";
+import { blendScores, playerDimIds, playerOverall } from "@/lib/reputation/blend";
+import {
   fetchAthleteProfileRow,
   fetchAthleteProfilesForTeam,
   type AthleteProfileRow,
@@ -17,6 +23,7 @@ import {
   STANDARD_RATING_WEIGHT,
   VIP_RATING_WEIGHT,
 } from "@/lib/vip";
+import type { ReputationCard } from "@/lib/reputation/types";
 import type { ScoreMap, Sport } from "@/lib/types";
 
 type RatingRow = {
@@ -248,12 +255,16 @@ export async function buildPlayerEventRankings(
   careerAvg: ScoreMap | null;
   totalRatings: number;
   byEvent: PlayerEventRating[];
+  reputation: ReputationCard | null;
 }> {
   const profile = await fetchAthleteProfileRow(sport, athleteId);
-  const positionKey = positionForProfile(profile, sport);
-  const dimIds = [
-    ...(POSITION_PROFILES[positionKey]?.dimensions ?? dimensionIds(positionKey)),
-  ];
+  const honor =
+    findHonorPlayer(sport, athleteId) ??
+    (profile?.display_name ? findHonorPlayer(sport, profile.display_name) : undefined);
+  const positionKey = honor?.positionKey ?? positionForProfile(profile, sport);
+  const dimIds = honor
+    ? playerDimIds(positionKey)
+    : [...(POSITION_PROFILES[positionKey]?.dimensions ?? dimensionIds(positionKey))];
 
   const rows = await loadRatings({ sport, athleteId, limit: 2000 });
   const userIds = [...new Set(rows.map((r) => r.user_id))];
@@ -294,14 +305,46 @@ export async function buildPlayerEventRankings(
     scores: r.scores,
     weight: weightByUser.get(r.user_id) ?? STANDARD_RATING_WEIGHT,
   }));
-  const careerAvg = weightedAverageScores(careerWeighted, dimIds);
+  const ratedAvg = weightedAverageScores(careerWeighted, dimIds);
+  const matchAvgs = [
+    ...seedMatchSamples(honor?.id ?? athleteId),
+    ...eventRankings.map((row) => row.avg),
+  ];
+
+  let careerAvg = ratedAvg;
+  let careerOverall = ratedAvg ? overallScore(ratedAvg, positionKey) : null;
+  let totalRatings = rows.length;
+  let reputation: ReturnType<typeof presentPlayer> | null = null;
+
+  if (honor) {
+    const blended = blendScores(honor.scores, honor.seedWeight, matchAvgs, dimIds);
+    careerAvg = blended;
+    careerOverall = playerOverall(blended, positionKey);
+    totalRatings = honor.seedWeight + matchAvgs.length;
+    reputation = presentPlayer(honor, eventRankings.map((row) => row.avg));
+  }
+
+  const resolvedProfile =
+    profile ??
+    (honor
+      ? {
+          sport,
+          athlete_id: honor.id,
+          display_name: honor.name,
+          team_id: honor.clubId ? `honor-${honor.clubId}` : null,
+          team_name: honor.team,
+          photo_url: null,
+          position_key: honor.positionKey,
+        }
+      : null);
 
   return {
-    profile,
-    careerOverall: careerAvg ? overallScore(careerAvg, positionKey) : null,
+    profile: resolvedProfile,
+    careerOverall,
     careerAvg,
-    totalRatings: rows.length,
+    totalRatings,
     byEvent: eventRankings,
+    reputation,
   };
 }
 

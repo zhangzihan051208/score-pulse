@@ -91,6 +91,9 @@ const ja: Dict = {
       since: "創設",
       openMatch: "試合スレッドへ",
       squadRankings: "チーム内ランキング",
+      fiveTitle: "五軸総評",
+      fiveHint: "タイトルが基準。試合の採点のたびに平均へ引き込まれます。",
+      fanTakes: "ファン短評",
     },
     player: {
       hubKicker: "選手ページ",
@@ -104,6 +107,8 @@ const ja: Dict = {
       noRatingsYet: "まだ採点がありません。試合スレッドから採点してください。",
       matchFallback: "試合",
       profileLink: "選手ページ",
+      fiveTitle: "五軸総評",
+      fiveHint: "タイトルが基準。試合の採点のたびに平均へ引き込まれます。",
     },
     rankings: {
       title: "採点ランキング",
@@ -115,6 +120,14 @@ const ja: Dict = {
       boardOverall: "総合",
       boardDimension: "単軸",
       empty: "この榜にはまだデータがありません。試合から採点を投稿してください。",
+      hallPlayers: "現役トップ100",
+      hallTeams: "クラブトップ50",
+      hallLegends: "歴代名選手",
+      hallCommunity: "コミュニティ採点",
+      hallAll: "すべて",
+      hallLead: "順位は公開された栄誉順。五軸はその形で、以降の試合採点が平均に織り込まれます。",
+      blendHint: "栄誉の基準点が先に重みを持ちます。試合ごとの平均が1サンプルとして平均に入ります。",
+      fanTakes: "ファン短評",
     },
     teams: {
       title: "マイチーム",

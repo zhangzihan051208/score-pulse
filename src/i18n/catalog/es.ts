@@ -91,6 +91,9 @@ const es: Dict = {
       since: "Desde",
       openMatch: "Ver hilo del partido",
       squadRankings: "Ranking del plantel",
+      fiveTitle: "Nota de cinco ejes",
+      fiveHint: "Los títulos marcan la base. Cada partido tira del promedio.",
+      fanTakes: "Voces de afición",
     },
     player: {
       hubKicker: "Ficha del jugador",
@@ -104,6 +107,8 @@ const es: Dict = {
       noRatingsYet: "Sin notas aún — puntúa desde el hilo del partido.",
       matchFallback: "Partido",
       profileLink: "Ficha",
+      fiveTitle: "Nota de cinco ejes",
+      fiveHint: "Los títulos marcan la base. Cada partido tira del promedio.",
     },
     rankings: {
       title: "Tablones de notas",
@@ -115,6 +120,16 @@ const es: Dict = {
       boardOverall: "Global",
       boardDimension: "Por eje",
       empty: "Sin datos en este tablón. Publica notas en los partidos.",
+      hallPlayers: "Top 100 en activo",
+      hallTeams: "Top 50 de clubes",
+      hallLegends: "Históricos",
+      hallCommunity: "Tablón comunitario",
+      hallAll: "Todos",
+      hallLead:
+        "El orden sigue los títulos públicos. Los cinco ejes son la forma; cada nota de partido entra en esa media.",
+      blendHint:
+        "La base de palmarés pesa al inicio. Cada media de partido cuenta como una muestra en el promedio.",
+      fanTakes: "Voces de afición",
     },
     teams: {
       title: "Mis equipos",

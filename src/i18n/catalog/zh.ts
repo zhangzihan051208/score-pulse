@@ -91,6 +91,9 @@ const zh: Dict = {
       since: "成立于",
       openMatch: "进入比赛帖",
       squadRankings: "全队评分榜",
+      fiveTitle: "五维总评",
+      fiveHint: "奖杯是底，每一场评分再往里拉。",
+      fanTakes: "球迷短评",
     },
     player: {
       hubKicker: "选手主页",
@@ -104,6 +107,8 @@ const zh: Dict = {
       noRatingsYet: "还没有社区评分，请从比赛帖为 TA 打分。",
       matchFallback: "比赛",
       profileLink: "选手主页",
+      fiveTitle: "五维总评",
+      fiveHint: "奖杯是底，每一场评分再往里拉。",
     },
     rankings: {
       title: "评分排行专区",
@@ -115,6 +120,14 @@ const zh: Dict = {
       boardOverall: "总榜",
       boardDimension: "分类榜",
       empty: "该榜单暂无评分，请先在比赛帖提交评分。",
+      hallPlayers: "现役前100",
+      hallTeams: "球队前50",
+      hallLegends: "历史名宿",
+      hallCommunity: "社区评分",
+      hallAll: "全部",
+      hallLead: "名次按公开荣誉排。五维是形状，之后每一场评分会把五维拉进平均。",
+      blendHint: "荣誉底分先占着。每场比赛的均分算一份，跟底分一起平均。",
+      fanTakes: "球迷短评",
     },
     teams: {
       title: "我的主队",
