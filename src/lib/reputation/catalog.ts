@@ -15,6 +15,7 @@ import { extraHonorTeams } from "./extra-teams";
 import { legendPlayers as seededLegendPlayers } from "./legends";
 import { honorTeams as seededHonorTeams } from "./teams";
 import { applyFc26 } from "./fc26";
+import { applyNba2026, nba2026Players } from "./nba-2026";
 import { applySoccer2026, soccer2026Players } from "./soccer-2026";
 import { portraitFor } from "./portraits";
 import type { HonorPlayer, HonorTeam, ReputationCard } from "./types";
@@ -24,6 +25,7 @@ export const activePlayers: HonorPlayer[] = [
   ...seededActivePlayers,
   ...extraActivePlayers,
   ...soccer2026Players,
+  ...nba2026Players,
 ];
 export const legendPlayers: HonorPlayer[] = [
   ...seededLegendPlayers,
@@ -71,6 +73,7 @@ function rankWithinSport<T extends { sport: Sport; prestige: number }>(rows: T[]
 
 applyFc26(activePlayers);
 applySoccer2026(activePlayers);
+applyNba2026(activePlayers);
 rankWithinSport(activePlayers.filter((person) => !person.offBoard));
 rankWithinSport(legendPlayers);
 rankWithinSport(honorTeams);

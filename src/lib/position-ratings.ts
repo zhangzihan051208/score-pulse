@@ -2,7 +2,11 @@ import type { Sport } from "./types";
 
 export type PositionKey =
   | "nba.guard"
+  | "nba.pointguard"
+  | "nba.shootingguard"
   | "nba.forward"
+  | "nba.smallforward"
+  | "nba.powerforward"
   | "nba.center"
   | "soccer.striker"
   | "soccer.winger"
@@ -55,6 +59,34 @@ export const POSITION_PROFILES: Record<PositionKey, PositionProfile> = {
     rebounding: 0.18,
     versatility: 0.17,
     clutch: 0.15,
+  }),
+  "nba.pointguard": profile("nba", ["scoring", "playmaking", "perimeter_def", "hustle", "clutch"], {
+    scoring: 0.24,
+    playmaking: 0.32,
+    perimeter_def: 0.16,
+    hustle: 0.12,
+    clutch: 0.16,
+  }),
+  "nba.shootingguard": profile("nba", ["scoring", "playmaking", "perimeter_def", "hustle", "clutch"], {
+    scoring: 0.36,
+    playmaking: 0.16,
+    perimeter_def: 0.18,
+    hustle: 0.14,
+    clutch: 0.16,
+  }),
+  "nba.smallforward": profile("nba", ["scoring", "defense", "rebounding", "versatility", "clutch"], {
+    scoring: 0.32,
+    defense: 0.2,
+    rebounding: 0.14,
+    versatility: 0.18,
+    clutch: 0.16,
+  }),
+  "nba.powerforward": profile("nba", ["scoring", "defense", "rebounding", "versatility", "clutch"], {
+    scoring: 0.24,
+    defense: 0.24,
+    rebounding: 0.24,
+    versatility: 0.14,
+    clutch: 0.14,
   }),
   "nba.center": profile("nba", ["finishing", "rebounding", "rim_def", "interior", "screening"], {
     finishing: 0.22,
@@ -227,7 +259,15 @@ export const POSITION_PROFILES: Record<PositionKey, PositionProfile> = {
 };
 
 export const BOARD_POSITIONS: Record<Sport, PositionKey[]> = {
-  nba: ["nba.guard", "nba.forward", "nba.center"],
+  nba: [
+    "nba.pointguard",
+    "nba.shootingguard",
+    "nba.smallforward",
+    "nba.powerforward",
+    "nba.center",
+    "nba.guard",
+    "nba.forward",
+  ],
   soccer: [
     "soccer.striker",
     "soccer.winger",

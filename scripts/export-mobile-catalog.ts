@@ -14,6 +14,7 @@ import {
 import type { ReputationCard } from "../src/lib/reputation/types";
 import { athletes, events } from "../src/lib/data";
 import { POSITION_PROFILES } from "../src/lib/position-ratings";
+import { NBA_ROLES } from "../src/lib/reputation/nba-2026";
 import { SOCCER_ROLES } from "../src/lib/reputation/soccer-2026";
 import { SPORTS, type Sport } from "../src/lib/types";
 
@@ -154,7 +155,9 @@ const catalog = {
   people,
   teams,
   boards,
-  roleBoards: Object.fromEntries(Object.entries(SOCCER_ROLES).map(([key, ids]) => [key, [...ids]])),
+  roleBoards: Object.fromEntries(
+    [...Object.entries(SOCCER_ROLES), ...Object.entries(NBA_ROLES)].map(([key, ids]) => [key, [...ids]]),
+  ),
 };
 
 mkdirSync(outDir, { recursive: true });
