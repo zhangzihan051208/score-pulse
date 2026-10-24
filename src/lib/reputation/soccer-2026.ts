@@ -1,5 +1,7 @@
-import { dimensionIds, type PositionKey } from "@/lib/position-ratings";
+import { events } from "@/lib/data";
+import { dimensionIds, getPositionProfile, weightedOverall, type PositionKey } from "@/lib/position-ratings";
 import type { ScoreMap } from "@/lib/types";
+import { blendScores } from "./blend";
 import { player } from "./build";
 import type { HonorPlayer } from "./types";
 
@@ -164,42 +166,334 @@ const ADDED: Spec[] = [
   { id: "schlotterbeck", name: "Nico Schlotterbeck", team: "Borussia Dortmund", country: "Germany", pos: "soccer.centerback", zh: "多特中卫，带球出禁区", en: "Dortmund centre-back, carrying it out" },
 ];
 
-export function soccerRating(rank: number) {
-  if (rank <= 12) return 100 - rank;
-  return Math.max(78, 88 - Math.floor((rank - 12) * 0.12));
+const ADDED_IDS = new Set(ADDED.map((row) => row.id));
+
+/**
+ * Headline on a 10-point scale. The drops are uneven: the top of the list
+ * stays packed, then the list loosens. Neighbors can share a number.
+ * A lower rank never targets a higher number.
+ */
+export function soccerTarget(rank: number) {
+  const bands: readonly [number, number][] = [
+    [1, 9.4],
+    [3, 9.3],
+    [5, 9.2],
+    [8, 9.1],
+    [12, 9.0],
+    [18, 8.8],
+    [25, 8.7],
+    [34, 8.5],
+    [45, 8.3],
+    [58, 8.1],
+    [70, 7.9],
+    [82, 7.7],
+    [92, 7.5],
+    [100, 7.3],
+  ];
+  for (const [until, score] of bands) {
+    if (rank <= until) return score;
+  }
+  return 7.3;
+}
+
+function roleOnlyTarget(order: number) {
+  const raw = 7.15 - Math.pow((order - 1) / 19, 0.8) * 0.55;
+  return round1(Math.max(6.6, raw));
+}
+
+/** Shape to use when the stored axes belong to another position, or were a flat template. */
+const VOICE: Record<string, ScoreMap> = {
+  messi: { dribbling: 9.6, crossing: 7.6, finishing: 8.7, tracking: 4.8, decision: 9.5 },
+  foden: { passing: 8.4, vision: 8.9, defending: 6.1, stamina: 7.6, tempo: 8.6 },
+  gordon: { dribbling: 8.3, crossing: 8.5, finishing: 7.7, tracking: 8.6, decision: 7.5 },
+  doku: { dribbling: 9.3, crossing: 7.6, finishing: 7.2, tracking: 6.2, decision: 7.3 },
+  luisdiaz: { dribbling: 8.8, crossing: 8.2, finishing: 8.0, tracking: 6.8, decision: 7.8 },
+  enzo: { passing: 8.8, vision: 8.5, defending: 8.2, stamina: 8.4, tempo: 8.6 },
+  szoboszlai: { passing: 8.2, vision: 8.5, defending: 7.3, stamina: 8.8, tempo: 8.7 },
+  dimarco: { defending: 7.0, overlap: 8.8, delivery: 9.2, pace: 8.0, focus: 7.4 },
+  gvardiol: { aerial: 8.4, tackling: 8.3, positioning: 8.6, buildup: 8.9, composure: 7.8 },
+  unaisimon: { saves: 8.4, reflexes: 8.2, distribution: 8.7, command: 8.3, positioning: 8.1 },
+  joangarcia: { saves: 8.7, reflexes: 8.9, distribution: 7.1, command: 7.5, positioning: 8.2 },
+  stones: { aerial: 7.4, tackling: 8.2, positioning: 8.7, buildup: 9.2, composure: 8.5 },
+  bastoni: { aerial: 8.3, tackling: 8.4, positioning: 8.6, buildup: 9.3, composure: 8.5 },
+  pacho: { aerial: 8.8, tackling: 8.6, positioning: 8.5, buildup: 7.3, composure: 8.0 },
+  schlotterbeck: { aerial: 7.8, tackling: 8.2, positioning: 8.0, buildup: 8.9, composure: 7.5 },
+  gakpo: { dribbling: 8.3, crossing: 7.6, finishing: 8.6, tracking: 7.5, decision: 7.7 },
+  sesko: { finishing: 8.6, movement: 8.4, linkup: 7.2, pressing: 7.8, composure: 7.4 },
+  frimpong: { defending: 6.8, overlap: 9.0, delivery: 7.4, pace: 9.2, focus: 7.0 },
+  balde: { defending: 7.6, overlap: 8.8, delivery: 7.0, pace: 9.0, focus: 7.4 },
+  grimaldo: { defending: 7.2, overlap: 8.6, delivery: 8.9, pace: 8.0, focus: 7.6 },
+  davies: { defending: 7.2, overlap: 8.8, delivery: 7.5, pace: 9.4, focus: 7.4 },
+  ederson: { saves: 8.2, reflexes: 8.2, distribution: 9.3, command: 7.6, positioning: 8.1 },
+  neuer: { saves: 8.4, reflexes: 8.2, distribution: 8.8, command: 9.2, positioning: 7.4 },
+  debruyne: { passing: 9.4, vision: 9.4, defending: 6.4, stamina: 6.2, tempo: 8.8 },
+};
+
+const HOLES: Record<string, readonly string[]> = {
+  "soccer.striker": ["movement", "linkup", "pressing"],
+  "soccer.winger": ["tracking", "crossing", "decision"],
+  "soccer.midfielder": ["defending", "vision", "tempo"],
+  "soccer.attackingmid": ["defending", "stamina", "passing"],
+  "soccer.fullback": ["defending", "delivery", "focus"],
+  "soccer.centerback": ["buildup", "aerial", "composure"],
+  "soccer.keeper": ["distribution", "command"],
+};
+
+const RELATIVES: Record<string, readonly string[]> = {
+  finishing: ["finishing"],
+  movement: ["movement", "dribbling", "pace"],
+  linkup: ["linkup", "passing", "decision", "vision"],
+  pressing: ["pressing", "tracking", "defending", "stamina"],
+  composure: ["composure", "decision", "focus"],
+  dribbling: ["dribbling", "movement", "tempo", "pace"],
+  crossing: ["crossing", "delivery", "linkup"],
+  tracking: ["tracking", "pressing", "defending"],
+  decision: ["decision", "vision", "composure", "tempo"],
+  passing: ["passing", "crossing", "linkup", "buildup", "distribution"],
+  vision: ["vision", "decision", "composure"],
+  defending: ["defending", "tackling", "tracking", "pressing"],
+  stamina: ["stamina", "pressing", "focus", "pace"],
+  tempo: ["tempo", "dribbling", "movement", "vision"],
+  overlap: ["overlap", "pace", "movement", "dribbling"],
+  delivery: ["delivery", "crossing", "passing"],
+  pace: ["pace", "movement", "dribbling"],
+  focus: ["focus", "composure", "positioning"],
+  aerial: ["aerial"],
+  tackling: ["tackling", "defending"],
+  positioning: ["positioning", "focus"],
+  buildup: ["buildup", "passing", "vision"],
+  saves: ["saves"],
+  reflexes: ["reflexes"],
+  distribution: ["distribution", "passing"],
+  command: ["command", "composure"],
+};
+
+function round1(n: number) {
+  return Math.round(n * 10) / 10;
 }
 
 function hash(id: string) {
   return [...id].reduce((sum, char) => sum + char.charCodeAt(0), 0);
 }
 
-function scoresFor(pos: PositionKey, rating: number, id: string): ScoreMap {
-  const dims = dimensionIds(pos);
-  const salt = hash(id);
-  const level = rating / 10;
-  return Object.fromEntries(
-    dims.map((dim, index) => {
-      const wobble = (((salt + index * 5) % 7) - 3) * 0.1;
-      const lead = index === 0 ? 0.25 : 0;
-      return [dim, Math.round(Math.min(9.9, Math.max(4.4, level + lead + wobble)) * 10) / 10];
-    }),
-  ) as ScoreMap;
+function holeSize(ownSpan: number, target: number) {
+  const personality = Math.min(3.4, Math.max(0.8, ownSpan));
+  const room = 1.05 + Math.max(0, target - 7) * 0.42;
+  const mixed = personality * 0.58 + Math.min(personality, room) * 0.42;
+  return Math.min(room + 0.45, Math.max(0.8, mixed));
 }
 
-function alignScores(person: HonorPlayer, rating: number) {
-  const dims = dimensionIds(person.positionKey);
-  const ready = dims.every((id) => typeof person.scores[id] === "number");
-  if (!ready) {
-    person.scores = scoresFor(person.positionKey, rating, person.id);
-    return;
+function dropsFrom(source: ScoreMap, dims: readonly string[]) {
+  const values = dims.map((dim) => source[dim] ?? 7);
+  const best = Math.max(...values);
+  const worst = Math.min(...values);
+  const span = best - worst;
+  if (span < 0.15) return Object.fromEntries(dims.map((dim) => [dim, 0]));
+  // A nearly even player stays nearly even. Stretching a 0.3 gap into a full hole invents a weakness.
+  const scale = span < 0.8 ? 0.35 : 1;
+  return Object.fromEntries(dims.map((dim, index) => [dim, ((best - values[index]!) / span) * scale]));
+}
+
+function templateDrops(pos: PositionKey, id: string, dims: readonly string[]) {
+  const weights = getPositionProfile(pos).weights;
+  const salt = hash(id);
+  let peak = [...dims].sort((a, b) => (weights[b] ?? 0) - (weights[a] ?? 0))[0]!;
+  let holes = (HOLES[pos] ?? dims).filter((dim) => dims.includes(dim));
+  if (pos === "soccer.fullback") {
+    const attacker = salt % 5 !== 0;
+    peak = attacker ? (salt % 2 === 0 ? "overlap" : "pace") : "defending";
+    holes = attacker ? ["defending", "focus"] : ["delivery", "overlap"];
+  } else if (pos === "soccer.keeper") {
+    peak = salt % 2 === 0 ? "saves" : "reflexes";
+    holes = ["distribution", "command"];
+  } else if (pos === "soccer.centerback") {
+    peak = salt % 3 === 0 ? "tackling" : "positioning";
+    holes = ["buildup", "aerial"];
   }
-  const mean = dims.reduce((sum, id) => sum + person.scores[id]!, 0) / dims.length;
-  const delta = rating / 10 - mean;
-  const next: ScoreMap = {};
-  for (const id of dims) {
-    next[id] = Math.round(Math.min(9.9, Math.max(4.2, person.scores[id]! + delta)) * 10) / 10;
+  const hole = holes.filter((dim) => dim !== peak)[salt % Math.max(1, holes.filter((dim) => dim !== peak).length)] ?? dims[dims.length - 1]!;
+  const rest = dims
+    .filter((dim) => dim !== peak && dim !== hole)
+    .sort((a, b) => (weights[b] ?? 0) - (weights[a] ?? 0));
+  if (rest.length >= 2 && salt % 2 === 0) {
+    const swap = rest[0]!;
+    rest[0] = rest[1]!;
+    rest[1] = swap;
   }
-  person.scores = next;
+  const order = [peak, ...rest, hole];
+  const tilt = ((salt % 5) - 2) * 0.05;
+  const pattern = [0, Math.max(0.08, 0.18 + tilt), 0.4 - tilt * 0.4, Math.min(0.82, 0.66 + tilt * 0.3), 1];
+  return Object.fromEntries(order.map((dim, index) => [dim, pattern[index] ?? 1]));
+}
+
+function bridgeScores(scores: ScoreMap, dims: readonly string[]): ScoreMap | null {
+  const out: ScoreMap = {};
+  for (const dim of dims) {
+    const relatives = RELATIVES[dim] ?? [dim];
+    const found = relatives.find((key) => typeof scores[key] === "number");
+    if (!found) return null;
+    out[dim] = scores[found]!;
+  }
+  return out;
+}
+
+function sourceProfile(person: HonorPlayer, dims: readonly string[]): ScoreMap | null {
+  const voice = VOICE[person.id];
+  if (voice && dims.every((dim) => typeof voice[dim] === "number")) return voice;
+  if (!ADDED_IDS.has(person.id) && dims.every((dim) => typeof person.scores[dim] === "number")) {
+    return Object.fromEntries(dims.map((dim) => [dim, person.scores[dim]!])) as ScoreMap;
+  }
+  if (!ADDED_IDS.has(person.id)) return bridgeScores(person.scores, dims);
+  return null;
+}
+
+function weakest(dims: readonly string[], drops: Record<string, number>, weights: Record<string, number>) {
+  return dims.reduce((best, dim) => {
+    const gap = (drops[dim] ?? 0) - (drops[best] ?? 0);
+    if (gap > 0.001) return dim;
+    if (gap < -0.001) return best;
+    return (weights[dim] ?? 0) < (weights[best] ?? 0) ? dim : best;
+  });
+}
+
+function shapeToTarget(person: HonorPlayer, target: number): ScoreMap {
+  const pos = person.positionKey;
+  const dims = dimensionIds(pos);
+  const weights = getPositionProfile(pos).weights;
+  const source = sourceProfile(person, dims);
+  const drops = source ? dropsFrom(source, dims) : templateDrops(pos, person.id, dims);
+  const worst = weakest(dims, drops, weights);
+  const ownSpan = source
+    ? Math.max(...dims.map((dim) => source[dim] ?? 7)) - Math.min(...dims.map((dim) => source[dim] ?? 7))
+    : 1.5;
+  const hole = holeSize(ownSpan, target);
+  const scores: ScoreMap = {};
+  const bestLevel = Math.min(9.9, target + Math.min(0.6, hole * 0.42));
+  for (const dim of dims) {
+    scores[dim] = bestLevel - (drops[dim] ?? 0) * hole;
+  }
+
+  for (let pass = 0; pass < 18; pass += 1) {
+    const now = weightedOverall(scores, pos);
+    const err = target - now;
+    if (Math.abs(err) < 0.03) break;
+    const raising = err > 0;
+    const mag = Math.min(Math.abs(err), 0.22);
+    const share = (dim: string) => (dim === worst ? (raising ? 0 : 1.45) : raising ? 1 : 0.6);
+    const denom = dims.reduce((sum, dim) => sum + (weights[dim] ?? 0) * share(dim), 0) || 1;
+    const step = ((raising ? 1 : -1) * mag) / denom;
+    let capped = false;
+    for (const dim of dims) {
+      const next = scores[dim]! + step * share(dim);
+      if (next > 9.9 || next < 4.5) capped = true;
+      scores[dim] = Math.min(9.9, Math.max(4.5, next));
+    }
+    if (!capped || !raising) continue;
+    const left = target - weightedOverall(scores, pos);
+    if (left <= 0.03) break;
+    const room = dims.filter((dim) => dim !== worst && scores[dim]! < 9.89);
+    if (room.length) {
+      const roomWeight = room.reduce((sum, dim) => sum + (weights[dim] ?? 0), 0) || 1;
+      for (const dim of room) scores[dim] = Math.min(9.9, scores[dim]! + left / roomWeight);
+      continue;
+    }
+    const best = Math.max(...dims.filter((dim) => dim !== worst).map((dim) => scores[dim]!));
+    const gap = best - scores[worst]!;
+    if (gap > 0.75) scores[worst] = Math.min(best - 0.6, scores[worst]! + left / (weights[worst] ?? 0.2));
+    break;
+  }
+
+  for (const dim of dims) scores[dim] = round1(Math.min(9.9, Math.max(4.5, scores[dim]!)));
+  // Only the signature skill sits on the ceiling. Tied 9.9s are the flat radar this avoids.
+  for (let pass = 0; pass < 4; pass += 1) {
+    const top = Math.max(...dims.map((dim) => scores[dim]!));
+    const tied = dims.filter((dim) => scores[dim]! >= top - 0.001);
+    if (tied.length < 2) break;
+    const sacrifice = tied.reduce((a, b) => ((drops[a] ?? 0) > (drops[b] ?? 0) ? a : b));
+    scores[sacrifice] = round1(scores[sacrifice]! - 0.1);
+    if (weightedOverall(scores, pos) < target - 0.049) {
+      scores[sacrifice] = round1(scores[sacrifice]! + 0.1);
+      break;
+    }
+  }
+  for (let pass = 0; pass < 10; pass += 1) {
+    const now = weightedOverall(scores, pos);
+    if (Math.abs(now - target) < 0.05) break;
+    const dir = now < target ? 0.1 : -0.1;
+    const pool = [...dims]
+      .filter((dim) => dim !== worst)
+      .sort((a, b) => (weights[b] ?? 0) - (weights[a] ?? 0));
+    let moved = false;
+    for (const dim of pool) {
+      const next = round1(scores[dim]! + dir);
+      if (next > 9.9 || next < 4.5) continue;
+      scores[dim] = next;
+      moved = true;
+      break;
+    }
+    if (moved) continue;
+    const others = Math.max(...dims.filter((dim) => dim !== worst).map((dim) => scores[dim]!));
+    const next = round1(scores[worst]! + dir);
+    if (dir > 0 && next <= others - 0.6) scores[worst] = next;
+    else if (dir < 0 && next >= 4.5) scores[worst] = next;
+    else break;
+  }
+  const axisFloor = target >= 7.3 ? 6.2 : 5.4;
+  if (scores[worst]! < axisFloor) {
+    scores[worst] = axisFloor;
+    for (let pass = 0; pass < 4; pass += 1) {
+      if (weightedOverall(scores, pos) <= target + 0.049) break;
+      const best = dims.reduce((a, b) => (scores[a]! >= scores[b]! ? a : b));
+      if (best === worst || scores[best]! <= axisFloor + 0.4) break;
+      scores[best] = round1(scores[best]! - 0.1);
+    }
+  }
+  return scores;
+}
+
+function matchSamples(id: string): ScoreMap[] {
+  const out: ScoreMap[] = [];
+  for (const event of events) {
+    const perf = event.performances.find((row) => row.athleteId === id);
+    if (perf) out.push(perf.communityAvg);
+  }
+  return out;
+}
+
+/** Stored axes are blended with match cards. Solve the seed so the card shows `shown`. */
+function seedsForShown(person: HonorPlayer, shown: ScoreMap, dims: readonly string[]): ScoreMap {
+  const samples = matchSamples(person.id);
+  if (!samples.length) return shown;
+  const weight = person.seedWeight;
+  const seed: ScoreMap = {};
+  for (const dim of dims) {
+    let extra = 0;
+    let count = 0;
+    for (const sample of samples) {
+      const value = sample[dim];
+      if (value == null) continue;
+      extra += value;
+      count += 1;
+    }
+    if (!count) {
+      seed[dim] = shown[dim]!;
+      continue;
+    }
+    const solved = (shown[dim]! * (weight + count) - extra) / weight;
+    seed[dim] = round1(Math.min(12, Math.max(2, solved)));
+  }
+  for (let pass = 0; pass < 6; pass += 1) {
+    const blended = blendScores(seed, weight, samples, dims);
+    let done = true;
+    for (const dim of dims) {
+      const want = shown[dim]!;
+      const got = blended[dim];
+      if (got == null || Math.abs(got - want) < 0.05) continue;
+      done = false;
+      seed[dim] = round1(Math.min(12, Math.max(2, (seed[dim] ?? want) + (want - got))));
+    }
+    if (done) break;
+  }
+  return seed;
 }
 
 function axesFor(pos: PositionKey, index: number) {
@@ -264,9 +558,11 @@ export function applySoccer2026(players: HonorPlayer[]) {
       if (club.clubId) person.clubId = club.clubId;
     }
     if (rank || role) {
-      const rating = rank ? soccerRating(rank) : Math.max(76, 84 - (role?.order ?? 20));
-      person.fcRating = rating;
-      alignScores(person, rating);
+      const target = rank ? soccerTarget(rank) : roleOnlyTarget(role?.order ?? 20);
+      const dims = dimensionIds(person.positionKey);
+      const shown = shapeToTarget(person, target);
+      person.scores = seedsForShown(person, shown, dims);
+      delete person.fcRating;
     }
   }
   for (const id of overall.keys()) {
