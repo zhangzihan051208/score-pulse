@@ -7,6 +7,7 @@ export type PositionKey =
   | "soccer.striker"
   | "soccer.winger"
   | "soccer.midfielder"
+  | "soccer.attackingmid"
   | "soccer.fullback"
   | "soccer.centerback"
   | "soccer.keeper"
@@ -93,6 +94,17 @@ export const POSITION_PROFILES: Record<PositionKey, PositionProfile> = {
       defending: 0.2,
       stamina: 0.15,
       tempo: 0.15,
+    },
+  ),
+  "soccer.attackingmid": profile(
+    "soccer",
+    ["passing", "vision", "defending", "stamina", "tempo"],
+    {
+      passing: 0.22,
+      vision: 0.28,
+      defending: 0.12,
+      stamina: 0.16,
+      tempo: 0.22,
     },
   ),
   "soccer.fullback": profile(
@@ -220,6 +232,7 @@ export const BOARD_POSITIONS: Record<Sport, PositionKey[]> = {
     "soccer.striker",
     "soccer.winger",
     "soccer.midfielder",
+    "soccer.attackingmid",
     "soccer.fullback",
     "soccer.centerback",
     "soccer.keeper",

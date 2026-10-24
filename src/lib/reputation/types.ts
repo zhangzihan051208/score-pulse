@@ -25,6 +25,10 @@ export type HonorPlayer = {
   trait: Trait;
   /** 1 is the top of the honor list. */
   prestige: number;
+  /** Hidden from the overall hundred, still eligible for a position board. */
+  offBoard?: boolean;
+  /** 1 is the top of this player's position list. */
+  roleOrder?: number;
   /** EA FC overall, when the soccer board is rated from FC 26. */
   fcRating?: number;
   /** Club shirt number, without a hash. */
@@ -61,6 +65,8 @@ export type ReputationCard = {
   positionKey?: PositionKey;
   trait: Trait;
   rank: number;
+  offBoard?: boolean;
+  roleOrder?: number;
   honors: Bilingual;
   scores: ScoreMap;
   dimIds: string[];

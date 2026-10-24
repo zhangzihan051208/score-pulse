@@ -14,6 +14,7 @@ import {
 import type { ReputationCard } from "../src/lib/reputation/types";
 import { athletes, events } from "../src/lib/data";
 import { POSITION_PROFILES } from "../src/lib/position-ratings";
+import { SOCCER_ROLES } from "../src/lib/reputation/soccer-2026";
 import { SPORTS, type Sport } from "../src/lib/types";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
@@ -122,7 +123,9 @@ const boards: Record<"players" | "teams" | "legends", Record<string, string[]>> 
 };
 
 for (const sport of SPORTS) {
-  boards.players[sport] = honorBoard("players", sport).map((card) => card.id);
+  boards.players[sport] = honorBoard("players", sport)
+    .filter((card) => !card.offBoard)
+    .map((card) => card.id);
   boards.legends[sport] = honorBoard("legends", sport).map((card) => card.id);
   boards.teams[sport] = honorBoard("teams", sport).map((card) => card.id);
 }
@@ -151,6 +154,7 @@ const catalog = {
   people,
   teams,
   boards,
+  roleBoards: Object.fromEntries(Object.entries(SOCCER_ROLES).map(([key, ids]) => [key, [...ids]])),
 };
 
 mkdirSync(outDir, { recursive: true });

@@ -221,8 +221,15 @@ export function HonorBoard({
 
   const ranked = useMemo(() => {
     if (!entries) return [];
-    const list = role === "all" ? entries : entries.filter((entry) => entry.positionKey === role);
-    return list.map((entry, index) => ({ ...entry, rank: index + 1 }));
+    const soccerRole = role !== "all" && role.startsWith("soccer.");
+    const list =
+      role === "all"
+        ? entries.filter((entry) => !entry.offBoard)
+        : entries
+            .filter((entry) => entry.positionKey === role && (!soccerRole || entry.roleOrder))
+            .sort((a, b) => (a.roleOrder ?? 999) - (b.roleOrder ?? 999) || a.rank - b.rank);
+    const shown = soccerRole ? list.slice(0, 20) : list;
+    return shown.map((entry, index) => ({ ...entry, rank: index + 1 }));
   }, [entries, role]);
 
   useEffect(() => {

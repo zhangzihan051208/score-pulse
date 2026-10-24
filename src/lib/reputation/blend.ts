@@ -26,6 +26,13 @@ const TO_SPORT: Record<PositionKey, Record<string, string>> = {
     stamina: "workrate",
     tempo: "attack",
   },
+  "soccer.attackingmid": {
+    passing: "creation",
+    vision: "creation",
+    defending: "defending",
+    stamina: "workrate",
+    tempo: "attack",
+  },
   "soccer.fullback": {
     defending: "defending",
     overlap: "attack",

@@ -41,6 +41,7 @@ type Catalog = {
   people: Record<string, Slim>;
   teams: Record<string, TeamCard>;
   boards: Record<Hall, Record<string, string[]>>;
+  roleBoards?: Record<string, string[]>;
 };
 
 export const catalog = raw as Catalog;
@@ -82,6 +83,14 @@ export function rolesFor(sport: string, hall: "players" | "legends") {
 }
 
 export function boardRows(hall: Hall, sport: string, role?: string) {
+  if (role && catalog.roleBoards?.[role]) {
+    return catalog.roleBoards[role]
+      .map((id, index) => {
+        const row = catalog.people[`${sport}:${id}`];
+        return row ? { ...row, rank: index + 1 } : undefined;
+      })
+      .filter((row): row is NonNullable<typeof row> => Boolean(row));
+  }
   const ids = catalog.boards[hall][sport] ?? [];
   const rows =
     hall === "teams"

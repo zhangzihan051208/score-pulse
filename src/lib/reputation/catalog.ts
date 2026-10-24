@@ -15,6 +15,7 @@ import { extraHonorTeams } from "./extra-teams";
 import { legendPlayers as seededLegendPlayers } from "./legends";
 import { honorTeams as seededHonorTeams } from "./teams";
 import { applyFc26 } from "./fc26";
+import { applySoccer2026, soccer2026Players } from "./soccer-2026";
 import { portraitFor } from "./portraits";
 import type { HonorPlayer, HonorTeam, ReputationCard } from "./types";
 import { fanTakes } from "./voice";
@@ -22,6 +23,7 @@ import { fanTakes } from "./voice";
 export const activePlayers: HonorPlayer[] = [
   ...seededActivePlayers,
   ...extraActivePlayers,
+  ...soccer2026Players,
 ];
 export const legendPlayers: HonorPlayer[] = [
   ...seededLegendPlayers,
@@ -68,7 +70,8 @@ function rankWithinSport<T extends { sport: Sport; prestige: number }>(rows: T[]
 }
 
 applyFc26(activePlayers);
-rankWithinSport(activePlayers);
+applySoccer2026(activePlayers);
+rankWithinSport(activePlayers.filter((person) => !person.offBoard));
 rankWithinSport(legendPlayers);
 rankWithinSport(honorTeams);
 
@@ -82,7 +85,7 @@ function assertBoards() {
   const teamIds = new Set(honorTeams.map((club) => club.id));
   if (teamIds.size !== honorTeams.length) throw new Error("duplicate team ids");
   for (const sport of SPORTS) {
-    const active = activePlayers.filter((person) => person.sport === sport).length;
+    const active = activePlayers.filter((person) => person.sport === sport && !person.offBoard).length;
     const clubs = honorTeams.filter((club) => club.sport === sport).length;
     const legends = legendPlayers.filter((person) => person.sport === sport).length;
     if (active !== 100) throw new Error(`${sport} active board is ${active}, expected 100`);
@@ -225,6 +228,8 @@ export function presentPlayer(
     positionKey: person.positionKey,
     trait: person.trait,
     rank: person.prestige,
+    offBoard: person.offBoard,
+    roleOrder: person.roleOrder,
     honors: person.honors,
     scores,
     dimIds,
@@ -308,8 +313,13 @@ export function honorBoard(
   const source = kind === "legends" ? legendPlayers : activePlayers;
   return sports.flatMap((boardSport) =>
     source
-      .filter((person) => person.sport === boardSport)
-      .sort((a, b) => a.prestige - b.prestige)
+      .filter((person) => person.sport === boardSport && (!person.offBoard || person.roleOrder))
+      .sort(
+        (a, b) =>
+          Number(Boolean(a.offBoard)) - Number(Boolean(b.offBoard)) ||
+          a.prestige - b.prestige ||
+          (a.roleOrder ?? 99) - (b.roleOrder ?? 99),
+      )
       .map((person, index) => ({
           ...presentPlayer(person, extraById?.get(person.id) ?? [], { withTakes: false }),
         rank: index + 1,
