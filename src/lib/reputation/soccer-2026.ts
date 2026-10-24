@@ -1,4 +1,5 @@
-import type { PositionKey } from "@/lib/position-ratings";
+import { dimensionIds, type PositionKey } from "@/lib/position-ratings";
+import type { ScoreMap } from "@/lib/types";
 import { player } from "./build";
 import type { HonorPlayer } from "./types";
 
@@ -163,6 +164,44 @@ const ADDED: Spec[] = [
   { id: "schlotterbeck", name: "Nico Schlotterbeck", team: "Borussia Dortmund", country: "Germany", pos: "soccer.centerback", zh: "多特中卫，带球出禁区", en: "Dortmund centre-back, carrying it out" },
 ];
 
+export function soccerRating(rank: number) {
+  if (rank <= 12) return 100 - rank;
+  return Math.max(78, 88 - Math.floor((rank - 12) * 0.12));
+}
+
+function hash(id: string) {
+  return [...id].reduce((sum, char) => sum + char.charCodeAt(0), 0);
+}
+
+function scoresFor(pos: PositionKey, rating: number, id: string): ScoreMap {
+  const dims = dimensionIds(pos);
+  const salt = hash(id);
+  const level = rating / 10;
+  return Object.fromEntries(
+    dims.map((dim, index) => {
+      const wobble = (((salt + index * 5) % 7) - 3) * 0.1;
+      const lead = index === 0 ? 0.25 : 0;
+      return [dim, Math.round(Math.min(9.9, Math.max(4.4, level + lead + wobble)) * 10) / 10];
+    }),
+  ) as ScoreMap;
+}
+
+function alignScores(person: HonorPlayer, rating: number) {
+  const dims = dimensionIds(person.positionKey);
+  const ready = dims.every((id) => typeof person.scores[id] === "number");
+  if (!ready) {
+    person.scores = scoresFor(person.positionKey, rating, person.id);
+    return;
+  }
+  const mean = dims.reduce((sum, id) => sum + person.scores[id]!, 0) / dims.length;
+  const delta = rating / 10 - mean;
+  const next: ScoreMap = {};
+  for (const id of dims) {
+    next[id] = Math.round(Math.min(9.9, Math.max(4.2, person.scores[id]! + delta)) * 10) / 10;
+  }
+  person.scores = next;
+}
+
 function axesFor(pos: PositionKey, index: number) {
   const base = BASE[pos] ?? BASE["soccer.midfielder"]!;
   return base.map((value, axis) => {
@@ -224,9 +263,10 @@ export function applySoccer2026(players: HonorPlayer[]) {
       person.team = club.team;
       if (club.clubId) person.clubId = club.clubId;
     }
-    if (person.fcRating == null) {
-      const values = Object.values(person.scores);
-      person.fcRating = Math.round((values.reduce((sum, value) => sum + value, 0) / values.length) * 10);
+    if (rank || role) {
+      const rating = rank ? soccerRating(rank) : Math.max(76, 84 - (role?.order ?? 20));
+      person.fcRating = rating;
+      alignScores(person, rating);
     }
   }
   for (const id of overall.keys()) {
