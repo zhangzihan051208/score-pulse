@@ -8,7 +8,7 @@ import type { HonorPlayer } from "./types";
 /** Overall hundred. Guardian 21–100, with the five “already promoted” reference rows removed, then five position-list names to fill the board. */
 export const SOCCER_OVERALL = [
   "kane", "yamal", "mbappe", "vitinha", "dembele", "rodri", "olise", "hakimi", "pedri", "rice",
-  "haaland", "mendes", "saliba", "raphinha", "salah", "bellingham", "gabriel", "palmer", "saka", "vandijk",
+  "haaland", "mendes", "kvara", "saliba", "raphinha", "salah", "bellingham", "gabriel", "palmer", "saka", "vandijk",
   "lautaro", "vini", "lewa", "julian", "fabian", "gyokeres", "courtois", "luisdiaz", "caicedo", "messi",
   "macallister", "wirtz", "valverde", "szoboszlai", "guirassy", "dumfries", "gravenberch", "marquinhos", "musiala", "pacho",
   "odegaard", "osimhen", "enzo", "isak", "alisson", "kimmich", "ronaldo", "calhanoglu", "barcola", "bastoni",
@@ -16,7 +16,7 @@ export const SOCCER_OVERALL = [
   "thuram", "fermin", "ekitike", "cubarsi", "bruno", "zubimendi", "guler", "bernardo", "debruyne", "doku",
   "joaopedro", "mbeumo", "emimartinez", "reijnders", "kounde", "oyarzabal", "woltemade", "anguissa", "dias", "grimaldo",
   "nicopaz", "arrascaeta", "semenyo", "yildiz", "merino", "leao", "huijsen", "gvardiol", "neuer", "greenwood",
-  "vanderven", "antony", "trent", "dimarco", "griezmann", "kvara", "donnarumma", "unaisimon", "joangarcia", "diogocosta",
+  "vanderven", "antony", "trent", "dimarco", "griezmann", "donnarumma", "unaisimon", "joangarcia", "diogocosta",
 ] as const;
 
 export const SOCCER_ROLES: Record<string, readonly string[]> = {
@@ -179,15 +179,15 @@ export function soccerTarget(rank: number) {
     [3, 9.3],
     [5, 9.2],
     [8, 9.1],
-    [12, 9.0],
-    [18, 8.8],
-    [25, 8.7],
-    [34, 8.5],
-    [45, 8.3],
-    [58, 8.1],
-    [70, 7.9],
-    [82, 7.7],
-    [92, 7.5],
+    [13, 9.0],
+    [19, 8.8],
+    [26, 8.7],
+    [35, 8.5],
+    [46, 8.3],
+    [59, 8.1],
+    [71, 7.9],
+    [83, 7.7],
+    [93, 7.5],
     [100, 7.3],
   ];
   for (const [until, score] of bands) {
