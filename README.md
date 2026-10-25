@@ -49,7 +49,13 @@ The website can delete an account, report a comment, block a user, and store a m
 
 Operator: 张子函. Support and review email: zhangzihan051208@gmail.com. That address is also the safety-queue admin when `SAFETY_ADMIN_EMAILS` is unset.
 
-VIP product: **看台月卡** / Grandstand Monthly, €7 per month. App Store product id `com.grandstand.tribune.vip.monthly`. Google Play product id `grandstand_vip_monthly`. The website does not grant VIP until those store products are connected. The phone switch still only previews the benefit on the device.
+VIP product: **看台月卡** / Grandstand Monthly, €7 per month. The website header and `/profile/vip` start a Stripe Checkout subscription. The installed iPhone and Android apps buy the same membership with StoreKit and Play Billing. The phone browser preview uses the website checkout, because a browser cannot open the store sheet.
+
+- App Store product id: `com.grandstand.tribune.vip.monthly`
+- Google Play product id: `grandstand_vip_monthly`
+- `STRIPE_SECRET_KEY` and `STRIPE_WEBHOOK_SECRET` — card checkout and renewals. Without the secret key the buy button explains that checkout is not configured and does not grant VIP.
+- `GOOGLE_PLAY_SERVICE_ACCOUNT_JSON` — the Play Console service account used to verify an Android purchase token.
+- Apple receipts are a StoreKit 2 signature checked against Apple's public root certificate. No Apple private key is stored here. The product still has to exist in App Store Connect.
 
 Before a store submission, fill `.env.local` (and the hosted environment) with:
 

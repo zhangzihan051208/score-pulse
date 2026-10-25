@@ -265,7 +265,12 @@ export const deOverrides = {
     planPrice: "7 € pro Monat",
     activate: "Im App Store oder bei Google Play kaufen",
     activated: "VIP aktiv",
-    demoNote: "Grandstand Monthly wird im App Store und bei Google Play verkauft. Bis das Produkt live ist, bucht die Website nichts und schaltet VIP nicht frei.",
+    demoNote: "7 € im Monat per Karte auf dieser Website. Die iPhone- und Android-Apps kaufen dieselbe Mitgliedschaft im App Store oder bei Google Play.",
+    buy: "Grandstand Monthly kaufen",
+    buying: "Kasse wird geöffnet…",
+    buyFailed: "Die Zahlung wurde nicht abgeschlossen.",
+    stripeMissing: "Kartenzahlung ist noch nicht eingerichtet. STRIPE_SECRET_KEY in den Secrets der Website eintragen.",
+    canceled: "Zahlung abgebrochen. Es wurde nichts berechnet.",
   },
   auth: {
     signIn: "Anmelden",

@@ -1,16 +1,82 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect, useState } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { useProfile } from "@/hooks/use-profile";
 import { useVipQuota } from "@/hooks/use-vip";
 import { useI18n } from "@/i18n/use-i18n";
+import { Button, buttonVariants } from "@/components/ui/button";
+import { cn } from "cn";
 
 export function VipPageInner() {
   const { t } = useI18n();
   const { user, enabled, loading: authLoading } = useAuth();
   const { profile, loading, cloud } = useProfile();
-  const { quota } = useVipQuota();
+  const { quota, reload } = useVipQuota();
+  const [busy, setBusy] = useState(false);
+  const [note, setNote] = useState<string | null>(null);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("canceled")) {
+      setNote("canceled");
+      return;
+    }
+    const sessionId = params.get("session_id");
+    if (!sessionId || !user) return;
+    let stop = false;
+    void fetch("/api/vip/confirm", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ sessionId }),
+    })
+      .then(async (res) => {
+        const data = (await res.json().catch(() => null)) as { error?: string } | null;
+        if (stop) return;
+        if (!res.ok) setNote(data?.error ?? "buy_failed");
+        else {
+          setNote("activated");
+          window.history.replaceState(null, "", "/profile/vip");
+          await reload();
+        }
+      })
+      .catch(() => {
+        if (!stop) setNote("buy_failed");
+      });
+    return () => {
+      stop = true;
+    };
+  }, [reload, user]);
+
+  async function buy() {
+    setBusy(true);
+    setNote(null);
+    try {
+      const res = await fetch("/api/vip/checkout", { method: "POST" });
+      const data = (await res.json().catch(() => null)) as { url?: string; error?: string } | null;
+      if (!res.ok || !data?.url) {
+        setNote(data?.error ?? "buy_failed");
+        setBusy(false);
+        return;
+      }
+      window.location.href = data.url;
+    } catch {
+      setNote("buy_failed");
+      setBusy(false);
+    }
+  }
+
+  const noteText =
+    note === "canceled"
+      ? t.vip.canceled
+      : note === "activated"
+        ? t.vip.activated
+        : note === "stripe_not_configured"
+          ? t.vip.stripeMissing
+          : note
+            ? t.vip.buyFailed
+            : null;
 
   if (!enabled || !cloud) {
     return (
@@ -24,17 +90,6 @@ export function VipPageInner() {
     return (
       <div className="mx-auto max-w-lg px-3 py-10 text-sm text-muted-foreground">
         {t.auth.loading}
-      </div>
-    );
-  }
-
-  if (!user) {
-    return (
-      <div className="mx-auto max-w-lg px-3 py-10">
-        <p className="text-sm text-muted-foreground">{t.profile.signInRequired}</p>
-        <Link href="/login?next=/profile/vip" className="mt-4 text-primary hover:underline">
-          {t.auth.signIn}
-        </Link>
       </div>
     );
   }
@@ -80,6 +135,16 @@ export function VipPageInner() {
           <p className="font-medium">{t.vip.planTitle}</p>
           <p className="mt-1 text-2xl font-bold">{t.vip.planPrice}</p>
           <p className="mt-3 text-sm text-muted-foreground">{t.vip.demoNote}</p>
+          {profile?.isVip ? null : user ? (
+            <Button className="mt-4" disabled={busy} onClick={() => void buy()}>
+              {busy ? t.vip.buying : t.vip.buy}
+            </Button>
+          ) : (
+            <Link href="/login?next=/profile/vip" className={cn(buttonVariants(), "mt-4")}>
+              {t.vip.buy}
+            </Link>
+          )}
+          {noteText ? <p className="mt-3 text-sm text-primary">{noteText}</p> : null}
         </div>
       </section>
     </div>

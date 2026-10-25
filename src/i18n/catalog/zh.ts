@@ -20,6 +20,7 @@ const zh: Dict = {
       zones: "评分专区",
       search: "搜索",
       privacy: "隐私政策",
+      vip: "VIP",
     },
     zones: {
       title: "评分专区",
@@ -295,7 +296,12 @@ const zh: Dict = {
       planPrice: "每月 7 欧元",
       activate: "在 App Store 或 Google Play 购买",
       activated: "VIP 已开通，刷新评分页即可无限五维打分。",
-      demoNote: "看台月卡在 App Store 和 Google Play 购买。商店商品上架之前，网页不会扣款，也不会开通会员。",
+      demoNote: "网页用银行卡开通，每月 7 欧元。装好的 iPhone 和 Android 应用在 App Store 或 Google Play 购买同一份会员。",
+      buy: "购买看台月卡",
+      buying: "正在打开付款…",
+      buyFailed: "这次付款没有完成。",
+      stripeMissing: "银行卡付款还没配好。把 STRIPE_SECRET_KEY 放进网站的 Secrets。",
+      canceled: "已取消付款，没有扣款。",
     },
     auth: {
       signIn: "登录",

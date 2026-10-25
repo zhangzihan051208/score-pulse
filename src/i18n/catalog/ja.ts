@@ -20,6 +20,7 @@ const ja: Dict = {
       zones: "専区",
       search: "検索",
       privacy: "プライバシー",
+      vip: "VIP",
     },
     zones: {
       title: "採点ゾーン",
@@ -294,7 +295,12 @@ const ja: Dict = {
       planPrice: "月額 7 ユーロ",
       activate: "App Store または Google Play で購入",
       activated: "VIP を有効化しました。採点ページを更新してください。",
-      demoNote: "看台月卡は App Store と Google Play で購入します。商品が公開されるまで、サイトは課金も会員の付与もしません。",
+      demoNote: "このサイトではカードで月額 7 ユーロ。iPhone と Android アプリは App Store または Google Play で同じ会員を購入します。",
+      buy: "看台月卡を購入",
+      buying: "支払いを開いています…",
+      buyFailed: "支払いが完了しませんでした。",
+      stripeMissing: "カード決済はまだ設定されていません。サイトの Secrets に STRIPE_SECRET_KEY を追加してください。",
+      canceled: "支払いはキャンセルされました。請求はありません。",
     },
     auth: {
       signIn: "ログイン",

@@ -19,6 +19,7 @@ export type Dict = {
     zones: string;
     search: string;
     privacy: string;
+    vip: string;
   };
   search: {
     title: string;
@@ -274,6 +275,11 @@ export type Dict = {
     activate: string;
     activated: string;
     demoNote: string;
+    buy: string;
+    buying: string;
+    buyFailed: string;
+    stripeMissing: string;
+    canceled: string;
   };
   auth: {
     signIn: string;

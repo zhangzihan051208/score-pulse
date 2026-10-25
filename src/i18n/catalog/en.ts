@@ -20,6 +20,7 @@ const en: Dict = {
       zones: "Zones",
       search: "Search",
       privacy: "Privacy",
+      vip: "VIP",
     },
     zones: {
       title: "Rating zones",
@@ -299,7 +300,12 @@ const en: Dict = {
       planPrice: "€7 per month",
       activate: "Buy on the App Store or Google Play",
       activated: "VIP activated. Refresh any rating page to unlock full axes.",
-      demoNote: "Grandstand Monthly is sold on the App Store and Google Play. Until those products are live, the website does not charge or turn on VIP.",
+      demoNote: "€7 a month on this site by card. The iPhone and Android apps buy the same membership in the App Store or Google Play.",
+      buy: "Buy Grandstand Monthly",
+      buying: "Opening checkout…",
+      buyFailed: "The payment did not finish.",
+      stripeMissing: "Card checkout is not configured yet. Add STRIPE_SECRET_KEY to the site secrets.",
+      canceled: "Checkout was canceled. You have not been charged.",
     },
     auth: {
       signIn: "Sign in",

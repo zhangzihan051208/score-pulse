@@ -20,6 +20,7 @@ const es: Dict = {
       zones: "Zonas",
       search: "Buscar",
       privacy: "Privacidad",
+      vip: "VIP",
     },
     zones: {
       title: "Zonas de notas",
@@ -299,7 +300,12 @@ const es: Dict = {
       planPrice: "7 € al mes",
       activate: "Comprar en App Store o Google Play",
       activated: "VIP activado. Recarga la página de notas.",
-      demoNote: "Grandstand Monthly se compra en App Store y Google Play. Hasta que el producto esté a la venta, la web no cobra ni activa VIP.",
+      demoNote: "7 € al mes con tarjeta en esta web. Las apps de iPhone y Android compran la misma membresía en App Store o Google Play.",
+      buy: "Comprar Grandstand Monthly",
+      buying: "Abriendo el pago…",
+      buyFailed: "El pago no se completó.",
+      stripeMissing: "El pago con tarjeta aún no está configurado. Añade STRIPE_SECRET_KEY a los secretos del sitio.",
+      canceled: "Pago cancelado. No se ha cobrado.",
     },
     auth: {
       signIn: "Entrar",

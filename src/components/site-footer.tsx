@@ -32,6 +32,9 @@ export function SiteFooter() {
           <Link href="/profile" className="hover:text-white">
             {t.nav.profile}
           </Link>
+          <Link href="/profile/vip" className="hover:text-white">
+            {t.nav.vip}
+          </Link>
           <Link href="/search" className="hover:text-white">
             {t.nav.search}
           </Link>

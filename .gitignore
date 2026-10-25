@@ -23,6 +23,8 @@
 # misc
 .DS_Store
 *.pem
+# Apple's public StoreKit root. Not a private key.
+!src/lib/apple-root-g3.pem
 
 # debug
 npm-debug.log*

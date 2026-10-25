@@ -358,8 +358,8 @@ export function RateCard({
               : t.rate.fullQuotaBanner
                   .replace("{used}", String(quota.fullRatingsToday))
                   .replace("{limit}", String(quota.fullRatingsLimit))}{" "}
-            <Link href="/profile" className="font-medium text-primary hover:underline">
-              VIP
+            <Link href="/profile/vip" className="font-medium text-primary hover:underline">
+              {t.vip.buy}
             </Link>
           </p>
         ) : null}

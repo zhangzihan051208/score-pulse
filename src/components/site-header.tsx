@@ -85,7 +85,12 @@ export function SiteHeader() {
             <NavLink
               href="/profile"
               label={t.nav.profile}
-              active={pathname.startsWith("/profile")}
+              active={pathname.startsWith("/profile") && !pathname.startsWith("/profile/vip")}
+            />
+            <NavLink
+              href="/profile/vip"
+              label={t.nav.vip}
+              active={pathname.startsWith("/profile/vip")}
             />
             <NavLink
               href="/rankings"

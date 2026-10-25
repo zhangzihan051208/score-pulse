@@ -61,7 +61,7 @@ Grandstand reserves the same ad space on iOS, Android, and the web. This build l
 - App Store 订阅产品 ID：`com.grandstand.tribune.vip.monthly`
 - Google Play 订阅产品 ID：`grandstand_vip_monthly`
 
-在两个商店后台建成这个自动续期订阅之后，应用才能真正扣款。当前安装包里的开关只在本机预览权益。
+安装包用商店内购买扣款：iPhone 走 App Store，Android 走 Google Play。网站页头和 `/profile/vip` 用银行卡购买同一份月卡。商店后台还没建好这个自动续期订阅时，购买按钮会停在商店错误上，不会开通会员。
 
 ## 提交前你需要自己准备
 
