@@ -27,14 +27,17 @@ create table if not exists public.blocks (
 alter table public.reports enable row level security;
 alter table public.blocks enable row level security;
 
+drop policy if exists "users insert own reports" on public.reports;
 create policy "users insert own reports"
   on public.reports for insert
   with check (auth.uid() = reporter_id);
 
+drop policy if exists "users read own reports" on public.reports;
 create policy "users read own reports"
   on public.reports for select
   using (auth.uid() = reporter_id);
 
+drop policy if exists "users manage own blocks" on public.blocks;
 create policy "users manage own blocks"
   on public.blocks for all
   using (auth.uid() = blocker_id)

@@ -18,11 +18,14 @@ create index if not exists athlete_profiles_team_idx
 
 alter table public.athlete_profiles enable row level security;
 
+drop policy if exists "athlete profiles are viewable by everyone" on public.athlete_profiles;
 create policy "athlete profiles are viewable by everyone"
   on public.athlete_profiles for select using (true);
 
+drop policy if exists "authenticated users can upsert athlete profiles" on public.athlete_profiles;
 create policy "authenticated users can upsert athlete profiles"
   on public.athlete_profiles for insert with check (auth.uid() is not null);
 
+drop policy if exists "authenticated users can update athlete profiles" on public.athlete_profiles;
 create policy "authenticated users can update athlete profiles"
   on public.athlete_profiles for update using (auth.uid() is not null);

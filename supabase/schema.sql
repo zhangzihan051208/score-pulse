@@ -22,6 +22,16 @@ create table if not exists public.ratings (
   primary key (user_id, event_id, athlete_id)
 );
 
+alter table public.ratings
+  add column if not exists rating_mode text not null default 'full';
+
+alter table public.ratings
+  drop constraint if exists ratings_rating_mode_check;
+
+alter table public.ratings
+  add constraint ratings_rating_mode_check
+  check (rating_mode in ('full', 'overall_only'));
+
 create index if not exists ratings_event_athlete_idx
   on public.ratings (event_id, athlete_id);
 
@@ -37,6 +47,14 @@ create table if not exists public.comments (
   hidden boolean not null default false,
   created_at timestamptz not null default now()
 );
+
+-- Existing projects already have comments without these columns.
+-- CREATE TABLE IF NOT EXISTS does not add them.
+alter table public.comments
+  add column if not exists parent_id uuid references public.comments (id) on delete cascade;
+
+alter table public.comments
+  add column if not exists hidden boolean not null default false;
 
 create index if not exists comments_event_athlete_idx
   on public.comments (event_id, athlete_id, created_at desc);
@@ -91,42 +109,55 @@ alter table public.comments enable row level security;
 alter table public.comment_likes enable row level security;
 alter table public.sportsdb_fixtures enable row level security;
 
+drop policy if exists "profiles are viewable by everyone" on public.profiles;
 create policy "profiles are viewable by everyone"
   on public.profiles for select using (true);
 
+drop policy if exists "users can update own profile" on public.profiles;
 create policy "users can update own profile"
   on public.profiles for update using (auth.uid() = id);
 
+drop policy if exists "users can insert own profile" on public.profiles;
 create policy "users can insert own profile"
   on public.profiles for insert with check (auth.uid() = id);
 
+drop policy if exists "ratings are viewable by everyone" on public.ratings;
 create policy "ratings are viewable by everyone"
   on public.ratings for select using (true);
 
+drop policy if exists "users can insert own ratings" on public.ratings;
 create policy "users can insert own ratings"
   on public.ratings for insert with check (auth.uid() = user_id);
 
+drop policy if exists "users can update own ratings" on public.ratings;
 create policy "users can update own ratings"
   on public.ratings for update using (auth.uid() = user_id);
 
+drop policy if exists "comments are viewable by everyone" on public.comments;
 create policy "comments are viewable by everyone"
   on public.comments for select using (true);
 
+drop policy if exists "users can insert own comments" on public.comments;
 create policy "users can insert own comments"
   on public.comments for insert with check (auth.uid() = user_id);
 
+drop policy if exists "authors can hide own comments" on public.comments;
 create policy "authors can hide own comments"
   on public.comments for update using (auth.uid() = user_id);
 
+drop policy if exists "comment likes are viewable by everyone" on public.comment_likes;
 create policy "comment likes are viewable by everyone"
   on public.comment_likes for select using (true);
 
+drop policy if exists "users can like comments" on public.comment_likes;
 create policy "users can like comments"
   on public.comment_likes for insert with check (auth.uid() = user_id);
 
+drop policy if exists "users can unlike own likes" on public.comment_likes;
 create policy "users can unlike own likes"
   on public.comment_likes for delete using (auth.uid() = user_id);
 
+drop policy if exists "fixtures are viewable by everyone" on public.sportsdb_fixtures;
 create policy "fixtures are viewable by everyone"
   on public.sportsdb_fixtures for select using (true);
 

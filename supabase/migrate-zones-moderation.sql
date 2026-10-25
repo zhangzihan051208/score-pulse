@@ -63,15 +63,19 @@ alter table public.rating_zones enable row level security;
 alter table public.zone_items enable row level security;
 alter table public.zone_ratings enable row level security;
 
+drop policy if exists "zones are viewable when published" on public.rating_zones;
 create policy "zones are viewable when published"
   on public.rating_zones for select using (published = true or auth.uid() = owner_id);
 
+drop policy if exists "users can insert own zones" on public.rating_zones;
 create policy "users can insert own zones"
   on public.rating_zones for insert with check (auth.uid() = owner_id);
 
+drop policy if exists "owners can update own zones" on public.rating_zones;
 create policy "owners can update own zones"
   on public.rating_zones for update using (auth.uid() = owner_id);
 
+drop policy if exists "zone items viewable when zone visible" on public.zone_items;
 create policy "zone items viewable when zone visible"
   on public.zone_items for select using (
     exists (
@@ -81,21 +85,27 @@ create policy "zone items viewable when zone visible"
     and (hidden = false or created_by = auth.uid())
   );
 
+drop policy if exists "authenticated can insert zone items" on public.zone_items;
 create policy "authenticated can insert zone items"
   on public.zone_items for insert with check (auth.uid() = created_by);
 
+drop policy if exists "creators can update own items" on public.zone_items;
 create policy "creators can update own items"
   on public.zone_items for update using (auth.uid() = created_by);
 
+drop policy if exists "zone ratings viewable by everyone" on public.zone_ratings;
 create policy "zone ratings viewable by everyone"
   on public.zone_ratings for select using (true);
 
+drop policy if exists "users insert own zone ratings" on public.zone_ratings;
 create policy "users insert own zone ratings"
   on public.zone_ratings for insert with check (auth.uid() = user_id);
 
+drop policy if exists "users update own zone ratings" on public.zone_ratings;
 create policy "users update own zone ratings"
   on public.zone_ratings for update using (auth.uid() = user_id);
 
+drop policy if exists "zone owners can moderate comments" on public.comments;
 create policy "zone owners can moderate comments"
   on public.comments for update using (
     auth.uid() = user_id
