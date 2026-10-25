@@ -19,7 +19,6 @@ export function LegacyBoardBlock({ sport }: { sport: Sport }) {
         <div className="flex items-center gap-2">
           <span className={`h-5 w-1 rounded-full ${SPORT_CHIP[sport]}`} />
           <h3 className="font-semibold">{t.sports[sport]}</h3>
-          <span className="text-xs text-muted-foreground">{t.home.demoArchive}</span>
         </div>
         <Link
           href={`/boards/${sport}`}

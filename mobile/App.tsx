@@ -6,7 +6,6 @@ import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { StatusBar } from "expo-status-bar";
 import { Image, Pressable, StyleSheet, Text, View } from "react-native";
 import { SafeAreaProvider, useSafeAreaInsets } from "react-native-safe-area-context";
-import { AdSlot } from "./src/components/AdSlot";
 import { LocaleProvider, useLocale } from "./src/i18n";
 import type { RootStackParamList, TabParamList } from "./src/navigation";
 import { BoardsScreen } from "./src/screens/BoardsScreen";
@@ -147,7 +146,6 @@ export default function App() {
             <SessionProvider>
               <View style={styles.column}>
                 <Root />
-                <AdSlot dock />
               </View>
             </SessionProvider>
           </LocaleProvider>

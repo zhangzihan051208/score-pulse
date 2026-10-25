@@ -1,4 +1,4 @@
-import { S } from "./copy";
+import { L, S } from "./copy";
 import { emptyScoresForPosition } from "./position-ratings";
 import { inferPositionKey } from "./position-infer";
 import { fixtureSlug } from "./slugify";
@@ -164,15 +164,32 @@ export function fixtureToMatchEvent(
     venue: S("—"),
     startAt: startIso(row.date_event, row.str_time),
     status,
-    summary: S(
+    summary:
       scoreOnly || performances.length === 0
         ? score
-          ? `Score from cache: ${score}. Lineup temporarily unavailable.`
-          : "Scoreboard from cache — lineup temporarily unavailable."
+          ? L(`${score}`, `${score}`, `${score}`, `${score}`)
+          : L(
+              "The lineup is not posted yet.",
+              "阵容还没公布。",
+              "La plantilla aún no está publicada.",
+              "メンバーはまだ公開されていません。",
+              "Der Kader ist noch nicht veröffentlicht.",
+            )
         : score
-          ? `Final or in-progress: ${score}. ${performances.length} players on the board.`
-          : `${performances.length} players on the board — synced from TheSportsDB.`,
-    ),
+          ? L(
+              `${score}. ${performances.length} players to rate.`,
+              `${score}。${performances.length} 人可以打分。`,
+              `${score}. ${performances.length} jugadores para puntuar.`,
+              `${score}。${performances.length} 人を採点できます。`,
+              `${score}. ${performances.length} Spieler zum Bewerten.`,
+            )
+          : L(
+              `${performances.length} players to rate.`,
+              `${performances.length} 人可以打分。`,
+              `${performances.length} jugadores para puntuar.`,
+              `${performances.length} 人を採点できます。`,
+              `${performances.length} Spieler zum Bewerten.`,
+            ),
     cover: SPORT_ACCENT[sport],
     performances: scoreOnly && performances.length === 0 ? [] : performances,
     roster: scoreOnly && performances.length === 0 ? {} : roster,
