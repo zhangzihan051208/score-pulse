@@ -5,7 +5,7 @@ import { isSupabaseConfigured } from "@/lib/supabase/config";
 import { NextResponse } from "next/server";
 import type { Sport } from "@/lib/types";
 
-export const MATCH_ATHLETE_ID = "__match__";
+const MATCH_ATHLETE_ID = "__match__";
 
 function clampScore(n: number) {
   if (Number.isNaN(n)) return 0;

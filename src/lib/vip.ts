@@ -4,6 +4,13 @@ export const FREE_FULL_RATINGS_PER_DAY = 5;
 export const VIP_RATING_WEIGHT = 2;
 export const STANDARD_RATING_WEIGHT = 1;
 
+/** Store subscription. €7 per month. Create these products before charging. */
+export const VIP_PRODUCT_NAME = "看台月卡";
+export const VIP_PRODUCT_NAME_EN = "Grandstand Monthly";
+export const VIP_PRICE_EUR = 7;
+export const VIP_APPLE_PRODUCT_ID = "com.grandstand.tribune.vip.monthly";
+export const VIP_GOOGLE_PRODUCT_ID = "grandstand_vip_monthly";
+
 export type RatingMode = "full" | "overall_only";
 
 export function isVipActive(vipUntil: string | null | undefined): boolean {

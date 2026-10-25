@@ -2,11 +2,12 @@
 
 import Link from "next/link";
 import { useI18n } from "@/i18n/use-i18n";
+import { operatorName, supportEmail } from "@/lib/operator";
 
 export default function PrivacyPage() {
   const { t } = useI18n();
-  const operator = process.env.NEXT_PUBLIC_OPERATOR_NAME?.trim() || t.privacy.operatorMissing;
-  const email = process.env.NEXT_PUBLIC_SUPPORT_EMAIL?.trim() || t.privacy.emailMissing;
+  const operator = operatorName();
+  const email = supportEmail();
   const paragraphs = [
     t.privacy.intro,
     t.privacy.collect,

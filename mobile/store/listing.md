@@ -54,6 +54,15 @@ Grandstand reserves the same ad space on iOS, Android, and the web. This build l
 - 广告位为空，未接入广告 ID，无定位，无通讯录。
 - 用户可以在本机写评论。带联系方式或导流的专区评论会先待审核，不会公开。
 
+## 订阅
+
+商品名：看台月卡（Grandstand Monthly）。价格：每月 7 欧元。
+
+- App Store 订阅产品 ID：`com.grandstand.tribune.vip.monthly`
+- Google Play 订阅产品 ID：`grandstand_vip_monthly`
+
+在两个商店后台建成这个自动续期订阅之后，应用才能真正扣款。当前安装包里的开关只在本机预览权益。
+
 ## 提交前你需要自己准备
 
 - Google Play 开发者账号，以及签名密钥（EAS 或 Android Studio 生成，不要提交到仓库）。

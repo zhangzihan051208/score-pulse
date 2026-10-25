@@ -1,8 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
-import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/use-auth";
 import { useProfile } from "@/hooks/use-profile";
 import { useVipQuota } from "@/hooks/use-vip";
@@ -11,10 +9,8 @@ import { useI18n } from "@/i18n/use-i18n";
 export function VipPageInner() {
   const { t } = useI18n();
   const { user, enabled, loading: authLoading } = useAuth();
-  const { profile, loading, cloud, reload: reloadProfile } = useProfile();
-  const { quota, reload: reloadVip } = useVipQuota();
-  const [vipBusy, setVipBusy] = useState(false);
-  const [vipMsg, setVipMsg] = useState<string | null>(null);
+  const { profile, loading, cloud } = useProfile();
+  const { quota } = useVipQuota();
 
   if (!enabled || !cloud) {
     return (
@@ -82,37 +78,9 @@ export function VipPageInner() {
         )}
         <div className="rounded-lg border border-dashed p-4">
           <p className="font-medium">{t.vip.planTitle}</p>
-          <p className="mt-2 text-sm text-muted-foreground">{t.vip.planPrice}</p>
-          <Button
-            type="button"
-            className="mt-4 w-full"
-            disabled={vipBusy}
-            onClick={async () => {
-              setVipBusy(true);
-              setVipMsg(null);
-              try {
-                const res = await fetch("/api/vip/activate", {
-                  method: "POST",
-                  headers: { "Content-Type": "application/json" },
-                  body: JSON.stringify({ days: 30 }),
-                });
-                const data = (await res.json()) as { error?: string };
-                if (!res.ok) {
-                  setVipMsg(data.error ?? t.auth.failed);
-                  return;
-                }
-                setVipMsg(t.vip.activated);
-                await Promise.all([reloadProfile(), reloadVip()]);
-              } finally {
-                setVipBusy(false);
-              }
-            }}
-          >
-            {t.vip.activate}
-          </Button>
-          <p className="mt-3 text-[11px] text-muted-foreground">{t.vip.demoNote}</p>
+          <p className="mt-1 text-2xl font-bold">{t.vip.planPrice}</p>
+          <p className="mt-3 text-sm text-muted-foreground">{t.vip.demoNote}</p>
         </div>
-        {vipMsg ? <p className="text-sm text-primary">{vipMsg}</p> : null}
       </section>
     </div>
   );

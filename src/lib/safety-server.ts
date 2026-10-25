@@ -1,4 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { ADMIN_EMAIL } from "@/lib/operator";
 
 /** Users hidden from this viewer. A block works in both directions. */
 export async function blockedUserIds(
@@ -20,10 +21,11 @@ export async function blockedUserIds(
 }
 
 export function adminEmails() {
-  return (process.env.SAFETY_ADMIN_EMAILS ?? "")
+  const listed = (process.env.SAFETY_ADMIN_EMAILS ?? "")
     .split(",")
     .map((email) => email.trim().toLowerCase())
     .filter(Boolean);
+  return listed.length > 0 ? listed : [ADMIN_EMAIL];
 }
 
 export function isSafetyAdmin(email: string | undefined) {

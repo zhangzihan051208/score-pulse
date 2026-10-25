@@ -45,7 +45,11 @@ Save **Secrets** in the Secrets tab separately (names like `PANDASCORE_API_TOKEN
 
 ## Store review
 
-The website can delete an account, report a comment, block a user, and store a match score in Supabase. The phone app keeps grades on the device until `EXPO_PUBLIC_API_URL` is wired, and its profile screen can erase that local data. Ads stay empty. VIP on the phone is a local preview and does not charge.
+The website can delete an account, report a comment, block a user, and store a match score in Supabase. The phone app keeps grades on the device until `EXPO_PUBLIC_API_URL` is wired, and its profile screen can erase that local data. Ads stay empty.
+
+Operator: 张子函. Support and review email: zhangzihan051208@gmail.com. That address is also the safety-queue admin when `SAFETY_ADMIN_EMAILS` is unset.
+
+VIP product: **看台月卡** / Grandstand Monthly, €7 per month. App Store product id `com.grandstand.tribune.vip.monthly`. Google Play product id `grandstand_vip_monthly`. The website does not grant VIP until those store products are connected. The phone switch still only previews the benefit on the device.
 
 Before a store submission, fill `.env.local` (and the hosted environment) with:
 
