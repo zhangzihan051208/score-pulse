@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -11,6 +12,7 @@ export function ProfileScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { t, toggle } = useLocale();
   const session = useSession();
+  const [confirmWipe, setConfirmWipe] = useState(false);
   const clubs = favoriteNames(session.favorites);
   const initial = (session.name || t.guest).slice(0, 1).toUpperCase();
 
@@ -50,6 +52,29 @@ export function ProfileScreen() {
           { label: t.language, onPress: toggle },
         ]}
       />
+
+      {confirmWipe ? (
+        <View style={ui.card}>
+          <Text style={ui.title}>{t.wipeDevice}</Text>
+          <Text style={ui.muted}>{t.wipeHint}</Text>
+          <Pressable
+            style={ui.primaryBtn}
+            onPress={() => {
+              session.wipeDevice();
+              setConfirmWipe(false);
+            }}
+          >
+            <Text style={ui.primaryBtnText}>{t.wipeDevice}</Text>
+          </Pressable>
+          <Pressable onPress={() => setConfirmWipe(false)} style={styles.signOut}>
+            <Text style={styles.signOutText}>{t.cancel}</Text>
+          </Pressable>
+        </View>
+      ) : (
+        <Pressable style={styles.signOut} onPress={() => setConfirmWipe(true)}>
+          <Text style={styles.wipeText}>{t.wipeDevice}</Text>
+        </Pressable>
+      )}
 
       {session.name ? (
         <Pressable style={styles.signOut} onPress={() => navigation.navigate("Login")}>
@@ -120,4 +145,5 @@ const styles = StyleSheet.create({
   chevron: { color: "#C4B4A4", fontSize: 22, fontWeight: "400" },
   signOut: { alignItems: "center", paddingVertical: 8 },
   signOutText: { color: colors.muted, fontWeight: "700" },
+  wipeText: { color: colors.primary, fontWeight: "700" },
 });

@@ -1,3 +1,4 @@
+import { blockedUserIds } from "@/lib/safety-server";
 import { createClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 import { enrichTakesWithSocial } from "@/lib/comment-enrich";
@@ -60,10 +61,14 @@ export async function GET(
       .order("updated_at", { ascending: false }),
   ]);
 
+  const hidden = await blockedUserIds(supabase, user?.id);
+  const visibleComments = (comments ?? []).filter((row) => !hidden.has(row.user_id));
+  const visibleRatings = (ratings ?? []).filter((row) => !hidden.has(row.user_id));
+
   const userIds = [
     ...new Set([
-      ...(ratings ?? []).map((r) => r.user_id),
-      ...(comments ?? []).map((c) => c.user_id),
+      ...visibleRatings.map((r) => r.user_id),
+      ...visibleComments.map((c) => c.user_id),
     ]),
   ];
   const profileMap = new Map<string, string>();
@@ -79,7 +84,7 @@ export async function GET(
     }
   }
 
-  const allComments = (comments ?? []).filter(
+  const allComments = visibleComments.filter(
     (c) => c.moderation_status === "approved" || !c.moderation_status,
   );
   const commentRows = allComments
@@ -94,7 +99,7 @@ export async function GET(
       isYou: user?.id === c.user_id,
     }));
 
-  const ratingRows = (ratings ?? []).map((r) => ({
+  const ratingRows = visibleRatings.map((r) => ({
     userId: r.user_id,
     author: profileMap.get(r.user_id) ?? "Fan",
     scores: r.scores as ScoreMap,

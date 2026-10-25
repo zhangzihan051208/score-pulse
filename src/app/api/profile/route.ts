@@ -1,6 +1,6 @@
 import { normalizeFavorites } from "@/lib/favorite-teams";
 import { isVipActive } from "@/lib/vip";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, createServiceClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 import { NextResponse } from "next/server";
 
@@ -149,4 +149,26 @@ export async function PATCH(request: Request) {
   }
 
   return NextResponse.json({ profile: rowToProfile(data) });
+}
+
+export async function DELETE() {
+  if (!isSupabaseConfigured()) {
+    return NextResponse.json({ error: "Supabase not configured" }, { status: 503 });
+  }
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) {
+    return NextResponse.json({ error: "Sign in required" }, { status: 401 });
+  }
+  const admin = createServiceClient();
+  if (!admin) {
+    return NextResponse.json({ error: "Missing SUPABASE_SERVICE_ROLE_KEY" }, { status: 503 });
+  }
+  const { error } = await admin.auth.admin.deleteUser(user.id);
+  if (error) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+  return NextResponse.json({ ok: true });
 }

@@ -42,15 +42,15 @@ English: Phone-scale parity with the site: matches, five-axis grades, comparison
 
 中文：
 
-看台在 iOS、Android 和网页留出同一块广告位。这一版只留空位，没有接入广告 SDK，不会因广告读取设备标识。比赛样例、评分榜和头像在安装包里。登录名、主队、评分和专区保存在这台设备上，不上传通讯录。系统崩溃日志由 Google Play 或 App Store 按它们自己的政策处理。
+看台在 iOS、Android 和网页留出同一块广告位。这一版只留空位，没有接入广告 SDK，不会因广告读取设备标识。比赛样例、评分榜和头像在安装包里。登录名、主队、评分和专区保存在这台设备上，不上传通讯录。可以在个人页清除这台设备上的数据。连上网页账号之后，注销在网页个人页完成，会删掉云端昵称、评分和评论；这一版手机端仍不上传评分。系统崩溃日志由 Google Play 或 App Store 按它们自己的政策处理。
 
 English:
 
-Grandstand reserves the same ad space on iOS, Android, and the web. This build leaves the space empty and does not include an ad SDK, so ads do not read a device id. Sample matches, boards, and portraits ship in the install. Your name, clubs, ratings, and zones stay on this device. The store may keep crash logs under its own policy.
+Grandstand reserves the same ad space on iOS, Android, and the web. This build leaves the space empty and does not include an ad SDK, so ads do not read a device id. Sample matches, boards, and portraits ship in the install. Your name, clubs, ratings, and zones stay on this device. You can erase that data from the profile screen. After a website account is connected, deleting it on the website profile removes the cloud nickname, ratings, and comments. This phone build still does not upload grades. The store may keep crash logs under its own policy.
 
 ## 数据安全（Play Console）
 
-- 不向开发者服务器上传数据。登录名、评分、主队和专区只存在这台设备上。
+- 手机这一版不向开发者服务器上传数据。登录名、评分、主队和专区只存在这台设备上，可在个人页清除。网页账号另算，注销在网页个人页。
 - 广告位为空，未接入广告 ID，无定位，无通讯录。
 - 用户可以在本机写评论。带联系方式或导流的专区评论会先待审核，不会公开。
 

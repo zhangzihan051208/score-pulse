@@ -62,6 +62,7 @@ type Session = {
   onboarded: boolean;
   ratings: SavedRating[];
   matchTakes: MatchTake[];
+  hiddenTakeIds: string[];
   favorites: Favorites;
   zones: Zone[];
 };
@@ -70,6 +71,9 @@ type SessionApi = Session & {
   ready: boolean;
   signIn: (name: string, bio: string) => void;
   signOut: () => void;
+  wipeDevice: () => void;
+  hideTake: (id: string) => void;
+  removeMatch: (eventSlug: string) => void;
   completeOnboarding: () => void;
   setVip: (vip: boolean) => void;
   setFavorite: (sport: string, slot: "primary" | "secondary", teamId?: string) => void;
@@ -130,6 +134,7 @@ const empty: Session = {
   onboarded: false,
   ratings: [],
   matchTakes: [],
+  hiddenTakeIds: [],
   favorites: {},
   zones: seedZones,
 };
@@ -161,6 +166,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
             onboarded,
             zones: parsed.zones?.length ? parsed.zones : seedZones,
             matchTakes: parsed.matchTakes ?? [],
+            hiddenTakeIds: Array.isArray(parsed.hiddenTakeIds) ? parsed.hiddenTakeIds : [],
           });
         }
       })
@@ -180,6 +186,22 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       ready,
       signIn: (name, bio) => setSession((current) => ({ ...current, name: name.trim() || "球迷", bio })),
       signOut: () => setSession((current) => ({ ...current, name: null, bio: "" })),
+      wipeDevice: () =>
+        setSession((current) => ({
+          ...empty,
+          onboarded: current.onboarded,
+        })),
+      hideTake: (id) =>
+        setSession((current) =>
+          current.hiddenTakeIds.includes(id)
+            ? current
+            : { ...current, hiddenTakeIds: [...current.hiddenTakeIds, id] },
+        ),
+      removeMatch: (eventSlug) =>
+        setSession((current) => ({
+          ...current,
+          matchTakes: current.matchTakes.filter((row) => row.eventSlug !== eventSlug),
+        })),
       completeOnboarding: () => setSession((current) => ({ ...current, onboarded: true })),
       setVip: (vip) => setSession((current) => ({ ...current, vip })),
       setFavorite: (key, slot, teamId) =>

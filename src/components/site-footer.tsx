@@ -35,6 +35,12 @@ export function SiteFooter() {
           <Link href="/search" className="hover:text-white">
             {t.nav.search}
           </Link>
+          <Link href="/privacy" className="hover:text-white">
+            {t.nav.privacy}
+          </Link>
+          <Link href="/safety" className="hover:text-white">
+            {t.safety.title}
+          </Link>
         </nav>
       </div>
       <div className="border-t border-white/8 px-3 py-4 text-center text-[11px] text-white/40 sm:px-4">

@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/hooks/use-auth";
+import { createClient } from "@/lib/supabase/client";
 import { useProfile } from "@/hooks/use-profile";
 import { useI18n } from "@/i18n/use-i18n";
 import type { UserEngagement } from "@/lib/types";
@@ -25,6 +26,9 @@ export function ProfilePageInner() {
   const [saved, setSaved] = useState(false);
   const [saving, setSaving] = useState(false);
   const [engagement, setEngagement] = useState<UserEngagement | null>(null);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [deleteText, setDeleteText] = useState("");
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!profile) return;
@@ -243,6 +247,51 @@ export function ProfilePageInner() {
           {t.profile.save}
         </Button>
       </form>
+
+      <div className="mt-10 rounded-xl border border-destructive/30 p-4">
+        <h2 className="text-sm font-semibold">{t.profile.deleteAccount}</h2>
+        <p className="mt-1 text-sm text-muted-foreground">{t.profile.deleteHint}</p>
+        {deleteOpen ? (
+          <div className="mt-3 space-y-2">
+            <Input
+              value={deleteText}
+              placeholder={t.profile.deleteWord}
+              onChange={(e) => setDeleteText(e.target.value)}
+            />
+            <Button
+              type="button"
+              variant="destructive"
+              disabled={deleteText.trim() !== t.profile.deleteWord || saving}
+              onClick={() => {
+                setSaving(true);
+                setDeleteError(null);
+                void fetch("/api/profile", { method: "DELETE" })
+                  .then(async (res) => {
+                    if (!res.ok) {
+                      const data = (await res.json().catch(() => null)) as { error?: string } | null;
+                      setDeleteError(data?.error ?? t.profile.deleteFailed);
+                      setSaving(false);
+                      return;
+                    }
+                    await createClient().auth.signOut();
+                    window.location.href = "/";
+                  })
+                  .catch(() => {
+                    setDeleteError(t.profile.deleteFailed);
+                    setSaving(false);
+                  });
+              }}
+            >
+              {t.profile.deleteAccount}
+            </Button>
+            {deleteError ? <p className="text-sm text-destructive">{deleteError}</p> : null}
+          </div>
+        ) : (
+          <Button type="button" variant="outline" className="mt-3" onClick={() => setDeleteOpen(true)}>
+            {t.profile.deleteAccount}
+          </Button>
+        )}
+      </div>
     </div>
   );
 }

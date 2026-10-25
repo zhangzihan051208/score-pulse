@@ -16,7 +16,7 @@ Open `http://127.0.0.1:43147` or use Cursor **Preview** (Desktop). Styling needs
 ## Supabase + TheSportsDB
 
 1. Copy `.env.example` → `.env.local` and fill keys.
-2. In Supabase **SQL Editor**, run `supabase/schema.sql`. Existing projects: also run `supabase/migrate-profile-fields.sql`, `supabase/migrate-vip.sql`, `supabase/migrate-social.sql`, `supabase/migrate-athlete-profiles.sql`, and `supabase/migrate-zones-moderation.sql` (DIY rating zones + comment moderation).
+2. In Supabase **SQL Editor**, run `supabase/schema.sql`. Existing projects: also run `supabase/migrate-profile-fields.sql`, `supabase/migrate-vip.sql`, `supabase/migrate-social.sql`, `supabase/migrate-athlete-profiles.sql`, `supabase/migrate-zones-moderation.sql` (DIY rating zones + comment moderation), and `supabase/migrate-safety.sql` (reports and blocks).
 3. **Authentication → URL Configuration**: Site URL `http://127.0.0.1:43147`, redirect `http://127.0.0.1:43147/**`.
 4. Sign in at `/login`. Edit nickname, avatar URL, and signature at `/profile`. Ratings/comments post to Supabase when configured.
 5. Sync (two steps — schedules first, rosters on a schedule):
@@ -42,6 +42,19 @@ In the dashboard **Install / Start** JSON, use **only** these two keys (do not p
 ```
 
 Save **Secrets** in the Secrets tab separately (names like `PANDASCORE_API_TOKEN`, no spaces). If Save still errors, save scripts first, then add secrets one tab at a time.
+
+## Store review
+
+The website can delete an account, report a comment, block a user, and store a match score in Supabase. The phone app keeps grades on the device until `EXPO_PUBLIC_API_URL` is wired, and its profile screen can erase that local data. Ads stay empty. VIP on the phone is a local preview and does not charge.
+
+Before a store submission, fill `.env.local` (and the hosted environment) with:
+
+- `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`
+- `SAFETY_ADMIN_EMAILS` — the login email that opens `/safety`
+- `NEXT_PUBLIC_OPERATOR_NAME` and `NEXT_PUBLIC_SUPPORT_EMAIL` — shown on `/privacy`
+- A public site URL for the store privacy field, plus a reviewer test account
+
+Run `supabase/migrate-safety.sql` in that project. Account deletion needs the service role key. The report queue does not hide a comment until someone presses hide on `/safety`.
 
 ## Phone apps
 

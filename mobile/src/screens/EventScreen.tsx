@@ -108,29 +108,34 @@ function MatchGrade({
 }) {
   const { locale, t } = useLocale();
   const session = useSession();
+  const [notice, setNotice] = useState<string | null>(null);
   const seeds = seedMatchTakes.filter((take) => take.eventId === eventId);
   const rows = [
     ...session.matchTakes
       .filter((take) => {
         const event = eventBySlug(take.eventSlug);
-        return event?.id === eventId;
+        return event?.id === eventId && !session.hiddenTakeIds.includes(take.id);
       })
       .map((take) => ({
         id: take.id,
+        eventSlug: take.eventSlug,
         author: take.author,
         score: take.score,
         body: take.body,
         at: take.at,
         you: true,
       })),
-    ...seeds.map((take) => ({
-      id: take.id,
-      author: take.author,
-      score: take.score,
-      body: seedText(locale, take),
-      at: take.at,
-      you: false,
-    })),
+    ...seeds
+      .filter((take) => !session.hiddenTakeIds.includes(take.id))
+      .map((take) => ({
+        id: take.id,
+        eventSlug: "",
+        author: take.author,
+        score: take.score,
+        body: seedText(locale, take),
+        at: take.at,
+        you: false,
+      })),
   ].sort((a, b) => +new Date(b.at) - +new Date(a.at));
   const average = rows.length ? rows.reduce((sum, row) => sum + row.score, 0) / rows.length : null;
 
@@ -165,12 +170,32 @@ function MatchGrade({
       </Pressable>
       {note ? <Text style={{ color: colors.primary }}>{note}</Text> : null}
       {rows.length === 0 ? <Text style={ui.muted}>{t.matchEmpty}</Text> : null}
+      {notice ? <Text style={ui.muted}>{notice}</Text> : null}
       {rows.map((row) => (
         <View key={row.id} style={{ gap: 2 }}>
           <Text style={ui.muted}>
             {row.score.toFixed(1)} · {row.you ? `${t.matchYou} · ${row.author}` : row.author}
           </Text>
           <Text style={ui.title}>{row.body || t.matchScoreOnly}</Text>
+          {row.you ? (
+            <Pressable
+              onPress={() => {
+                session.removeMatch(row.eventSlug);
+                setNotice(null);
+              }}
+            >
+              <Text style={{ color: colors.primary, fontWeight: "700" }}>{t.removeMatch}</Text>
+            </Pressable>
+          ) : (
+            <Pressable
+              onPress={() => {
+                session.hideTake(row.id);
+                setNotice(t.reportHidden);
+              }}
+            >
+              <Text style={{ color: colors.primary, fontWeight: "700" }}>{t.reportHide}</Text>
+            </Pressable>
+          )}
         </View>
       ))}
     </View>

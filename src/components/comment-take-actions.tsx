@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { SafetyActions } from "@/components/safety-actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useI18n } from "@/i18n/use-i18n";
@@ -103,7 +104,14 @@ export function CommentTakeActions({
           >
             {t.social.hide}
           </button>
-        ) : null}
+        ) : (
+          <SafetyActions
+            targetUserId={take.userId}
+            commentId={take.commentId}
+            excerpt={take.body}
+            onBlocked={onChange}
+          />
+        )}
       </div>
       {take.replies && take.replies.length > 0 ? (
         <ul className="space-y-1.5 rounded-md bg-muted/40 px-2 py-2">

@@ -18,6 +18,7 @@ export type Dict = {
     rankings: string;
     zones: string;
     search: string;
+    privacy: string;
   };
   search: {
     title: string;
@@ -196,6 +197,10 @@ export type Dict = {
     ratingModeFull: string;
     ratingModeOverall: string;
     ratingOpenMatch: string;
+    deleteAccount: string;
+    deleteHint: string;
+    deleteWord: string;
+    deleteFailed: string;
     myZonesTitle: string;
     myZonesHint: string;
     myZonesEmpty: string;
@@ -216,6 +221,34 @@ export type Dict = {
     hide: string;
     replyPlaceholder: string;
     sendReply: string;
+  };
+  safety: {
+    title: string;
+    lead: string;
+    report: string;
+    block: string;
+    blocked: string;
+    reported: string;
+    failed: string;
+    spam: string;
+    abuse: string;
+    other: string;
+    signInToPublish: string;
+    empty: string;
+    hide: string;
+    dismiss: string;
+    noExcerpt: string;
+  };
+  privacy: {
+    title: string;
+    operatorMissing: string;
+    emailMissing: string;
+    intro: string;
+    collect: string;
+    use: string;
+    store: string;
+    delete: string;
+    contact: string;
   };
   moderation: {
     autoBadge: string;
