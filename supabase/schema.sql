@@ -56,6 +56,21 @@ alter table public.comments
 alter table public.comments
   add column if not exists hidden boolean not null default false;
 
+-- One top-level take per person, match, and player. Keep the newest copy.
+delete from public.comments
+where id in (
+  select id from (
+    select id,
+           row_number() over (
+             partition by user_id, event_id, athlete_id
+             order by created_at desc nulls last, id desc
+           ) as n
+    from public.comments
+    where parent_id is null
+  ) ranked
+  where n > 1
+);
+
 create index if not exists comments_event_athlete_idx
   on public.comments (event_id, athlete_id, created_at desc);
 
