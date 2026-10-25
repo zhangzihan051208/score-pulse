@@ -1,5 +1,5 @@
 import { mergeTakes } from "@/lib/community-takes";
-import { createClient } from "@/lib/supabase/server";
+import { requestUser } from "@/lib/supabase/request-user";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 import { NextResponse } from "next/server";
 import type { ScoreMap } from "@/lib/types";
@@ -22,16 +22,17 @@ export async function GET(
   }
 
   const { eventId } = await context.params;
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const { supabase, user } = await requestUser(_request);
+  if (!supabase) {
+    return NextResponse.json({ takesByAthlete: {} as Record<string, SummaryTake[]> });
+  }
 
   const [{ data: comments }, { data: ratings }] = await Promise.all([
     supabase
       .from("comments")
-      .select("id, athlete_id, author, body, scores, created_at, user_id")
+      .select("id, athlete_id, author, body, scores, created_at, user_id, parent_id, hidden, moderation_status")
       .eq("event_id", eventId)
+      .is("parent_id", null)
       .order("created_at", { ascending: false })
       .limit(400),
     supabase
@@ -68,7 +69,8 @@ export async function GET(
   };
 
   for (const c of comments ?? []) {
-    if (!c.athlete_id) continue;
+    if (!c.athlete_id || c.hidden) continue;
+    if (c.moderation_status && c.moderation_status !== "approved") continue;
     push(c.athlete_id, {
       userId: c.user_id,
       author: c.author ?? profileMap.get(c.user_id) ?? "Fan",
@@ -122,10 +124,6 @@ export async function GET(
 
   return NextResponse.json(
     { takesByAthlete },
-    {
-      headers: {
-        "Cache-Control": "private, max-age=20, stale-while-revalidate=40",
-      },
-    },
+    { headers: { "Cache-Control": "no-store" } },
   );
 }

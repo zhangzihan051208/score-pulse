@@ -1,12 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import type { CommunityTake } from "@/components/community-ratings-panel";
 import { DimensionRadar } from "@/components/dimension-radar";
 import { PlayerAvatar } from "@/components/player-avatar";
 import { Overall } from "@/components/score-rows";
 import { useAuth } from "@/hooks/use-auth";
+import { useLivePoll } from "@/hooks/use-live-poll";
 import { dimLabel } from "@/i18n/position-dims";
 import { useI18n } from "@/i18n/use-i18n";
 import { tx } from "@/lib/copy";
@@ -41,17 +42,21 @@ export function EventSpotlightCard({
   const positionKey = pick.performance.positionKey;
   const dimIds = radarDimIds(positionKey);
 
-  useEffect(() => {
+  const loadRemote = useCallback(() => {
     if (!authEnabled || !isSupabaseConfigured()) return;
     const qs = new URLSearchParams({ positionKey });
     fetch(
       `/api/community/${encodeURIComponent(event.id)}/${encodeURIComponent(pick.athlete.id)}?${qs}`,
+      { cache: "no-store" },
     )
       .then((r) => (r.ok ? r.json() : null))
       .then((d: { takes?: CommunityTake[] } | null) => {
         setRemoteTakes(d?.takes ?? []);
-      });
+      })
+      .catch(() => undefined);
   }, [authEnabled, event.id, pick.athlete.id, positionKey]);
+
+  useLivePoll(loadRemote, authEnabled && isSupabaseConfigured());
 
   const takes = useMemo(() => {
     const local = localTakesForAthlete(event, pick.athlete.id, state, locale);
@@ -64,9 +69,8 @@ export function EventSpotlightCard({
     [dimIds, takes],
   );
 
-  const takeSample =
-    takes.length > 0 && communityAvg && takes.length * 20 >= pick.merged.count;
-  const avgForRadar = takeSample && communityAvg ? communityAvg : pick.merged.avg;
+  const useLive = remoteTakes.length > 0 && communityAvg;
+  const avgForRadar = useLive ? communityAvg : pick.merged.avg;
   const topTake = topEngagementTake(takes, positionKey);
   const dimLabels = dimIds.map((id) => dimLabel(locale, positionKey, id));
 
@@ -112,7 +116,7 @@ export function EventSpotlightCard({
             <div className="text-right">
               <Overall value={overallScore(avgForRadar, positionKey)} />
               <p className="text-[11px] text-muted-foreground">
-                {Math.max(pick.merged.count, takes.length)} {t.event.ratings}
+                {(useLive ? remoteTakes.length : pick.merged.count).toLocaleString()} {t.event.ratings}
               </p>
             </div>
           </div>

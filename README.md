@@ -45,7 +45,7 @@ Save **Secrets** in the Secrets tab separately (names like `PANDASCORE_API_TOKEN
 
 ## Store review
 
-The website can delete an account, report a comment, block a user, and store a match score in Supabase. The phone signs in with the same email through `/api/auth/mobile` and syncs grades through the website APIs. Set `EXPO_PUBLIC_API_URL` to the public site; local preview uses `http://127.0.0.1:43147`. Ads stay empty.
+The website can delete an account, report a comment, block a user, and store a match score in Supabase. The phone signs in with the same email through `/api/auth/mobile` and syncs grades through the website APIs. Open match and player pages refresh the published scores and comments every few seconds, so a post on one shows on the other. Set `EXPO_PUBLIC_API_URL` to the public site; local preview uses `http://127.0.0.1:43147`. Ads stay empty.
 
 Operator: 张子函. Support and review email: zhangzihan051208@gmail.com. That address is also the safety-queue admin when `SAFETY_ADMIN_EMAILS` is unset.
 

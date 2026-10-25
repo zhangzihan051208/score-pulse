@@ -4,16 +4,22 @@ import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { dimLabel } from "../catalog";
 import { ScoreDots } from "../components/ScoreDots";
 import { eventBySlug, pairText, weightedOverall } from "../events";
+import { useLiveJson, type PlayerThread } from "../live";
 import { useLocale } from "../i18n";
 import type { RootStackParamList } from "../navigation";
 import { useSession } from "../store";
 import { colors, ui } from "../ui";
 
-export function RateScreen({ route, navigation }: NativeStackScreenProps<RootStackParamList, "Rate">) {
+export function RateScreen({ route }: NativeStackScreenProps<RootStackParamList, "Rate">) {
   const { locale, t } = useLocale();
   const session = useSession();
   const event = eventBySlug(route.params.slug);
   const player = event?.players.find((row) => row.id === route.params.athleteId);
+  const threadPath =
+    event && player
+      ? `/api/community/${encodeURIComponent(event.id)}/${encodeURIComponent(player.id)}?positionKey=${encodeURIComponent(player.positionKey)}`
+      : null;
+  const thread = useLiveJson<PlayerThread>(threadPath, session.accessToken);
   const dims = player ? Object.keys(player.scores) : [];
   const full = session.fullLeft() > 0;
   const [scores, setScores] = useState<Record<string, number>>(() =>
@@ -21,7 +27,7 @@ export function RateScreen({ route, navigation }: NativeStackScreenProps<RootSta
   );
   const [overall, setOverall] = useState(7);
   const [comment, setComment] = useState("");
-  const [done, setDone] = useState(false);
+  const [note, setNote] = useState<string | null>(null);
 
   if (!event || !player) {
     return (
@@ -33,12 +39,19 @@ export function RateScreen({ route, navigation }: NativeStackScreenProps<RootSta
 
   const posted = full ? scores : Object.fromEntries(dims.map((id) => [id, overall]));
   const total = weightedOverall(player.positionKey, posted);
+  const liveOverall = thread?.communityAvg ? weightedOverall(player.positionKey, thread.communityAvg) : null;
+  const published = (thread?.takes ?? []).filter((take) => take.body?.trim());
 
   return (
     <ScrollView style={ui.page} contentContainerStyle={ui.content}>
       <Text style={ui.h1}>{player.name}</Text>
       <Text style={ui.muted}>{pairText(locale, event.title)}</Text>
       <Text style={ui.score}>{total.toFixed(1)}</Text>
+      {liveOverall != null && thread ? (
+        <Text style={ui.muted}>
+          {t.matchAverage} {liveOverall.toFixed(1)} · {thread.ratingCount} {t.matchPeople}
+        </Text>
+      ) : null}
       {!full ? <Text style={ui.muted}>{t.overallOnly}</Text> : null}
       {full
         ? dims.map((id) => (
@@ -73,13 +86,20 @@ export function RateScreen({ route, navigation }: NativeStackScreenProps<RootSta
             comment: comment.trim(),
             mode: full ? "full" : "overall",
           });
-          setDone(true);
-          navigation.navigate("Feed");
+          setNote(session.email ? t.publishedNow : t.saved);
         }}
       >
         <Text style={ui.primaryBtnText}>{t.post}</Text>
       </Pressable>
-      {done ? <Text style={{ color: colors.primary }}>{t.saved}</Text> : null}
+      {note ? <Text style={{ color: colors.primary }}>{note}</Text> : null}
+      <Text style={ui.title}>{t.publishedComments}</Text>
+      {published.length === 0 ? <Text style={ui.muted}>{t.matchEmpty}</Text> : null}
+      {published.map((take) => (
+        <View key={take.userId} style={ui.card}>
+          <Text style={ui.muted}>{take.isYou ? `${t.matchYou} · ${take.author}` : take.author}</Text>
+          <Text style={ui.title}>{take.body}</Text>
+        </View>
+      ))}
       <Text style={ui.muted}>
         {t.quota} {session.vip ? "VIP" : session.fullLeft()}
       </Text>

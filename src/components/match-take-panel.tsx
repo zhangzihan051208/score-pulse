@@ -1,12 +1,13 @@
 "use client";
 
-import { useEffect, useMemo, useState, type FormEvent } from "react";
+import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
 import { GradeSlider } from "@/components/grade-slider";
 import { SafetyActions } from "@/components/safety-actions";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/hooks/use-auth";
 import { useCommunity } from "@/hooks/use-community";
+import { useLivePoll } from "@/hooks/use-live-poll";
 import { useI18n } from "@/i18n/use-i18n";
 import { scanCommentBody } from "@/lib/comment-moderation";
 import { moderationI18nKey } from "@/lib/content-moderation";
@@ -39,21 +40,21 @@ export function MatchTakePanel({ event }: { event: MatchEvent }) {
   const [error, setError] = useState<string | null>(null);
   const name = nameDraft ?? state.nickname;
 
-  useEffect(() => {
+  const loadRemote = useCallback(() => {
     if (!enabled) return;
-    let cancelled = false;
-    fetch(`/api/community/match?eventId=${encodeURIComponent(event.id)}`)
+    fetch(`/api/community/match?eventId=${encodeURIComponent(event.id)}`, { cache: "no-store" })
       .then((res) => (res.ok ? res.json() : null))
       .then((data: { takes?: RemoteTake[] } | null) => {
-        if (!cancelled) setRemote(data?.takes ?? []);
+        setRemote(data?.takes ?? []);
       })
-      .catch(() => {
-        if (!cancelled) setRemote([]);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [enabled, event.id, saved]);
+      .catch(() => setRemote([]));
+  }, [enabled, event.id]);
+
+  useLivePoll(loadRemote, enabled);
+
+  useEffect(() => {
+    if (saved) loadRemote();
+  }, [loadRemote, saved]);
 
   const seeds = useMemo(
     () => seedMatchTakes.filter((take) => take.eventId === event.id),

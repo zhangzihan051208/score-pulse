@@ -1,5 +1,5 @@
 import { blockedUserIds } from "@/lib/safety-server";
-import { createClient } from "@/lib/supabase/server";
+import { requestUser } from "@/lib/supabase/request-user";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 import { enrichTakesWithSocial } from "@/lib/comment-enrich";
 import { mergeTakes } from "@/lib/community-takes";
@@ -38,10 +38,16 @@ export async function GET(
   const dimIds =
     POSITION_PROFILES[positionKey]?.dimensions ?? dimensionIds("nba.guard");
 
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const { supabase, user } = await requestUser(request);
+  if (!supabase) {
+    return NextResponse.json({
+      takes: [],
+      mine: null,
+      mineComment: "",
+      communityAvg: null,
+      ratingCount: 0,
+    });
+  }
 
   const [{ data: comments }, { data: ratings }] = await Promise.all([
     supabase
@@ -158,11 +164,14 @@ export async function GET(
 
   const mineTake = user ? takes.find((t) => t.isYou) : undefined;
 
-  return NextResponse.json({
-    takes,
-    ratingCount: takes.length,
-    communityAvg,
-    mine: mineTake?.scores ?? null,
-    mineComment: mineTake?.body ?? "",
-  });
+  return NextResponse.json(
+    {
+      takes,
+      ratingCount: takes.length,
+      communityAvg,
+      mine: mineTake?.scores ?? null,
+      mineComment: mineTake?.body ?? "",
+    },
+    { headers: { "Cache-Control": "no-store" } },
+  );
 }

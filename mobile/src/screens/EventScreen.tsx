@@ -5,6 +5,7 @@ import { ScoreDots } from "../components/ScoreDots";
 import { person } from "../catalog";
 import { eventBySlug, pairText, weightedOverall } from "../events";
 import { useLocale } from "../i18n";
+import { useLiveJson, type EventSummary, type MatchThread } from "../live";
 import { seedMatchTakes, seedText } from "../match-takes";
 import type { RootStackParamList } from "../navigation";
 import { useSession } from "../store";
@@ -14,6 +15,10 @@ export function EventScreen({ route, navigation }: NativeStackScreenProps<RootSt
   const { locale, t } = useLocale();
   const session = useSession();
   const event = eventBySlug(route.params.slug);
+  const matchPath = event ? `/api/community/match?eventId=${encodeURIComponent(event.id)}` : null;
+  const summaryPath = event ? `/api/community/${encodeURIComponent(event.id)}/summary` : null;
+  const matchThread = useLiveJson<MatchThread>(matchPath, session.accessToken);
+  const summary = useLiveJson<EventSummary>(summaryPath, session.accessToken);
   const mine = event ? session.matchTakes.find((take) => take.eventSlug === event.slug) : undefined;
   const [score, setScore] = useState(Math.round(mine?.score ?? 8));
   const [body, setBody] = useState(mine?.body ?? "");
@@ -51,9 +56,10 @@ export function EventScreen({ route, navigation }: NativeStackScreenProps<RootSt
         note={note}
         onScore={setScore}
         onBody={setBody}
+        cloudTakes={matchThread?.takes ?? []}
         onPost={() => {
           const result = session.postMatch(event.slug, score, body);
-          setNote(result === "held" ? t.matchBlocked : t.matchPosted);
+          setNote(result === "held" ? t.matchBlocked : session.email ? t.publishedNow : t.matchPosted);
         }}
       />
       <Pressable style={ui.primaryBtn} onPress={() => navigation.navigate("Matchup", { slug: event.slug })}>
@@ -61,7 +67,12 @@ export function EventScreen({ route, navigation }: NativeStackScreenProps<RootSt
       </Pressable>
       {event.players.map((player) => {
         const known = person(event.sport, player.id);
-        const overall = weightedOverall(player.positionKey, player.scores);
+        const liveTakes = summary?.takesByAthlete?.[player.id] ?? [];
+        const liveOverall = liveTakes.length
+          ? liveTakes.reduce((sum, take) => sum + weightedOverall(player.positionKey, take.scores ?? {}), 0) / liveTakes.length
+          : null;
+        const overall = liveOverall ?? weightedOverall(player.positionKey, player.scores);
+        const liveComment = liveTakes.find((take) => take.body?.trim());
         return (
           <Pressable
             key={player.id}
@@ -77,6 +88,11 @@ export function EventScreen({ route, navigation }: NativeStackScreenProps<RootSt
               <Text style={ui.muted} numberOfLines={2}>
                 {[pairText(locale, player.role), pairText(locale, player.result)].filter(Boolean).join(" · ")}
               </Text>
+              {liveComment?.body ? (
+                <Text style={ui.muted} numberOfLines={2}>
+                  {liveComment.author}：{liveComment.body}
+                </Text>
+              ) : null}
             </View>
             <Text style={ui.score}>{overall.toFixed(1)}</Text>
             <Pressable onPress={() => navigation.navigate("Rate", { slug: event.slug, athleteId: player.id })}>
@@ -94,6 +110,7 @@ function MatchGrade({
   score,
   body,
   note,
+  cloudTakes,
   onScore,
   onBody,
   onPost,
@@ -102,6 +119,7 @@ function MatchGrade({
   score: number;
   body: string;
   note: string | null;
+  cloudTakes: MatchThread["takes"];
   onScore: (value: number) => void;
   onBody: (value: string) => void;
   onPost: () => void;
@@ -110,21 +128,35 @@ function MatchGrade({
   const session = useSession();
   const [notice, setNotice] = useState<string | null>(null);
   const seeds = seedMatchTakes.filter((take) => take.eventId === eventId);
+  const cloudYou = cloudTakes.some((take) => take.isYou);
   const rows = [
-    ...session.matchTakes
-      .filter((take) => {
-        const event = eventBySlug(take.eventSlug);
-        return event?.id === eventId && !session.hiddenTakeIds.includes(take.id);
-      })
+    ...cloudTakes
+      .filter((take) => !session.hiddenTakeIds.includes(take.userId))
       .map((take) => ({
-        id: take.id,
-        eventSlug: take.eventSlug,
+        id: take.userId,
+        eventSlug: "",
         author: take.author,
         score: take.score,
         body: take.body,
-        at: take.at,
-        you: true,
+        at: take.createdAt,
+        you: take.isYou,
       })),
+    ...(cloudYou
+      ? []
+      : session.matchTakes
+          .filter((take) => {
+            const event = eventBySlug(take.eventSlug);
+            return event?.id === eventId && !session.hiddenTakeIds.includes(take.id);
+          })
+          .map((take) => ({
+            id: take.id,
+            eventSlug: take.eventSlug,
+            author: take.author,
+            score: take.score,
+            body: take.body,
+            at: take.at,
+            you: true,
+          }))),
     ...seeds
       .filter((take) => !session.hiddenTakeIds.includes(take.id))
       .map((take) => ({
@@ -177,7 +209,7 @@ function MatchGrade({
             {row.score.toFixed(1)} · {row.you ? `${t.matchYou} · ${row.author}` : row.author}
           </Text>
           <Text style={ui.title}>{row.body || t.matchScoreOnly}</Text>
-          {row.you ? (
+          {row.you && row.eventSlug ? (
             <Pressable
               onPress={() => {
                 session.removeMatch(row.eventSlug);
@@ -186,7 +218,7 @@ function MatchGrade({
             >
               <Text style={{ color: colors.primary, fontWeight: "700" }}>{t.removeMatch}</Text>
             </Pressable>
-          ) : (
+          ) : row.you ? null : (
             <Pressable
               onPress={() => {
                 session.hideTake(row.id);

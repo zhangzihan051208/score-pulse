@@ -1,7 +1,8 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import type { CommunityTake } from "@/components/community-ratings-panel";
+import { useLivePoll } from "@/hooks/use-live-poll";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 
 type SummaryTake = CommunityTake;
@@ -17,7 +18,7 @@ export function useEventTakesSummary(eventId: string) {
     }
     const res = await fetch(
       `/api/community/${encodeURIComponent(eventId)}/summary`,
-      { credentials: "same-origin" },
+      { credentials: "same-origin", cache: "no-store" },
     );
     if (!res.ok) {
       setLoaded(true);
@@ -30,9 +31,7 @@ export function useEventTakesSummary(eventId: string) {
     setLoaded(true);
   }, [eventId]);
 
-  useEffect(() => {
-    load();
-  }, [load]);
+  useLivePoll(load, isSupabaseConfigured());
 
   return { byAthlete, loaded, reload: load };
 }

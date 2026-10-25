@@ -5,12 +5,23 @@ import { Radar } from "../components/Radar";
 import { dimLabel, formatScore, person, roleLabel } from "../catalog";
 import { eventsForAthlete, pairText } from "../events";
 import { useLocale } from "../i18n";
+import { useAthleteComments } from "../live";
 import type { RootStackParamList } from "../navigation";
+import { useSession } from "../store";
 
 export function PlayerScreen({ route, navigation }: NativeStackScreenProps<RootStackParamList, "Player">) {
   const { sport, id } = route.params;
   const { locale, t } = useLocale();
+  const session = useSession();
   const card = person(sport, id);
+  const events = card
+    ? eventsForAthlete(card.id).map((event) => ({
+        id: event.id,
+        positionKey: event.players.find((player) => player.id === card.id)?.positionKey ?? "soccer.midfielder",
+        title: pairText(locale, event.title),
+      }))
+    : [];
+  const published = useAthleteComments(events, card?.id ?? "", session.accessToken);
   if (!card) {
     return (
       <View style={styles.missing}>
@@ -50,6 +61,15 @@ export function PlayerScreen({ route, navigation }: NativeStackScreenProps<RootS
         <Pressable key={event.slug} style={styles.take} onPress={() => navigation.navigate("Event", { slug: event.slug })}>
           <Text style={styles.body}>{pairText(locale, event.title)}</Text>
         </Pressable>
+      ))}
+
+      <Text style={styles.section}>{t.publishedComments}</Text>
+      {published.length === 0 ? <Text style={styles.sub}>{t.matchEmpty}</Text> : null}
+      {published.map((take) => (
+        <View key={take.id} style={styles.take}>
+          <Text style={styles.sub}>{take.title} · {take.author}</Text>
+          <Text style={styles.body}>{take.body}</Text>
+        </View>
       ))}
 
       <Text style={styles.section}>{t.comments}</Text>

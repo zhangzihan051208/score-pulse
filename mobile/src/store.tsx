@@ -226,9 +226,29 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (!ready || !session.accessToken) return;
     void syncAccount();
-    // Re-sync when the cloud token changes, including the first launch after login.
+    const id = setInterval(() => void pullAccount(), 8000);
+    // Keep this device aligned with grades posted on the website.
     // eslint-disable-next-line react-hooks/exhaustive-deps
+    return () => clearInterval(id);
   }, [ready, session.accessToken]);
+
+  async function pullAccount() {
+    if (syncing.current) return;
+    const token = sessionRef.current.accessToken;
+    if (!token) return;
+    const fresh = await fetchBundle(token);
+    if (!fresh) return;
+    setSession((s) => ({
+      ...s,
+      name: fresh.profile.displayName || s.name,
+      bio: fresh.profile.bio || s.bio,
+      email: fresh.email || s.email,
+      vip: fresh.profile.isVip || s.vip,
+      favorites: { ...s.favorites, ...favoritesFromCloud(fresh.profile.favoriteTeams) },
+      ratings: mergeRatings(s.ratings, fresh.ratings),
+      matchTakes: mergeMatches(s.matchTakes, fresh.matches),
+    }));
+  }
 
   async function syncAccount(override?: CloudAuth) {
     if (syncing.current) return;

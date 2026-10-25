@@ -1,9 +1,10 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import type { CommunityTake } from "@/components/community-ratings-panel";
 import { mergeTakes } from "@/lib/community-takes";
 import { useAuth } from "@/hooks/use-auth";
+import { useLivePoll } from "@/hooks/use-live-poll";
 import { tx } from "@/lib/copy";
 import {
   commentsFor,
@@ -54,6 +55,7 @@ export function usePlayerCommunity({
     const qs = new URLSearchParams({ positionKey });
     const res = await fetch(
       `/api/community/${encodeURIComponent(event.id)}/${encodeURIComponent(athlete.id)}?${qs}`,
+      { cache: "no-store" },
     );
     if (!res.ok) return;
     const data = (await res.json()) as {
@@ -69,9 +71,7 @@ export function usePlayerCommunity({
     return data;
   }, [athlete.id, cloudReads, event.id, positionKey]);
 
-  useEffect(() => {
-    loadRemote();
-  }, [loadRemote]);
+  useLivePoll(loadRemote, cloudReads);
 
   const mine =
     user && remoteMine

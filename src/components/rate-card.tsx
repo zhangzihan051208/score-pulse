@@ -18,6 +18,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Overall } from "@/components/score-rows";
 import { useAuth } from "@/hooks/use-auth";
+import { useLivePoll } from "@/hooks/use-live-poll";
 import { useProfile } from "@/hooks/use-profile";
 import { useVipQuota } from "@/hooks/use-vip";
 import { useCommunity } from "@/hooks/use-community";
@@ -91,6 +92,7 @@ export function RateCard({
     const qs = new URLSearchParams({ positionKey });
     const res = await fetch(
       `/api/community/${encodeURIComponent(event.id)}/${encodeURIComponent(athlete.id)}?${qs}`,
+      { cache: "no-store" },
     );
     if (!res.ok) return;
     const data = (await res.json()) as {
@@ -108,9 +110,7 @@ export function RateCard({
     }
   }, [athlete.id, cloudReads, event.id, positionKey]);
 
-  useEffect(() => {
-    loadRemote();
-  }, [loadRemote]);
+  useLivePoll(loadRemote, cloudReads);
 
   const mine =
     user && remoteMine

@@ -9,6 +9,8 @@ import { localTakesForAthlete, topEngagementTake } from "@/lib/event-spotlight";
 import { useI18n } from "@/i18n/use-i18n";
 import { tx } from "@/lib/copy";
 import { overallScore } from "@/lib/score-display";
+import { averageScores } from "@/lib/score-aggregate";
+import { dimensionIds } from "@/lib/position-ratings";
 import { playerRoleSubtitle } from "@/lib/player-meta";
 import { performancesBySide, type RosterEntry } from "@/lib/event-spotlight";
 import type { CommunityState } from "@/lib/store";
@@ -28,7 +30,15 @@ function RosterPlayerCard({
 }) {
   const { locale, t } = useI18n();
   const { performance: p, athlete, merged } = entry;
-  const overall = overallScore(merged.avg, merged.positionKey);
+  const liveAvg =
+    remoteTakes && remoteTakes.length > 0
+      ? averageScores(
+          remoteTakes.map((take) => take.scores),
+          [...dimensionIds(merged.positionKey)],
+        )
+      : null;
+  const overall = overallScore(liveAvg ?? merged.avg, merged.positionKey);
+  const ratingCount = liveAvg ? remoteTakes!.length : merged.count;
   const local = localTakesForAthlete(event, athlete.id, state, locale);
   const takes = remoteTakes && remoteTakes.length > 0 ? remoteTakes : local;
   const topTake = topEngagementTake(takes, merged.positionKey);
@@ -59,7 +69,7 @@ function RosterPlayerCard({
               <div className="shrink-0 text-right">
                 <Overall value={overall} />
                 <p className="text-[10px] text-muted-foreground">
-                  {merged.count.toLocaleString()} {t.event.ratings}
+                  {ratingCount.toLocaleString()} {t.event.ratings}
                 </p>
               </div>
             </div>

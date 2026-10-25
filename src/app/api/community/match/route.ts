@@ -37,6 +37,7 @@ export async function GET(request: Request) {
       .select("id, user_id, author, body, created_at, hidden, moderation_status")
       .eq("event_id", eventId)
       .eq("athlete_id", MATCH_ATHLETE_ID)
+      .is("parent_id", null)
       .order("created_at", { ascending: false }),
   ]);
 
@@ -63,10 +64,13 @@ export async function GET(request: Request) {
     })
     .sort((a, b) => +new Date(b.createdAt) - +new Date(a.createdAt));
 
-  return NextResponse.json({
-    takes,
-    mine: takes.find((take) => take.isYou) ?? null,
-  });
+  return NextResponse.json(
+    {
+      takes,
+      mine: takes.find((take) => take.isYou) ?? null,
+    },
+    { headers: { "Cache-Control": "no-store" } },
+  );
 }
 
 export async function POST(request: Request) {
