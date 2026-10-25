@@ -77,6 +77,10 @@ export function eventBySlug(slug: string) {
   return matchEvents.find((event) => event.slug === slug);
 }
 
+export function eventById(id: string) {
+  return matchEvents.find((event) => event.id === id);
+}
+
 export function eventsForAthlete(id: string) {
   return matchEvents.filter((event) => event.players.some((player) => player.id === id));
 }

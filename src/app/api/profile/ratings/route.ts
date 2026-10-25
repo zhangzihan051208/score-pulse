@@ -4,7 +4,7 @@ import {
   POSITION_PROFILES,
   type PositionKey,
 } from "@/lib/position-ratings";
-import { createClient } from "@/lib/supabase/server";
+import { requestUser } from "@/lib/supabase/request-user";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 import type { ScoreMap, Sport } from "@/lib/types";
 import { NextResponse } from "next/server";
@@ -38,25 +38,35 @@ function positionFor(sport: Sport, key?: string | null): PositionKey {
   return "nba.guard";
 }
 
-export async function GET() {
+export async function GET(request: Request) {
   if (!isSupabaseConfigured()) {
     return NextResponse.json({ error: "Supabase not configured" }, { status: 503 });
   }
 
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) {
+  const { supabase, user } = await requestUser(request);
+  if (!supabase || !user) {
     return NextResponse.json({ error: "Sign in required" }, { status: 401 });
   }
 
-  const { data: rows, error } = await supabase
+  const first = await supabase
     .from("ratings")
     .select("event_id, athlete_id, sport, scores, rating_mode, updated_at")
     .eq("user_id", user.id)
     .order("updated_at", { ascending: false })
     .limit(80);
+  const fallback =
+    first.error && /rating_mode/.test(first.error.message)
+      ? await supabase
+          .from("ratings")
+          .select("event_id, athlete_id, sport, scores, updated_at")
+          .eq("user_id", user.id)
+          .order("updated_at", { ascending: false })
+          .limit(80)
+      : null;
+  const error = fallback ? fallback.error : first.error;
+  const rows = fallback
+    ? (fallback.data ?? []).map((row) => ({ ...row, rating_mode: "full" }))
+    : first.data;
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });

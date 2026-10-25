@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { favoriteNames } from "../favorites";
@@ -13,6 +13,9 @@ export function ProfileScreen() {
   const { t, toggle } = useLocale();
   const session = useSession();
   const [confirmWipe, setConfirmWipe] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [deleteText, setDeleteText] = useState("");
+  const [deleteError, setDeleteError] = useState<string | null>(null);
   const clubs = favoriteNames(session.favorites);
   const initial = (session.name || t.guest).slice(0, 1).toUpperCase();
 
@@ -24,7 +27,9 @@ export function ProfileScreen() {
         </View>
         <View style={{ flex: 1, gap: 4 }}>
           <Text style={styles.name}>{session.name || t.guest}</Text>
+          {session.email ? <Text style={ui.muted}>{session.email}</Text> : null}
           {session.bio ? <Text style={ui.muted}>{session.bio}</Text> : null}
+          {session.cloudNote ? <Text style={{ color: colors.primary }}>{session.cloudNote}</Text> : null}
         </View>
       </View>
 
@@ -33,7 +38,7 @@ export function ProfileScreen() {
         <Text style={styles.quotaValue}>{session.vip ? "VIP" : String(session.fullLeft())}</Text>
       </View>
 
-      {!session.name ? (
+      {!session.email ? (
         <Pressable style={ui.primaryBtn} onPress={() => navigation.navigate("Login")}>
           <Text style={ui.primaryBtnText}>{t.signIn}</Text>
         </Pressable>
@@ -76,8 +81,51 @@ export function ProfileScreen() {
         </Pressable>
       )}
 
-      {session.name ? (
-        <Pressable style={styles.signOut} onPress={() => navigation.navigate("Login")}>
+      {session.email && confirmDelete ? (
+        <View style={ui.card}>
+          <Text style={ui.title}>{t.deleteAccount}</Text>
+          <Text style={ui.muted}>{t.deleteHint}</Text>
+          <TextInput
+            value={deleteText}
+            onChangeText={setDeleteText}
+            placeholder={t.deleteWord}
+            placeholderTextColor="#A89886"
+            style={ui.input}
+          />
+          <Pressable
+            style={ui.primaryBtn}
+            disabled={deleteText.trim() !== t.deleteWord}
+            onPress={() => {
+              void session.deleteAccount().then((error) => {
+                if (error) {
+                  setDeleteError(error);
+                  return;
+                }
+                setConfirmDelete(false);
+                setDeleteText("");
+              });
+            }}
+          >
+            <Text style={ui.primaryBtnText}>{t.deleteAccount}</Text>
+          </Pressable>
+          {deleteError ? <Text style={{ color: colors.primary }}>{deleteError}</Text> : null}
+          <Pressable onPress={() => setConfirmDelete(false)} style={styles.signOut}>
+            <Text style={styles.signOutText}>{t.cancel}</Text>
+          </Pressable>
+        </View>
+      ) : session.email ? (
+        <Pressable style={styles.signOut} onPress={() => setConfirmDelete(true)}>
+          <Text style={styles.wipeText}>{t.deleteAccount}</Text>
+        </Pressable>
+      ) : null}
+
+      {session.email ? (
+        <Pressable
+          style={styles.signOut}
+          onPress={() => {
+            session.signOut();
+          }}
+        >
           <Text style={styles.signOutText}>{t.signOut}</Text>
         </Pressable>
       ) : null}

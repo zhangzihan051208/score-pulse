@@ -1,10 +1,24 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
+function withCors(request: NextRequest, response: NextResponse) {
+  if (!request.nextUrl.pathname.startsWith("/api/")) return response;
+  const origin = request.headers.get("origin");
+  if (!origin) return response;
+  response.headers.set("Access-Control-Allow-Origin", origin);
+  response.headers.set("Access-Control-Allow-Headers", "authorization, content-type");
+  response.headers.set("Access-Control-Allow-Methods", "GET, POST, PATCH, DELETE, OPTIONS");
+  response.headers.set("Vary", "Origin");
+  return response;
+}
+
 export async function middleware(request: NextRequest) {
+  if (request.method === "OPTIONS" && request.nextUrl.pathname.startsWith("/api/")) {
+    return withCors(request, new NextResponse(null, { status: 204 }));
+  }
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-  if (!url || !anon) return NextResponse.next();
+  if (!url || !anon) return withCors(request, NextResponse.next());
 
   let response = NextResponse.next({ request: { headers: request.headers } });
 
@@ -26,7 +40,7 @@ export async function middleware(request: NextRequest) {
   });
 
   await supabase.auth.getUser();
-  return response;
+  return withCors(request, response);
 }
 
 export const config = {

@@ -45,7 +45,7 @@ Save **Secrets** in the Secrets tab separately (names like `PANDASCORE_API_TOKEN
 
 ## Store review
 
-The website can delete an account, report a comment, block a user, and store a match score in Supabase. The phone app keeps grades on the device until `EXPO_PUBLIC_API_URL` is wired, and its profile screen can erase that local data. Ads stay empty.
+The website can delete an account, report a comment, block a user, and store a match score in Supabase. The phone signs in with the same email through `/api/auth/mobile` and syncs grades through the website APIs. Set `EXPO_PUBLIC_API_URL` to the public site; local preview uses `http://127.0.0.1:43147`. Ads stay empty.
 
 Operator: 张子函. Support and review email: zhangzihan051208@gmail.com. That address is also the safety-queue admin when `SAFETY_ADMIN_EMAILS` is unset.
 
@@ -58,7 +58,7 @@ Before a store submission, fill `.env.local` (and the hosted environment) with:
 - `NEXT_PUBLIC_OPERATOR_NAME` and `NEXT_PUBLIC_SUPPORT_EMAIL` — shown on `/privacy`
 - A public site URL for the store privacy field, plus a reviewer test account
 
-Run `supabase/migrate-safety.sql` in that project. Account deletion needs the service role key. The report queue does not hide a comment until someone presses hide on `/safety`.
+Run `supabase/migrate-safety.sql` in that project. If the project was created before profile fields and `rating_mode`, also run `supabase/repair-sync.sql` once. Scores still sync without that column; the daily five-axis cap is stored only after the repair. Account deletion needs the service role key. The report queue does not hide a comment until someone presses hide on `/safety`.
 
 ## Phone apps
 

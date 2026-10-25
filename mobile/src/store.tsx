@@ -1,5 +1,21 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import {
+  deleteCloudAccount,
+  favoritesFromCloud,
+  favoritesToCloud,
+  fetchBundle,
+  mergeMatches,
+  mergeRatings,
+  pushMatch,
+  pushPlayerRating,
+  pushProfile,
+  refreshCloud,
+  signInCloud,
+  signUpCloud,
+  uploadNewer,
+  type CloudAuth,
+} from "./cloud";
 
 const KEY = "grandstand.session.v1";
 export const FREE_FULL_RATINGS = 5;
@@ -9,6 +25,7 @@ export type RatingMode = "full" | "overall";
 export type MatchTake = {
   id: string;
   eventSlug: string;
+  eventId?: string;
   score: number;
   body: string;
   at: string;
@@ -18,6 +35,7 @@ export type MatchTake = {
 export type SavedRating = {
   id: string;
   eventSlug: string;
+  eventId?: string;
   athleteId: string;
   athleteName: string;
   scores: Record<string, number>;
@@ -58,6 +76,11 @@ export type Favorites = Record<string, { primary?: string; secondary?: string }>
 type Session = {
   name: string | null;
   bio: string;
+  email: string | null;
+  accessToken: string | null;
+  refreshToken: string | null;
+  expiresAt: number | null;
+  cloudNote: string | null;
   vip: boolean;
   onboarded: boolean;
   ratings: SavedRating[];
@@ -70,7 +93,10 @@ type Session = {
 type SessionApi = Session & {
   ready: boolean;
   signIn: (name: string, bio: string) => void;
+  signInCloud: (email: string, password: string) => Promise<"ok" | "confirm" | string>;
+  signUpCloud: (email: string, password: string, name: string) => Promise<"ok" | "confirm" | string>;
   signOut: () => void;
+  deleteAccount: () => Promise<string | null>;
   wipeDevice: () => void;
   hideTake: (id: string) => void;
   removeMatch: (eventSlug: string) => void;
@@ -130,6 +156,11 @@ const seedZones: Zone[] = [
 const empty: Session = {
   name: null,
   bio: "",
+  email: null,
+  accessToken: null,
+  refreshToken: null,
+  expiresAt: null,
+  cloudNote: null,
   vip: false,
   onboarded: false,
   ratings: [],
@@ -140,6 +171,15 @@ const empty: Session = {
 };
 
 const SessionContext = createContext<SessionApi | null>(null);
+
+function authFields(auth: CloudAuth) {
+  return {
+    email: auth.email,
+    accessToken: auth.accessToken,
+    refreshToken: auth.refreshToken,
+    expiresAt: auth.expiresAt,
+  };
+}
 
 function dayStartIso() {
   const now = new Date();
@@ -179,13 +219,118 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     AsyncStorage.setItem(KEY, JSON.stringify(session)).catch(() => undefined);
   }, [ready, session]);
 
+  const sessionRef = useRef(session);
+  sessionRef.current = session;
+  const syncing = useRef(false);
+
+  useEffect(() => {
+    if (!ready || !session.accessToken) return;
+    void syncAccount();
+    // Re-sync when the cloud token changes, including the first launch after login.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ready, session.accessToken]);
+
+  async function syncAccount(override?: CloudAuth) {
+    if (syncing.current) return;
+    syncing.current = true;
+    try {
+      const current = sessionRef.current;
+      let token = override?.accessToken ?? current.accessToken;
+      const refresh = override?.refreshToken ?? current.refreshToken;
+      const expires = override?.expiresAt ?? current.expiresAt;
+      if (!token || !refresh) return;
+      if (expires && expires < Date.now() / 1000 + 60) {
+        const next = await refreshCloud(refresh);
+        if (!next) {
+          setSession((s) => ({ ...s, accessToken: null, refreshToken: null, cloudNote: "登录已过期" }));
+          return;
+        }
+        token = next.accessToken;
+        setSession((s) => ({ ...s, ...authFields(next) }));
+      }
+      const bundle = await fetchBundle(token);
+      if (!bundle) {
+        setSession((s) => ({ ...s, cloudNote: "云端暂时没连上，评分先留在这台手机上" }));
+        return;
+      }
+      const name = bundle.profile.displayName || current.name || "";
+      const uploadError = await uploadNewer(token, current.ratings, current.matchTakes, bundle, name);
+      const favorites = { ...current.favorites, ...favoritesFromCloud(bundle.profile.favoriteTeams) };
+      await pushProfile(token, {
+        displayName: name.length >= 2 ? name : undefined,
+        ...(current.bio ? { bio: current.bio } : {}),
+        favoriteTeams: favoritesToCloud(favorites),
+      });
+      const fresh = (await fetchBundle(token)) ?? bundle;
+      setSession((s) => ({
+        ...s,
+        name: fresh.profile.displayName || s.name,
+        bio: fresh.profile.bio || s.bio,
+        email: fresh.email || s.email,
+        vip: fresh.profile.isVip || s.vip,
+        favorites: { ...s.favorites, ...favoritesFromCloud(fresh.profile.favoriteTeams) },
+        ratings: mergeRatings(s.ratings, fresh.ratings),
+        matchTakes: mergeMatches(s.matchTakes, fresh.matches),
+        onboarded: true,
+        cloudNote: uploadError,
+      }));
+    } finally {
+      syncing.current = false;
+    }
+  }
+
   const api = useMemo<SessionApi>(() => {
     const author = session.name || "球迷";
     return {
       ...session,
       ready,
       signIn: (name, bio) => setSession((current) => ({ ...current, name: name.trim() || "球迷", bio })),
-      signOut: () => setSession((current) => ({ ...current, name: null, bio: "" })),
+      signInCloud: async (email, password) => {
+        try {
+          const result = await signInCloud(email, password);
+          if ("error" in result) return result.error;
+          if ("confirm" in result) return "confirm";
+          setSession((current) => ({ ...current, ...authFields(result.auth), cloudNote: null }));
+          return "ok";
+        } catch (err) {
+          return err instanceof Error ? err.message : "failed";
+        }
+      },
+      signUpCloud: async (email, password, name) => {
+        try {
+          const result = await signUpCloud(email, password, name);
+          if ("error" in result) return result.error;
+          if ("confirm" in result) return "confirm";
+          setSession((current) => ({
+            ...current,
+            ...authFields(result.auth),
+            name: name.trim() || current.name,
+            cloudNote: null,
+          }));
+          return "ok";
+        } catch (err) {
+          return err instanceof Error ? err.message : "failed";
+        }
+      },
+      signOut: () =>
+        setSession((current) => ({
+          ...current,
+          name: null,
+          bio: "",
+          email: null,
+          accessToken: null,
+          refreshToken: null,
+          expiresAt: null,
+          cloudNote: null,
+        })),
+      deleteAccount: async () => {
+        const token = sessionRef.current.accessToken;
+        if (!token) return "Sign in required";
+        const error = await deleteCloudAccount(token);
+        if (error) return error;
+        setSession((current) => ({ ...empty, onboarded: current.onboarded }));
+        return null;
+      },
       wipeDevice: () =>
         setSession((current) => ({
           ...empty,
@@ -210,12 +355,19 @@ export function SessionProvider({ children }: { children: ReactNode }) {
           const next = { ...prev, [slot]: teamId };
           if (teamId && slot === "primary" && next.secondary === teamId) next.secondary = undefined;
           if (teamId && slot === "secondary" && next.primary === teamId) next.primary = undefined;
-          return { ...current, favorites: { ...current.favorites, [key]: next } };
+          const favorites = { ...current.favorites, [key]: next };
+          if (current.accessToken) {
+            void pushProfile(current.accessToken, { favoriteTeams: favoritesToCloud(favorites) });
+          }
+          return { ...current, favorites };
         }),
       clearPartition: (key) =>
         setSession((current) => {
           const favorites = { ...current.favorites };
           delete favorites[key];
+          if (current.accessToken) {
+            void pushProfile(current.accessToken, { favoriteTeams: favoritesToCloud(favorites) });
+          }
           return { ...current, favorites };
         }),
       fullLeft: () => {
@@ -224,19 +376,27 @@ export function SessionProvider({ children }: { children: ReactNode }) {
         const used = session.ratings.filter((rating) => rating.mode === "full" && rating.at >= start).length;
         return Math.max(0, FREE_FULL_RATINGS - used);
       },
-      addRating: (rating) =>
+      addRating: (rating) => {
+        const saved: SavedRating = {
+          ...rating,
+          id: `r-${Date.now()}`,
+          at: new Date().toISOString(),
+          author,
+        };
         setSession((current) => ({
           ...current,
           ratings: [
-            {
-              ...rating,
-              id: `r-${Date.now()}`,
-              at: new Date().toISOString(),
-              author,
-            },
-            ...current.ratings,
+            saved,
+            ...current.ratings.filter((row) => !(row.eventSlug === saved.eventSlug && row.athleteId === saved.athleteId)),
           ],
-        })),
+        }));
+        const token = sessionRef.current.accessToken;
+        if (token) {
+          void pushPlayerRating(token, saved, author).then((error) => {
+            if (error) setSession((current) => ({ ...current, cloudNote: error }));
+          });
+        }
+      },
       postMatch: (eventSlug, score, body) => {
         const trimmed = body.trim();
         const status = trimmed ? moderate(trimmed) : "ok";
@@ -253,6 +413,12 @@ export function SessionProvider({ children }: { children: ReactNode }) {
           ...current,
           matchTakes: [take, ...current.matchTakes.filter((row) => row.eventSlug !== eventSlug)],
         }));
+        const token = sessionRef.current.accessToken;
+        if (token) {
+          void pushMatch(token, take, author).then((error) => {
+            if (error) setSession((current) => ({ ...current, cloudNote: error }));
+          });
+        }
         return status;
       },
       addZone: (zone) => {

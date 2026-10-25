@@ -1,6 +1,6 @@
 import { scanCommentBody, moderationErrorPayload } from "@/lib/comment-moderation";
 import { blockedUserIds } from "@/lib/safety-server";
-import { createClient } from "@/lib/supabase/server";
+import { requestUser, upsertRating, writeClient } from "@/lib/supabase/request-user";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 import { NextResponse } from "next/server";
 import type { Sport } from "@/lib/types";
@@ -20,10 +20,10 @@ export async function GET(request: Request) {
   if (!eventId) {
     return NextResponse.json({ error: "Missing event" }, { status: 400 });
   }
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const { supabase, user } = await requestUser(request);
+  if (!supabase) {
+    return NextResponse.json({ takes: [], mine: null });
+  }
   const hidden = await blockedUserIds(supabase, user?.id);
 
   const [{ data: ratings }, { data: comments }] = await Promise.all([
@@ -73,13 +73,11 @@ export async function POST(request: Request) {
   if (!isSupabaseConfigured()) {
     return NextResponse.json({ error: "Supabase not configured" }, { status: 503 });
   }
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) {
+  const { supabase, user } = await requestUser(request);
+  if (!supabase || !user) {
     return NextResponse.json({ error: "Sign in required" }, { status: 401 });
   }
+  const db = writeClient(supabase);
 
   const body = (await request.json()) as {
     eventId?: string;
@@ -113,23 +111,20 @@ export async function POST(request: Request) {
     "Fan"
   ).slice(0, 32);
 
-  const { error: ratingError } = await supabase.from("ratings").upsert(
-    {
-      user_id: user.id,
-      event_id: eventId,
-      athlete_id: MATCH_ATHLETE_ID,
-      sport: body.sport ?? "soccer",
-      scores: { match: score },
-      rating_mode: "overall_only",
-      updated_at: new Date().toISOString(),
-    },
-    { onConflict: "user_id,event_id,athlete_id" },
-  );
+  const { error: ratingError } = await upsertRating(db, {
+    user_id: user.id,
+    event_id: eventId,
+    athlete_id: MATCH_ATHLETE_ID,
+    sport: body.sport ?? "soccer",
+    scores: { match: score },
+    rating_mode: "overall_only",
+    updated_at: new Date().toISOString(),
+  });
   if (ratingError) {
     return NextResponse.json({ error: ratingError.message }, { status: 500 });
   }
 
-  await supabase
+  await db
     .from("comments")
     .delete()
     .eq("user_id", user.id)
@@ -137,7 +132,7 @@ export async function POST(request: Request) {
     .eq("athlete_id", MATCH_ATHLETE_ID);
 
   if (comment) {
-    const { error: commentError } = await supabase.from("comments").insert({
+    const { error: commentError } = await db.from("comments").insert({
       user_id: user.id,
       event_id: eventId,
       athlete_id: MATCH_ATHLETE_ID,
