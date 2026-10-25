@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { EventSquadPageTabs } from "@/components/event-squad-page-tabs";
 import { MatchScoreboard } from "@/components/match-scoreboard";
+import { MatchTakePanel } from "@/components/match-take-panel";
 import { StatusPill } from "@/components/status-pill";
 import { useI18n } from "@/i18n/use-i18n";
 import { tx } from "@/lib/copy";
@@ -46,6 +47,7 @@ export function EventThreadShell({
       </section>
 
       <div className="mx-auto max-w-6xl space-y-4 px-3 py-6">
+        <MatchTakePanel event={event} />
         <EventSquadPageTabs slug={event.slug} active={active} />
         {children}
       </div>

@@ -318,6 +318,18 @@ export type Dict = {
     viewPlayer: string;
     matchupsTab: string;
     matchupsLead: string;
+    matchTitle: string;
+    matchLead: string;
+    matchScore: string;
+    matchAverage: string;
+    matchEmpty: string;
+    matchComment: string;
+    matchCommentHint: string;
+    matchPost: string;
+    matchPosted: string;
+    matchYou: string;
+    matchScoreOnly: string;
+    matchCount: string;
   };
   matchup: {
     tab: string;

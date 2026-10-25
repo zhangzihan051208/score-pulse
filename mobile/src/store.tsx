@@ -6,6 +6,15 @@ export const FREE_FULL_RATINGS = 5;
 
 export type RatingMode = "full" | "overall";
 
+export type MatchTake = {
+  id: string;
+  eventSlug: string;
+  score: number;
+  body: string;
+  at: string;
+  author: string;
+};
+
 export type SavedRating = {
   id: string;
   eventSlug: string;
@@ -52,6 +61,7 @@ type Session = {
   vip: boolean;
   onboarded: boolean;
   ratings: SavedRating[];
+  matchTakes: MatchTake[];
   favorites: Favorites;
   zones: Zone[];
 };
@@ -66,6 +76,7 @@ type SessionApi = Session & {
   clearPartition: (key: string) => void;
   fullLeft: () => number;
   addRating: (rating: Omit<SavedRating, "id" | "at" | "author">) => void;
+  postMatch: (eventSlug: string, score: number, body: string) => "ok" | "held";
   addZone: (zone: Omit<Zone, "id" | "owner" | "items"> & { items?: ZoneItem[] }) => string;
   addZoneItem: (zoneId: string, name: string) => void;
   rateZoneItem: (zoneId: string, itemId: string, scores: Record<string, number>, body: string) => "ok" | "held";
@@ -118,6 +129,7 @@ const empty: Session = {
   vip: false,
   onboarded: false,
   ratings: [],
+  matchTakes: [],
   favorites: {},
   zones: seedZones,
 };
@@ -148,6 +160,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
             ...parsed,
             onboarded,
             zones: parsed.zones?.length ? parsed.zones : seedZones,
+            matchTakes: parsed.matchTakes ?? [],
           });
         }
       })
@@ -202,6 +215,24 @@ export function SessionProvider({ children }: { children: ReactNode }) {
             ...current.ratings,
           ],
         })),
+      postMatch: (eventSlug, score, body) => {
+        const trimmed = body.trim();
+        const status = trimmed ? moderate(trimmed) : "ok";
+        if (status === "held") return status;
+        const take: MatchTake = {
+          id: `match-${eventSlug}`,
+          eventSlug,
+          score,
+          body: trimmed,
+          at: new Date().toISOString(),
+          author,
+        };
+        setSession((current) => ({
+          ...current,
+          matchTakes: [take, ...current.matchTakes.filter((row) => row.eventSlug !== eventSlug)],
+        }));
+        return status;
+      },
       addZone: (zone) => {
         const id = `zone-${Date.now()}`;
         setSession((current) => ({

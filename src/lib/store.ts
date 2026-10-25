@@ -8,6 +8,7 @@ import {
   weightedOverall,
 } from "./position-ratings";
 import type { PositionKey } from "./position-ratings";
+import type { MatchTake } from "./match-takes";
 import type {
   MatchEvent,
   ScoreMap,
@@ -23,12 +24,15 @@ export type CommunityState = {
   nickname: string;
   ratings: Record<string, UserRating>;
   comments: UserComment[];
+  /** One local score for the match itself, keyed by event id. */
+  matchTakes: Record<string, MatchTake>;
 };
 
 export const defaultState: CommunityState = {
   nickname: "Row 12",
   ratings: {},
   comments: [],
+  matchTakes: {},
 };
 
 const listeners = new Set<() => void>();
@@ -48,6 +52,8 @@ function parseState(raw: string | null): CommunityState {
       nickname: parsed.nickname || defaultState.nickname,
       ratings: parsed.ratings || {},
       comments: parsed.comments || [],
+      matchTakes:
+        parsed.matchTakes && typeof parsed.matchTakes === "object" ? parsed.matchTakes : {},
     };
   } catch {
     return defaultState;

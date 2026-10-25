@@ -2,7 +2,9 @@
 
 import { useCallback, useSyncExternalStore } from "react";
 import { performanceKey } from "@/lib/score-display";
+import type { MatchTake } from "@/lib/match-takes";
 import {
+  clampScore,
   getCommunitySnapshot,
   getServerCommunitySnapshot,
   saveState,
@@ -76,5 +78,24 @@ export function useCommunity() {
     [],
   );
 
-  return { state, postTake };
+  const postMatchTake = useCallback((eventId: string, score: number, body: string, nickname?: string) => {
+    const current = getCommunitySnapshot();
+    const author = (nickname ?? current.nickname).trim() || "Row 12";
+    const take: MatchTake = {
+      id: `local-match-${eventId}`,
+      eventId,
+      author,
+      score: clampScore(score),
+      body: body.trim(),
+      createdAt: new Date().toISOString(),
+      local: true,
+    };
+    saveState({
+      ...current,
+      nickname: author,
+      matchTakes: { ...current.matchTakes, [eventId]: take },
+    });
+  }, []);
+
+  return { state, postTake, postMatchTake };
 }
