@@ -1,4 +1,5 @@
-import { moderationErrorPayload, scanCommentBody } from "@/lib/comment-moderation";
+import { moderateComment } from "@/lib/ai-moderation";
+import { moderationErrorPayload } from "@/lib/comment-moderation";
 import { createClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 import { refreshItemHeat } from "@/lib/zone-server";
@@ -67,7 +68,7 @@ export async function POST(
       "Fan";
   }
 
-  const mod = scanCommentBody(trimmed || "—");
+  const mod = await moderateComment(trimmed || "—");
   if (!mod.pass) {
     return NextResponse.json(moderationErrorPayload(mod), { status: 422 });
   }

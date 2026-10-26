@@ -59,7 +59,7 @@ export function EventScreen({ route, navigation }: NativeStackScreenProps<RootSt
         cloudTakes={matchThread?.takes ?? []}
         onPost={() => {
           const result = session.postMatch(event.slug, score, body);
-          setNote(result === "held" ? t.matchBlocked : session.email ? t.publishedNow : t.matchPosted);
+          setNote(result === "blocked" ? t.matchBlocked : session.email ? t.publishedNow : t.matchPosted);
         }}
       />
       <Pressable style={ui.primaryBtn} onPress={() => navigation.navigate("Matchup", { slug: event.slug })}>

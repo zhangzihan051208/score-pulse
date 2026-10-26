@@ -250,11 +250,11 @@ const es: Dict = {
     },
     safety: {
       title: "Reportes",
-      lead: "Los reportes de quien inició sesión llegan aquí. Ocultar quita ese comentario del partido.",
+      lead: "Los reportes se revisan solos. Si el comentario incumple las reglas, se oculta al momento. Solo queda aquí si la revisión no responde.",
       report: "Reportar",
       block: "Bloquear",
       blocked: "Bloqueado. Sus notas ya no se muestran.",
-      reported: "Reporte recibido.",
+      reported: "Recibido. Se revisa ahora y se oculta si incumple las reglas.",
       failed: "No se completó. Inténtalo de nuevo.",
       spam: "Spam",
       abuse: "Abuso",
@@ -278,7 +278,8 @@ const es: Dict = {
     },
     moderation: {
       autoBadge: "Moderación automática",
-      autoLead: "Detectamos anuncios, palabras prohibidas y contenido sexual o violento.",
+      autoLead:
+        "Los comentarios se revisan antes de publicarse. Se bloquean anuncios, insultos, contenido sexual o violento y spam. Un reporte repite la revisión y oculta el comentario si falla.",
       blockAd: "Bloqueado: publicidad o enlaces.",
       blockProfanity: "Bloqueado: lenguaje abusivo.",
       blockPornViolence: "Bloqueado: contenido sexual o violento.",

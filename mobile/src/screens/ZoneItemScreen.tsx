@@ -42,8 +42,8 @@ export function ZoneItemScreen({ route }: NativeStackScreenProps<RootStackParamL
         style={ui.primaryBtn}
         onPress={() => {
           const status = session.rateZoneItem(zone.id, item.id, scores, body.trim());
-          setNote(status === "held" ? t.held : t.saved);
-          setBody("");
+          setNote(status === "blocked" ? t.held : t.saved);
+          if (status === "ok") setBody("");
         }}
       >
         <Text style={ui.primaryBtnText}>{t.post}</Text>

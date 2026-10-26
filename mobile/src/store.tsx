@@ -106,11 +106,10 @@ type SessionApi = Session & {
   clearPartition: (key: string) => void;
   fullLeft: () => number;
   addRating: (rating: Omit<SavedRating, "id" | "at" | "author">) => void;
-  postMatch: (eventSlug: string, score: number, body: string) => "ok" | "held";
+  postMatch: (eventSlug: string, score: number, body: string) => "ok" | "blocked";
   addZone: (zone: Omit<Zone, "id" | "owner" | "items"> & { items?: ZoneItem[] }) => string;
   addZoneItem: (zoneId: string, name: string) => void;
-  rateZoneItem: (zoneId: string, itemId: string, scores: Record<string, number>, body: string) => "ok" | "held";
-  approveComment: (zoneId: string, itemId: string, commentId: string) => void;
+  rateZoneItem: (zoneId: string, itemId: string, scores: Record<string, number>, body: string) => "ok" | "blocked";
 };
 
 const seedZones: Zone[] = [
@@ -186,8 +185,8 @@ function dayStartIso() {
   return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate())).toISOString();
 }
 
-export function moderate(body: string) {
-  return /https?:|微信|加微|赌博|色情|代充|免费领/i.test(body) ? "held" : "ok";
+export function moderate(body: string): "ok" | "blocked" {
+  return /https?:|微信|加微|赌博|色情|代充|免费领/i.test(body) ? "blocked" : "ok";
 }
 
 export function SessionProvider({ children }: { children: ReactNode }) {
@@ -414,6 +413,16 @@ export function SessionProvider({ children }: { children: ReactNode }) {
         const token = sessionRef.current.accessToken;
         if (token) {
           void pushPlayerRating(token, saved, author).then((error) => {
+            if (error === "moderation_blocked") {
+              setSession((current) => ({
+                ...current,
+                cloudNote: "moderation_blocked",
+                ratings: current.ratings.map((row) =>
+                  row.id === saved.id ? { ...row, comment: "" } : row,
+                ),
+              }));
+              return;
+            }
             if (error) setSession((current) => ({ ...current, cloudNote: error }));
           });
         }
@@ -421,7 +430,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       postMatch: (eventSlug, score, body) => {
         const trimmed = body.trim();
         const status = trimmed ? moderate(trimmed) : "ok";
-        if (status === "held") return status;
+        if (status === "blocked") return status;
         const take: MatchTake = {
           id: `match-${eventSlug}`,
           eventSlug,
@@ -437,6 +446,16 @@ export function SessionProvider({ children }: { children: ReactNode }) {
         const token = sessionRef.current.accessToken;
         if (token) {
           void pushMatch(token, take, author).then((error) => {
+            if (error === "moderation_blocked") {
+              setSession((current) => ({
+                ...current,
+                cloudNote: "moderation_blocked",
+                matchTakes: current.matchTakes.map((row) =>
+                  row.id === take.id ? { ...row, body: "" } : row,
+                ),
+              }));
+              return;
+            }
             if (error) setSession((current) => ({ ...current, cloudNote: error }));
           });
         }
@@ -464,6 +483,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
         })),
       rateZoneItem: (zoneId, itemId, scores, body) => {
         const status = body.trim() ? moderate(body) : "ok";
+        if (status === "blocked") return status;
         setSession((current) => ({
           ...current,
           zones: current.zones.map((zone) =>
@@ -483,7 +503,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
                               body,
                               scores,
                               at: new Date().toISOString(),
-                              status,
+                              status: "ok",
                             },
                             ...item.comments,
                           ],
@@ -494,27 +514,6 @@ export function SessionProvider({ children }: { children: ReactNode }) {
         }));
         return status;
       },
-      approveComment: (zoneId, itemId, commentId) =>
-        setSession((current) => ({
-          ...current,
-          zones: current.zones.map((zone) =>
-            zone.id !== zoneId
-              ? zone
-              : {
-                  ...zone,
-                  items: zone.items.map((item) =>
-                    item.id !== itemId
-                      ? item
-                      : {
-                          ...item,
-                          comments: item.comments.map((comment) =>
-                            comment.id === commentId ? { ...comment, status: "ok" } : comment,
-                          ),
-                        },
-                  ),
-                },
-          ),
-        })),
     };
   }, [ready, session]);
 

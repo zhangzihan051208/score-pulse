@@ -249,11 +249,11 @@ const en: Dict = {
     },
     safety: {
       title: "Reports",
-      lead: "Reports from signed-in fans land here. Hiding pulls that comment off the match.",
+      lead: "Reports are checked automatically. A comment that breaks the rules is hidden immediately. It stays here only when the check cannot be completed.",
       report: "Report",
       block: "Block",
       blocked: "Blocked. Their grades stay off your screens.",
-      reported: "Report received.",
+      reported: "Received. It is checked now, and hidden if it breaks the rules.",
       failed: "That did not go through. Try again.",
       spam: "Spam",
       abuse: "Abuse",
@@ -278,7 +278,7 @@ const en: Dict = {
     moderation: {
       autoBadge: "Auto moderation",
       autoLead:
-        "Comments are scanned for ads, banned words, and violent or sexual content before they go live.",
+        "Comments are checked before they go live. Ads, abuse, sexual or violent content, and spam are blocked. A report runs the same check and hides the comment when it fails.",
       blockAd: "Blocked: promotional or link spam is not allowed.",
       blockProfanity: "Blocked: abusive language is not allowed.",
       blockPornViolence: "Blocked: sexual or violent content is not allowed.",

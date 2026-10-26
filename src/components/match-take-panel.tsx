@@ -116,7 +116,6 @@ export function MatchTakePanel({ event }: { event: MatchEvent }) {
       setError(moderationMessage(t.moderation, moderationI18nKey(verdict.codes)));
       return;
     }
-    postMatchTake(event.id, score, trimmed, name);
     if (enabled && user) {
       const res = await fetch("/api/community/match", {
         method: "POST",
@@ -140,6 +139,7 @@ export function MatchTakePanel({ event }: { event: MatchEvent }) {
         return;
       }
     }
+    postMatchTake(event.id, score, trimmed, name);
     setSaved(true);
     setError(null);
   }

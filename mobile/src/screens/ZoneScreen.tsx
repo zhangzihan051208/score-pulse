@@ -18,11 +18,6 @@ export function ZoneScreen({ route, navigation }: NativeStackScreenProps<RootSta
       </View>
     );
   }
-  const mine = session.name && (session.name === zone.owner || zone.owner === "球迷");
-  const held = zone.items.flatMap((item) =>
-    item.comments.filter((comment) => comment.status === "held").map((comment) => ({ item, comment })),
-  );
-
   return (
     <ScrollView style={ui.page} contentContainerStyle={ui.content}>
       <Text style={ui.h1}>{zone.title}</Text>
@@ -53,21 +48,6 @@ export function ZoneScreen({ route, navigation }: NativeStackScreenProps<RootSta
           </Pressable>
         );
       })}
-      {mine && held.length > 0 ? (
-        <View style={ui.card}>
-          <Text style={ui.title}>{t.held}</Text>
-          {held.map(({ item, comment }) => (
-            <View key={comment.id} style={{ gap: 4 }}>
-              <Text style={ui.muted}>
-                {item.name}: {comment.body}
-              </Text>
-              <Pressable onPress={() => session.approveComment(zone.id, item.id, comment.id)}>
-                <Text style={ui.primaryBtnText}>{t.approve}</Text>
-              </Pressable>
-            </View>
-          ))}
-        </View>
-      ) : null}
     </ScrollView>
   );
 }

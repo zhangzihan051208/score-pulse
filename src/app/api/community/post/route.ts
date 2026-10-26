@@ -8,7 +8,8 @@ import {
   scoresFromOverall,
   type RatingMode,
 } from "@/lib/vip";
-import { moderationErrorPayload, scanCommentBody } from "@/lib/comment-moderation";
+import { moderateComment } from "@/lib/ai-moderation";
+import { moderationErrorPayload } from "@/lib/comment-moderation";
 import { upsertAthleteProfile } from "@/lib/athlete-profile-server";
 import { requestUser, upsertRating, writeClient } from "@/lib/supabase/request-user";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
@@ -100,6 +101,13 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Scores are required." }, { status: 400 });
   }
 
+  if (trimmedComment.length >= 8) {
+    const mod = await moderateComment(trimmedComment);
+    if (!mod.pass) {
+      return NextResponse.json(moderationErrorPayload(mod), { status: 422 });
+    }
+  }
+
   let authorName: string | undefined = displayName?.trim().slice(0, 32);
   const { data: existingProfile } = await supabase
     .from("profiles")
@@ -163,10 +171,6 @@ export async function POST(request: Request) {
   }
 
   if (trimmedComment.length >= 8) {
-    const mod = scanCommentBody(trimmedComment);
-    if (!mod.pass) {
-      return NextResponse.json(moderationErrorPayload(mod), { status: 422 });
-    }
     const { error: commentError } = await db.from("comments").insert({
       user_id: user.id,
       event_id: eventId,
@@ -174,7 +178,7 @@ export async function POST(request: Request) {
       author: author.slice(0, 32),
       body: trimmedComment,
       scores,
-      moderation_status: mod.status,
+      moderation_status: "approved",
     });
     if (commentError) {
       return NextResponse.json({ error: commentError.message }, { status: 500 });

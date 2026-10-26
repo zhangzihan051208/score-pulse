@@ -29,7 +29,11 @@ export function ProfileScreen() {
           <Text style={styles.name}>{session.name || t.guest}</Text>
           {session.email ? <Text style={ui.muted}>{session.email}</Text> : null}
           {session.bio ? <Text style={ui.muted}>{session.bio}</Text> : null}
-          {session.cloudNote ? <Text style={{ color: colors.primary }}>{session.cloudNote}</Text> : null}
+          {session.cloudNote ? (
+            <Text style={{ color: colors.primary }}>
+              {session.cloudNote === "moderation_blocked" ? t.matchBlocked : session.cloudNote}
+            </Text>
+          ) : null}
         </View>
       </View>
 

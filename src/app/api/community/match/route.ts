@@ -1,4 +1,5 @@
-import { scanCommentBody, moderationErrorPayload } from "@/lib/comment-moderation";
+import { moderateComment } from "@/lib/ai-moderation";
+import { moderationErrorPayload } from "@/lib/comment-moderation";
 import { blockedUserIds } from "@/lib/safety-server";
 import { requestUser, upsertRating, writeClient } from "@/lib/supabase/request-user";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
@@ -97,7 +98,7 @@ export async function POST(request: Request) {
   const score = clampScore(Number(body.score));
   const comment = body.comment?.trim() ?? "";
   if (comment) {
-    const verdict = scanCommentBody(comment);
+    const verdict = await moderateComment(comment);
     if (!verdict.pass) {
       return NextResponse.json(moderationErrorPayload(verdict), { status: 422 });
     }

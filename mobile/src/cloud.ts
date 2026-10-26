@@ -156,6 +156,7 @@ export async function pushPlayerRating(
   });
   if (res.ok) return null;
   const data = await readJson(res);
+  if (data?.code === "moderation_blocked") return "moderation_blocked";
   return String(data?.error ?? "Upload failed");
 }
 
@@ -174,6 +175,7 @@ export async function pushMatch(token: string, take: MatchRow, displayName: stri
   });
   if (res.ok) return null;
   const data = await readJson(res);
+  if (data?.code === "moderation_blocked") return "moderation_blocked";
   return String(data?.error ?? "Upload failed");
 }
 

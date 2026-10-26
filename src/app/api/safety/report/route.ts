@@ -1,3 +1,4 @@
+import { settleReport } from "@/lib/report-moderation";
 import { createClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 import { NextResponse } from "next/server";
@@ -30,16 +31,27 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Unknown reason" }, { status: 400 });
   }
 
-  const { error } = await supabase.from("reports").insert({
-    reporter_id: user.id,
-    target_user_id: body.targetUserId || null,
-    comment_id: body.commentId || null,
-    event_id: body.eventId?.slice(0, 120) || null,
-    excerpt: body.excerpt?.trim().slice(0, 280) || null,
-    reason,
-  });
+  const commentId = body.commentId || null;
+  const excerpt = body.excerpt?.trim().slice(0, 280) || null;
+  const { data: inserted, error } = await supabase
+    .from("reports")
+    .insert({
+      reporter_id: user.id,
+      target_user_id: body.targetUserId || null,
+      comment_id: commentId,
+      event_id: body.eventId?.slice(0, 120) || null,
+      excerpt,
+      reason,
+    })
+    .select("id")
+    .single();
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+  try {
+    await settleReport({ reportId: inserted.id, commentId, excerpt });
+  } catch {
+    /* the report is stored; a later check can still hide the comment */
   }
   return NextResponse.json({ ok: true });
 }

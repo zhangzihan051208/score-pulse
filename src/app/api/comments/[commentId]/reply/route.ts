@@ -1,4 +1,5 @@
-import { moderationErrorPayload, scanCommentBody } from "@/lib/comment-moderation";
+import { moderateComment } from "@/lib/ai-moderation";
+import { moderationErrorPayload } from "@/lib/comment-moderation";
 import { createClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 import { NextResponse } from "next/server";
@@ -44,7 +45,7 @@ export async function POST(
     .eq("id", user.id)
     .maybeSingle();
 
-  const mod = scanCommentBody(text);
+  const mod = await moderateComment(text);
   if (!mod.pass) {
     return NextResponse.json(moderationErrorPayload(mod), { status: 422 });
   }

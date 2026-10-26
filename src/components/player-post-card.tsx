@@ -12,6 +12,7 @@ import { usePlayerCommunity } from "@/hooks/use-player-community";
 import { useProfile } from "@/hooks/use-profile";
 import { useI18n } from "@/i18n/use-i18n";
 import { dimLabel } from "@/i18n/position-dims";
+import { moderationMessage } from "@/lib/moderation-message";
 import { tx } from "@/lib/copy";
 import { emptyScores, overallFromScores } from "@/lib/store";
 import { athletePostMeta, playerRoleSubtitle } from "@/lib/player-meta";
@@ -135,8 +136,16 @@ export function PlayerPostCard({
               }),
             });
             if (!res.ok) {
-              const data = (await res.json()) as { error?: string };
-              setError(data.error ?? t.auth.failed);
+              const data = (await res.json()) as {
+                error?: string;
+                code?: string;
+                messageKey?: string;
+              };
+              setError(
+                data.code === "moderation_blocked"
+                  ? moderationMessage(t.moderation, data.messageKey)
+                  : (data.error ?? t.auth.failed),
+              );
               return;
             }
             await loadRemote();

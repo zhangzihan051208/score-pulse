@@ -239,10 +239,14 @@ export const deOverrides = {
     replyPlaceholder: "Antwort schreiben…",
     sendReply: "Senden",
   },
+  safety: {
+    lead: "Meldungen werden automatisch geprüft. Verstößt der Kommentar, wird er sofort ausgeblendet. Er bleibt hier nur, wenn die Prüfung nicht antwortet.",
+    reported: "Erhalten. Die Meldung wird sofort geprüft und bei einem Verstoß ausgeblendet.",
+  },
   moderation: {
     autoBadge: "Auto-Moderation",
     autoLead:
-      "Kommentare werden auf Werbung, verbotene Wörter sowie sexuelle/gewaltverherrlichende Inhalte geprüft.",
+      "Kommentare werden vor der Veröffentlichung geprüft. Werbung, Beleidigungen, sexuelle oder gewalttätige Inhalte und Spam werden blockiert. Eine Meldung prüft den Kommentar erneut und blendet ihn bei einem Verstoß aus.",
     blockAd: "Blockiert: Werbung oder Links.",
     blockProfanity: "Blockiert: Beleidigungen.",
     blockPornViolence: "Blockiert: sexuelle oder gewalttätige Inhalte.",
