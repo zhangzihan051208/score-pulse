@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import type { ReactNode } from "react";
 import { Inter, Plus_Jakarta_Sans } from "next/font/google";
 import { LocaleBody } from "@/components/locale-body";
 import { DegradedBanner } from "@/components/degraded-banner";
@@ -33,7 +34,7 @@ export const metadata: Metadata = {
     "Fan tribune for overseas leagues. Five-axis player ratings, community boards, six languages.",
 };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en" className={`${inter.variable} ${display.variable} h-full antialiased`}>
       <body className="flex min-h-full flex-col bg-background text-foreground">
