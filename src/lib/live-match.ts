@@ -3,6 +3,7 @@ import { emptyScoresForPosition } from "./position-ratings";
 import { inferPositionKey } from "./position-infer";
 import { fixtureSlug } from "./slugify";
 import { alignEventToNow } from "./match-clock";
+import { teamBadgeFromTsdbRaw } from "./team-badges";
 import { mapTsdbStatus } from "./thesportsdb";
 import type { TsdbLineupPlayer } from "./thesportsdb";
 import { getLeagueByTsdbId, leagueMatchesRow } from "./leagues";
@@ -154,6 +155,8 @@ export function fixtureToMatchEvent(
     awayTeamId,
     homeTeamName: row.str_home_team ?? undefined,
     awayTeamName: row.str_away_team ?? undefined,
+    homeTeamLogoUrl: teamBadgeFromTsdbRaw(raw, "home"),
+    awayTeamLogoUrl: teamBadgeFromTsdbRaw(raw, "away"),
     homeScore: row.int_home_score,
     awayScore: row.int_away_score,
     statusDetail: row.str_status ?? undefined,

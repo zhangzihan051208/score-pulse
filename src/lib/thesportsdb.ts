@@ -66,6 +66,8 @@ export type TsdbEvent = {
   strThumb?: string;
   strSport?: string;
   idLeague?: string;
+  strHomeTeamBadge?: string;
+  strAwayTeamBadge?: string;
 };
 
 export type TsdbLineupPlayer = {

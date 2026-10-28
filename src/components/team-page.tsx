@@ -269,6 +269,8 @@ function TeamEventsSection({
             awayScore: ev.awayScore,
             homeTeamId: ev.isHome ? hub.id : undefined,
             awayTeamId: ev.isHome ? undefined : hub.id,
+            homeTeamLogoUrl: ev.isHome ? hub.badgeUrl : undefined,
+            awayTeamLogoUrl: ev.isHome ? undefined : hub.badgeUrl,
             live: true,
           };
           const href = ev.slug ? `/events/${ev.slug}` : undefined;
