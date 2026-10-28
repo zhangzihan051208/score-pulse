@@ -42,6 +42,11 @@ import {
   UPSTREAM_TIMEOUT_MS,
   withUpstreamTimeout,
 } from "@/lib/service-degraded";
+import {
+  isActiveFixtureRow,
+  isActiveMatchStatus,
+  shouldRetainFixtureRow,
+} from "@/lib/fixture-retention";
 import type { MatchEvent } from "./types";
 
 const LIVE_SYNC_MS = SCHEDULE_SYNC_MS;
@@ -265,7 +270,9 @@ function mergeLeagueBucketsIntoRows(
   const addEvent = (ev: TsdbEvent, league: LeagueConfig) => {
     if (league.sport !== "nba" && league.sport !== "soccer") return;
     if (!tsdbEventBelongsToLeague(ev, league)) return;
-    byId.set(ev.idEvent, rowFromEvent(league.sport, league.tsdbId, ev));
+    const row = rowFromEvent(league.sport, league.tsdbId, ev);
+    if (!shouldRetainFixtureRow(row)) return;
+    byId.set(ev.idEvent, row);
   };
 
   for (const { league, events: evs } of leagueBuckets) {
@@ -399,8 +406,40 @@ export async function syncFixturesFast(force = false) {
   });
   if (error) return { ok: false as const, error: error.message };
 
+  const pruned = await pruneExpiredFixturesFromDb(admin);
+
   revalidateTag("fixtures", "max");
-  return { ok: true as const, count: rows.length };
+  return { ok: true as const, count: rows.length, pruned };
+}
+
+/** Remove ended fixtures from Supabase so boards stay live/upcoming only. */
+export async function pruneExpiredFixturesFromDb(
+  admin: NonNullable<ReturnType<typeof createServiceClient>>,
+) {
+  const data = await fetchFixtureRows((select) =>
+    admin
+      .from("sportsdb_fixtures")
+      .select(select)
+      .in("sport", ["nba", "soccer"])
+      .order("date_event", { ascending: false })
+      .limit(2000)
+      .then((r) => ({ data: r.data, error: r.error })),
+  );
+  const expiredIds = data
+    .map((row) => hydrateFixtureRow(row))
+    .filter((row) => !isActiveFixtureRow(row))
+    .map((row) => row.id_event);
+  if (expiredIds.length === 0) return 0;
+
+  const chunkSize = 200;
+  let deleted = 0;
+  for (let i = 0; i < expiredIds.length; i += chunkSize) {
+    const chunk = expiredIds.slice(i, i + chunkSize);
+    const { error } = await admin.from("sportsdb_fixtures").delete().in("id_event", chunk);
+    if (error) break;
+    deleted += chunk.length;
+  }
+  return deleted;
 }
 
 /** Background roster fetch for matches that need lineups (run on a schedule). */
@@ -528,6 +567,7 @@ export async function listFixtures(
   return data
     .map((row) => hydrateFixtureRow(row))
     .filter((row) => isLiveLeagueRow(row))
+    .filter((row) => isActiveFixtureRow(row))
     .filter((row) => {
       if (!leagueFilter) return true;
       return (
@@ -546,7 +586,8 @@ export async function listLiveMatchEvents(
   const rows = await listFixtures(sports, Math.max(limit * 4, 48), leagueSlug);
   const events = rows
     .map((r) => fixtureRowToMatchEvent(r))
-    .filter((e): e is MatchEvent => Boolean(e));
+    .filter((e): e is MatchEvent => Boolean(e))
+    .filter((e) => isActiveMatchStatus(e.status));
   events.sort((a, b) => {
     const sr = statusRank(a.status) - statusRank(b.status);
     if (sr !== 0) return sr;
@@ -601,7 +642,7 @@ export async function getLiveMatchBySlug(slug: string) {
     return withTeamLogos(fixtureRowToMatchEvent(row));
   }
   const row = hydrateFixtureRow(rowData as Record<string, unknown>);
-  if (!isLiveLeagueRow(row)) return null;
+  if (!isLiveLeagueRow(row) || !isActiveFixtureRow(row)) return null;
   return withTeamLogos(fixtureRowToMatchEvent(row));
 }
 
@@ -662,6 +703,7 @@ export async function searchFixtures(query: string, limit = 20) {
   const rows = rawRows
     .map((row) => hydrateFixtureRow(row as Record<string, unknown>))
     .filter((row) => isTrackedFixture(row))
+    .filter((row) => isActiveFixtureRow(row))
     .filter((row) => {
       if (!usedFallback) return true;
       const blob = [
@@ -833,6 +875,7 @@ export async function listFixturesForTeam(
   const rows = data
     .map((row) => hydrateFixtureRow(row as Record<string, unknown>))
     .filter((row) => isTrackedFixture(row))
+    .filter((row) => isActiveFixtureRow(row))
     .filter((row) => {
       if (row.id_home_team === teamId || row.id_away_team === teamId) return true;
       if (!nameLower) return false;
@@ -846,6 +889,7 @@ export async function listFixturesForTeam(
   const events = rows
     .map((r) => fixtureRowToMatchEvent(r))
     .filter((e): e is MatchEvent => Boolean(e))
+    .filter((e) => isActiveMatchStatus(e.status))
     .sort((a, b) => {
       const sr = statusRank(a.status) - statusRank(b.status);
       if (sr !== 0) return sr;

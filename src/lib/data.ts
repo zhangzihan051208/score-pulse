@@ -1,5 +1,6 @@
 import { L } from "./copy";
 import { bayernArsenalEvent } from "./featured/bayern-arsenal";
+import { isSeedOnlyBoardSport } from "./fixture-retention";
 import type { Athlete, MatchEvent } from "./types";
 
 export { seedComments } from "./seed-comments";
@@ -610,9 +611,12 @@ export const events: MatchEvent[] = [
 ];
 
 export function getEvent(slug: string) {
-  return events.find((event) => event.slug === slug);
+  const event = events.find((item) => item.slug === slug);
+  if (event && isSeedOnlyBoardSport(event.sport)) return undefined;
+  return event;
 }
 
 export function eventsBySport(sport: string) {
+  if (isSeedOnlyBoardSport(sport)) return [];
   return events.filter((event) => event.sport === sport);
 }

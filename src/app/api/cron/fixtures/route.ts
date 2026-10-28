@@ -17,6 +17,7 @@ export async function GET(request: Request) {
   return NextResponse.json({
     ok: true,
     synced: result.count,
+    pruned: "pruned" in result ? result.pruned : undefined,
     skipped: result.skipped ?? false,
     at: new Date().toISOString(),
   });
