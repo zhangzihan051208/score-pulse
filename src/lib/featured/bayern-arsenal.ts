@@ -620,12 +620,7 @@ export const bayernArsenalEvent: MatchEvent = {
   ],
 };
 
-/** Curated card stays at the top of the soccer list. Other leagues leave it out. */
-export function pinBayernArsenal(
-  list: MatchEvent[],
-  leagueSlug?: string,
-): MatchEvent[] {
-  if (leagueSlug && leagueSlug !== "champions-league") return list;
-  const rest = list.filter((event) => event.slug !== bayernArsenalSlug);
-  return [bayernArsenalEvent, ...rest];
+/** @deprecated Expired curated cards are no longer injected into live lists. */
+export function pinBayernArsenal(list: MatchEvent[], _leagueSlug?: string): MatchEvent[] {
+  return list.filter((event) => event.slug !== bayernArsenalSlug);
 }
