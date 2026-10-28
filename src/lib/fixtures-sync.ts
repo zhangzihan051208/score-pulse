@@ -536,10 +536,17 @@ export async function listLiveMatchEvents(
   limit = 12,
   leagueSlug?: string,
 ): Promise<MatchEvent[]> {
-  const rows = await listFixtures(sports, limit, leagueSlug);
-  return rows
+  const rows = await listFixtures(sports, Math.max(limit * 4, 48), leagueSlug);
+  const events = rows
     .map((r) => fixtureRowToMatchEvent(r))
     .filter((e): e is MatchEvent => Boolean(e));
+  events.sort((a, b) => {
+    const sr = statusRank(a.status) - statusRank(b.status);
+    if (sr !== 0) return sr;
+    if (a.status === "ended") return b.startAt.localeCompare(a.startAt);
+    return a.startAt.localeCompare(b.startAt);
+  });
+  return events.slice(0, limit);
 }
 
 export async function getLiveMatchBySlug(slug: string) {
