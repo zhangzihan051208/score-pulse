@@ -1,13 +1,17 @@
+import {
+  CLIENT_KICKOFF_SOON_POLL_MS,
+  CLIENT_LIVE_POLL_MS,
+} from "@/lib/fixtures-cadence";
 import { kickoffIsSoon } from "@/lib/match-clock";
 import type { MatchEvent } from "@/lib/types";
 
-/** Client poll intervals. Kickoff window and live games stay close to the wall clock. */
+/** Client poll intervals aligned with TheSportsDB ~2 min livescores + quota guards. */
 export const POLL = {
-  detailLiveMs: 8_000,
-  detailSoonMs: 10_000,
+  detailLiveMs: CLIENT_LIVE_POLL_MS,
+  detailSoonMs: CLIENT_KICKOFF_SOON_POLL_MS,
   detailIdleMs: 45_000,
-  listLiveMs: 8_000,
-  listSoonMs: 12_000,
+  listLiveMs: CLIENT_LIVE_POLL_MS,
+  listSoonMs: CLIENT_KICKOFF_SOON_POLL_MS,
   listIdleMs: 45_000,
   backgroundMs: 60_000,
   seedGraceMs: 4_000,

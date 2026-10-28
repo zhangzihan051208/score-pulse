@@ -17,7 +17,9 @@ import {
   type TsdbEvent,
   type TsdbLineupPlayer,
 } from "@/lib/thesportsdb";
+import { SCHEDULE_SYNC_MS } from "@/lib/fixtures-cadence";
 import { thesportsdbBudgets, upstreamAllows } from "@/lib/upstream-budget";
+import { revalidateTag } from "next/cache";
 import { statusRank } from "@/lib/favorite-teams";
 import {
   getLeagueBySlug,
@@ -41,7 +43,7 @@ import {
 } from "@/lib/service-degraded";
 import type { MatchEvent } from "./types";
 
-const LIVE_SYNC_MS = 3 * 60 * 1000;
+const LIVE_SYNC_MS = SCHEDULE_SYNC_MS;
 const ENRICH_SYNC_MS = 4 * 60 * 1000;
 const ENRICH_CONCURRENCY = 1;
 /** Upcoming fixtures within this many days may get roster enrichment. */
@@ -390,6 +392,7 @@ export async function syncFixturesFast(force = false) {
   });
   if (error) return { ok: false as const, error: error.message };
 
+  revalidateTag("fixtures", "max");
   return { ok: true as const, count: rows.length };
 }
 

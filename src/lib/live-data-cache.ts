@@ -1,3 +1,4 @@
+import { LIVE_SCORE_REFRESH_SEC } from "@/lib/fixtures-cadence";
 import { unstable_cache } from "next/cache";
 import { listLiveMatchEvents } from "@/lib/fixtures-sync";
 import type { MatchEvent } from "@/lib/types";
@@ -16,6 +17,6 @@ export function cachedLiveMatchEvents(
       String(limit),
       leagueSlug ?? "all",
     ],
-    { revalidate: 8, tags: ["fixtures"] },
+    { revalidate: LIVE_SCORE_REFRESH_SEC, tags: ["fixtures"] },
   )();
 }

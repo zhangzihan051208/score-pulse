@@ -19,12 +19,14 @@ Open `http://127.0.0.1:43147` or use Cursor **Preview** (Desktop). Styling needs
 2. In Supabase **SQL Editor**, run `supabase/schema.sql`. Existing projects: also run `supabase/migrate-profile-fields.sql`, `supabase/migrate-vip.sql`, `supabase/migrate-social.sql`, `supabase/migrate-athlete-profiles.sql`, `supabase/migrate-zones-moderation.sql` (DIY rating zones + comment moderation), and `supabase/migrate-safety.sql` (reports and blocks).
 3. **Authentication → URL Configuration**: Site URL `http://127.0.0.1:43147`, redirect `http://127.0.0.1:43147/**`.
 4. Sign in at `/login`. Edit nickname, avatar URL, and signature at `/profile`. Ratings/comments post to Supabase when configured.
-5. Sync (two steps — schedules first, rosters on a schedule):
-   - **Fixtures (fast):** `curl "http://127.0.0.1:43147/api/sync/fixtures?force=1"` — scores & match list only.
-   - **Enrich (rosters):** `curl "http://127.0.0.1:43147/api/sync/enrich?force=1"` — fills player lineups in the background.
-   - Optional: set `SYNC_SECRET` and pass `Authorization: Bearer $SYNC_SECRET`. Cron helper: `BASE_URL=https://your-app.example scripts/sync-scheduled.sh`.
-   - Needs `SUPABASE_SERVICE_ROLE_KEY` + `THESPORTSDB_API_KEY`. Leagues: **NBA**, **Premier League**, **La Liga**, **Bundesliga**, **Serie A**, **Ligue 1**, **Champions League**.
-   - User page loads no longer trigger a full sync. Live scores refresh at most every 2 minutes, and only while quota remains.
+5. **Soccer + NBA (TheSportsDB)** — set `THESPORTSDB_API_KEY` to your premium key (not `123`).
+   - **Every 3 minutes:** pull the latest fixtures for all seven leagues into Supabase (`/api/cron/fixtures` or `GET /api/sync/fixtures?force=1`).
+   - **Every 15 minutes:** fill missing lineups (`/api/cron/enrich`).
+   - **While someone watches live:** refresh in-play scores at most every **2 minutes** (up to four matches per tick), within the 40/min and 20k/day cap.
+   - **Browser:** list and match pages poll on the same 2-minute clock when games are live; kickoff window polls every 60s (reads Supabase until the next upstream refresh).
+   - On **Vercel**, `vercel.json` registers those cron paths. Set **`CRON_SECRET`** (and optionally `SYNC_SECRET`) in project env; cron requests must send `Authorization: Bearer …`.
+   - Elsewhere: `BASE_URL=https://your-app.example SYNC_SECRET=… scripts/sync-scheduled.sh` on a 3-minute timer.
+   - Needs `SUPABASE_SERVICE_ROLE_KEY`. Leagues: **NBA**, **Premier League**, **La Liga**, **Bundesliga**, **Serie A**, **Ligue 1**, **Champions League**.
    - TheSportsDB calls stop at 40/minute and 20,000/day on a private key (8/minute and 1,500/day on the shared `123` key). PandaScore stops at 600/hour. KashRock stops at 8/minute and 1,200/day. A full budget serves the last saved scores and does not call the provider.
 6. Browse league sub-boards under `/boards/soccer/premier-league`, `/boards/soccer/la-liga`, etc. Search teams, matches, and players at `/search`.
 7. **Esports:** set **`KASHROCK_API_KEY`** (Sandbox, 500 req/UTC day) and/or `PANDASCORE_API_TOKEN`. **KashRock wins when both are set.** Boards: `/boards/esports` and `/boards/esports/lol`, `/cs2`, `/dota2`, `/valorant`. CS2 live lists pull rosters from map box scores when `player_board` is not cached; lists poll `/api/esports/events?live=1` for enriched cards.

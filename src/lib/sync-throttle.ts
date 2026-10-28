@@ -1,8 +1,9 @@
+import { LIVE_SCORE_REFRESH_MS } from "@/lib/fixtures-cadence";
+
 /** In-process cooldowns so read-heavy API routes do not hammer TSDB every request. */
 
-/** Premium livescores themselves move about every 2 minutes. Polling faster only spends quota. */
-const LIVE_BULK_REFRESH_MS = 120_000;
-const SINGLE_FIXTURE_REFRESH_MS = 120_000;
+const LIVE_BULK_REFRESH_MS = LIVE_SCORE_REFRESH_MS;
+const SINGLE_FIXTURE_REFRESH_MS = LIVE_SCORE_REFRESH_MS;
 
 let lastLiveBulkRefresh = 0;
 const lastFixtureRefresh = new Map<string, number>();

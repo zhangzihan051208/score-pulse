@@ -7,8 +7,8 @@ if [[ -n "${SYNC_SECRET:-}" ]]; then
   AUTH=(-H "Authorization: Bearer ${SYNC_SECRET}")
 fi
 
-echo "==> fixtures (schedules/scores)"
-curl -fsS "${AUTH[@]}" "${BASE_URL}/api/sync/fixtures" || true
+echo "==> fixtures (schedules/scores, force)"
+curl -fsS "${AUTH[@]}" "${BASE_URL}/api/sync/fixtures?force=1" || true
 
-echo "==> enrich (rosters)"
-curl -fsS "${AUTH[@]}" "${BASE_URL}/api/sync/enrich" || true
+echo "==> enrich (rosters, force)"
+curl -fsS "${AUTH[@]}" "${BASE_URL}/api/sync/enrich?force=1" || true
