@@ -1,5 +1,6 @@
 import type { PsMatch, PsPlayer } from "@/lib/pandascore";
 import { isPandaScoreConfigured } from "@/lib/pandascore";
+import { blockUpstream, PANDASCORE_BUDGET, takeUpstreamSlot } from "@/lib/upstream-budget";
 
 const BASE = "https://api.pandascore.co";
 
@@ -29,12 +30,9 @@ function pickPlayers(raw: PsPlayer[]): PsPlayer[] {
   return active.length > 0 ? active : raw.filter((p) => p.name?.trim());
 }
 
-async function sleep(ms: number) {
-  await new Promise((r) => setTimeout(r, ms));
-}
-
 async function fetchTeamJson(path: string): Promise<{ ok: boolean; status: number; players?: PsPlayer[] }> {
   if (!isPandaScoreConfigured()) return { ok: false, status: 0 };
+  if (!takeUpstreamSlot("pandascore", PANDASCORE_BUDGET)) return { ok: false, status: 429 };
   const res = await fetch(`${BASE}${path}`, {
     headers: {
       Accept: "application/json",
@@ -42,7 +40,10 @@ async function fetchTeamJson(path: string): Promise<{ ok: boolean; status: numbe
     },
     cache: "no-store",
   });
-  if (res.status === 429) return { ok: false, status: 429 };
+  if (res.status === 429) {
+    blockUpstream("pandascore", PANDASCORE_BUDGET, 15 * 60_000);
+    return { ok: false, status: 429 };
+  }
   if (!res.ok) return { ok: false, status: res.status };
   const data = (await res.json()) as { players?: PsPlayer[]; error?: string };
   if (data.error) return { ok: false, status: 400 };
@@ -58,34 +59,18 @@ export async function fetchPandaTeamPlayersResolved(
 ): Promise<PsPlayer[] | null> {
   if (!teamId) return [];
 
-  const prefixes = [
-    ...new Set(
-      [apiPrefix, "csgo", "lol", "dota2", "valorant"].filter(Boolean) as string[],
-    ),
-  ];
-  const paths = [`/teams/${teamId}`, ...prefixes.map((p) => `/${p}/teams/${teamId}`)];
+  const paths = [`/teams/${teamId}`];
+  if (apiPrefix) paths.push(`/${apiPrefix}/teams/${teamId}`);
 
-  for (let attempt = 0; attempt < 5; attempt++) {
-    let saw429 = false;
-    for (const path of paths) {
-      const hit = await fetchTeamJson(path);
-      if (hit.status === 429) {
-        saw429 = true;
-        continue;
-      }
-      if (hit.ok) {
-        const picked = pickPlayers(hit.players ?? []);
-        if (picked.length > 0) return picked;
-      }
+  for (const path of paths) {
+    const hit = await fetchTeamJson(path);
+    if (hit.status === 429) return null;
+    if (hit.ok) {
+      const picked = pickPlayers(hit.players ?? []);
+      if (picked.length > 0) return picked;
     }
-    if (saw429) {
-      await sleep(500 * (attempt + 1));
-      continue;
-    }
-    return [];
   }
-
-  return null;
+  return [];
 }
 
 export async function mapPool<T, R>(

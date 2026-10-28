@@ -1,4 +1,5 @@
-import { rememberKrList, sleep, staleKrList } from "@/lib/kashrock-cache";
+import { rememberKrList, staleKrList } from "@/lib/kashrock-cache";
+import { blockUpstream, KASHROCK_BUDGET, takeUpstreamSlot } from "@/lib/upstream-budget";
 import { normalizeKrMatch, type RawKrMatchInput } from "@/lib/kashrock-normalize";
 
 const BASE = "https://kashrock.up.railway.app";
@@ -68,35 +69,21 @@ type MatchesResponse = {
 
 async function krFetch(path: string): Promise<MatchesResponse | null> {
   if (!isKashRockConfigured()) return null;
+  if (!takeUpstreamSlot("kashrock", KASHROCK_BUDGET)) return null;
 
-  for (let attempt = 0; attempt < 3; attempt++) {
-    const res = await fetch(`${BASE}${path}`, {
-      headers: {
-        Accept: "application/json",
-        "X-API-Key": apiKey(),
-      },
-      cache: "no-store",
-    });
-    if (res.ok) {
-      return (await res.json()) as MatchesResponse;
-    }
-    if (res.status === 429 && attempt < 2) {
-      let waitMs = 1500 * (attempt + 1);
-      try {
-        const body = (await res.json()) as {
-          error?: { resets_in_seconds?: number };
-        };
-        const sec = body.error?.resets_in_seconds;
-        if (sec != null && sec > 0) waitMs = Math.min(sec * 1000 + 200, 8000);
-      } catch {
-        /* ignore */
-      }
-      await sleep(waitMs);
-      continue;
-    }
+  const res = await fetch(`${BASE}${path}`, {
+    headers: {
+      Accept: "application/json",
+      "X-API-Key": apiKey(),
+    },
+    cache: "no-store",
+  });
+  if (res.status === 429) {
+    blockUpstream("kashrock", KASHROCK_BUDGET, 60_000);
     return null;
   }
-  return null;
+  if (!res.ok) return null;
+  return (await res.json()) as MatchesResponse;
 }
 
 /** KashRock sport slug matches our game tabs (cs2, lol, dota2, valorant). */

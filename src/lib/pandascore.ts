@@ -1,3 +1,5 @@
+import { blockUpstream, PANDASCORE_BUDGET, takeUpstreamSlot } from "@/lib/upstream-budget";
+
 const BASE = "https://api.pandascore.co";
 
 export function isPandaScoreConfigured() {
@@ -58,6 +60,7 @@ async function sleep(ms: number) {
 
 async function psFetchOnce(path: string): Promise<{ status: number; data: ListResponse }> {
   if (!isPandaScoreConfigured()) return { status: 0, data: [] };
+  if (!takeUpstreamSlot("pandascore", PANDASCORE_BUDGET)) return { status: 0, data: [] };
   const sep = path.includes("?") ? "&" : "?";
   const url = `${BASE}${path}${sep}per_page=36&page=1`;
   const res = await fetch(url, {
@@ -67,6 +70,10 @@ async function psFetchOnce(path: string): Promise<{ status: number; data: ListRe
     },
     cache: "no-store",
   });
+  if (res.status === 429) {
+    blockUpstream("pandascore", PANDASCORE_BUDGET, 15 * 60_000);
+    return { status: 429, data: [] };
+  }
   if (!res.ok) return { status: res.status, data: [] };
   const json = (await res.json()) as ListResponse | { error?: string };
   if (!Array.isArray(json)) return { status: res.status, data: [] };
@@ -74,16 +81,8 @@ async function psFetchOnce(path: string): Promise<{ status: number; data: ListRe
 }
 
 async function psFetch(path: string): Promise<ListResponse> {
-  for (let attempt = 0; attempt < 6; attempt++) {
-    const { status, data } = await psFetchOnce(path);
-    if (data.length > 0) return data;
-    if (status === 429) {
-      await sleep(600 * (attempt + 1));
-      continue;
-    }
-    break;
-  }
-  return [];
+  const { data } = await psFetchOnce(path);
+  return data;
 }
 
 export async function fetchEsportsMatches(apiPrefix: string): Promise<PsMatch[]> {
@@ -117,24 +116,22 @@ export async function fetchEsportsMatchById(
   id: number,
 ): Promise<PsMatch | null> {
   if (!isPandaScoreConfigured()) return null;
-  for (let attempt = 0; attempt < 5; attempt++) {
-    const res = await fetch(`${BASE}/matches/${id}`, {
-      headers: {
-        Accept: "application/json",
-        Authorization: `Bearer ${token()}`,
-      },
-      cache: "no-store",
-    });
-    if (res.status === 429) {
-      await sleep(500 * (attempt + 1));
-      continue;
-    }
-    if (!res.ok) return null;
-    const data = (await res.json()) as PsMatch | { error?: string };
-    if (!data || typeof data !== "object" || !("id" in data)) return null;
-    return data as PsMatch;
+  if (!takeUpstreamSlot("pandascore", PANDASCORE_BUDGET)) return null;
+  const res = await fetch(`${BASE}/matches/${id}`, {
+    headers: {
+      Accept: "application/json",
+      Authorization: `Bearer ${token()}`,
+    },
+    cache: "no-store",
+  });
+  if (res.status === 429) {
+    blockUpstream("pandascore", PANDASCORE_BUDGET, 15 * 60_000);
+    return null;
   }
-  return null;
+  if (!res.ok) return null;
+  const data = (await res.json()) as PsMatch | { error?: string };
+  if (!data || typeof data !== "object" || !("id" in data)) return null;
+  return data as PsMatch;
 }
 
 /** @deprecated Use fetchPandaTeamPlayersResolved from pandascore-teams.ts */

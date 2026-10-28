@@ -1,4 +1,13 @@
+import { blockUpstream, takeUpstreamSlot, thesportsdbBudgets } from "@/lib/upstream-budget";
+
 /** TheSportsDB V1 — https://www.thesportsdb.com/api.php */
+
+export class UpstreamBudgetError extends Error {
+  constructor() {
+    super("Sports API budget exhausted");
+    this.name = "UpstreamBudgetError";
+  }
+}
 
 /** @deprecated use SIDELINE_LEAGUES from @/lib/leagues */
 export const TSDB_LEAGUES = {
@@ -21,8 +30,18 @@ async function tsdb<T>(
   path: string,
   opts?: { optional?: boolean },
 ): Promise<T | null> {
+  const budgets = thesportsdbBudgets();
+  if (!takeUpstreamSlot("thesportsdb", budgets)) {
+    if (opts?.optional) return null;
+    throw new UpstreamBudgetError();
+  }
   const url = `${BASE}/${apiKey()}/${path}`;
   const res = await fetch(url, { next: { revalidate: 120 } });
+  if (res.status === 429) {
+    blockUpstream("thesportsdb", budgets, 120_000);
+    if (opts?.optional) return null;
+    throw new UpstreamBudgetError();
+  }
   if (!res.ok) {
     if (opts?.optional) return null;
     throw new Error(`TheSportsDB ${res.status}: ${path}`);

@@ -24,7 +24,8 @@ Open `http://127.0.0.1:43147` or use Cursor **Preview** (Desktop). Styling needs
    - **Enrich (rosters):** `curl "http://127.0.0.1:43147/api/sync/enrich?force=1"` — fills player lineups in the background.
    - Optional: set `SYNC_SECRET` and pass `Authorization: Bearer $SYNC_SECRET`. Cron helper: `BASE_URL=https://your-app.example scripts/sync-scheduled.sh`.
    - Needs `SUPABASE_SERVICE_ROLE_KEY` + `THESPORTSDB_API_KEY`. Leagues: **NBA**, **Premier League**, **La Liga**, **Bundesliga**, **Serie A**, **Ligue 1**, **Champions League**.
-   - User page loads no longer trigger a full sync; only live score ticks refresh a few in-play matches.
+   - User page loads no longer trigger a full sync. Live scores refresh at most every 2 minutes, and only while quota remains.
+   - TheSportsDB calls stop at 40/minute and 20,000/day on a private key (8/minute and 1,500/day on the shared `123` key). PandaScore stops at 600/hour. KashRock stops at 8/minute and 1,200/day. A full budget serves the last saved scores and does not call the provider.
 6. Browse league sub-boards under `/boards/soccer/premier-league`, `/boards/soccer/la-liga`, etc. Search teams, matches, and players at `/search`.
 7. **Esports:** set **`KASHROCK_API_KEY`** (Sandbox, 500 req/UTC day) and/or `PANDASCORE_API_TOKEN`. **KashRock wins when both are set.** Boards: `/boards/esports` and `/boards/esports/lol`, `/cs2`, `/dota2`, `/valorant`. CS2 live lists pull rosters from map box scores when `player_board` is not cached; lists poll `/api/esports/events?live=1` for enriched cards.
 8. Set primary/secondary teams per league at `/my-teams` (home prioritizes primary-team fixtures; full schedule at `/my-teams/soccer-premier-league/schedule`). Run `supabase/migrate-favorite-teams.sql` if `profiles` already exists.

@@ -13,9 +13,11 @@ import {
   fetchPastLeagueEvents,
   fetchTeamRoster,
   mapTsdbStatus,
+  UpstreamBudgetError,
   type TsdbEvent,
   type TsdbLineupPlayer,
 } from "@/lib/thesportsdb";
+import { thesportsdbBudgets, upstreamAllows } from "@/lib/upstream-budget";
 import { statusRank } from "@/lib/favorite-teams";
 import {
   getLeagueBySlug,
@@ -41,7 +43,7 @@ import type { MatchEvent } from "./types";
 
 const LIVE_SYNC_MS = 3 * 60 * 1000;
 const ENRICH_SYNC_MS = 4 * 60 * 1000;
-const ENRICH_CONCURRENCY = 5;
+const ENRICH_CONCURRENCY = 1;
 /** Upcoming fixtures within this many days may get roster enrichment. */
 const ENRICH_UPCOMING_DAYS = 3;
 /** Recently ended fixtures within this many days may still get rosters. */
@@ -216,8 +218,10 @@ async function mapWithConcurrency<T, R>(
 async function fetchLeagueEventBuckets(): Promise<
   { league: LeagueConfig; events: TsdbEvent[] }[]
 > {
-  return Promise.all(
-    SIDELINE_LEAGUES.map(async (league) => {
+  const out: { league: LeagueConfig; events: TsdbEvent[] }[] = [];
+  for (const league of SIDELINE_LEAGUES) {
+    if (!upstreamAllows("thesportsdb", thesportsdbBudgets())) break;
+    try {
       const [next, past, last] = await Promise.all([
         withUpstreamTimeout(
           fetchNextLeagueEvents(league.tsdbId, EVENTS_FETCH_PER_LEAGUE),
@@ -235,9 +239,13 @@ async function fetchLeagueEventBuckets(): Promise<
           markTsdbUnavailable,
         ),
       ]);
-      return { league, events: [...next, ...past, ...last] };
-    }),
-  );
+      out.push({ league, events: [...next, ...past, ...last] });
+    } catch (error) {
+      if (error instanceof UpstreamBudgetError) break;
+      throw error;
+    }
+  }
+  return out;
 }
 
 function mergeLeagueBucketsIntoRows(
@@ -425,10 +433,14 @@ export async function enrichFixturesBatch(force = false) {
     candidates.push(...slice);
   }
 
-  const outcomes = await mapWithConcurrency(candidates, ENRICH_CONCURRENCY, (row) =>
-    applyLineupEnrichToRow(admin, row),
-  );
-  const enriched = outcomes.filter(Boolean).length;
+  let enriched = 0;
+  for (const row of candidates) {
+    if (!upstreamAllows("thesportsdb", thesportsdbBudgets())) break;
+    const outcomes = await mapWithConcurrency([row], ENRICH_CONCURRENCY, (item) =>
+      applyLineupEnrichToRow(admin, item),
+    );
+    enriched += outcomes.filter(Boolean).length;
+  }
 
   lastEnrichFinished = Date.now();
   return { ok: true as const, enriched, candidates: candidates.length };
@@ -899,10 +911,11 @@ export async function refreshLiveFixturesFromTsdb(limit = 10) {
     .map((r) => r.id_event);
 
   for (const id of liveIds) {
+    if (!upstreamAllows("thesportsdb", thesportsdbBudgets())) break;
     try {
       await refreshFixtureFromTsdb(id);
     } catch {
-      /* one failure */
+      /* one failure, or the daily budget is spent */
     }
   }
 }

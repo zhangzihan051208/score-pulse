@@ -1,8 +1,5 @@
 import { getEvent } from "@/lib/data";
-import {
-  getEsportsMatchBySlug,
-  refreshEsportsMatchBySlug,
-} from "@/lib/esports-catalog";
+import { readEsportsMatch } from "@/lib/esports-catalog";
 import { getLiveMatchBySlug, refreshFixtureFromTsdb } from "@/lib/fixtures-sync";
 import { getDegradedMode } from "@/lib/service-degraded";
 import { maybeRefreshFixtureFromTsdb } from "@/lib/sync-throttle";
@@ -20,10 +17,7 @@ export async function GET(
   let event: Awaited<ReturnType<typeof getLiveMatchBySlug>> = null;
 
   if (slug.startsWith("es-")) {
-    event =
-      liveRefresh && !degraded.cacheOnly
-        ? await refreshEsportsMatchBySlug(slug)
-        : await getEsportsMatchBySlug(slug);
+    event = await readEsportsMatch(slug);
     if (event) {
       return NextResponse.json(
         { event, syncedAt: new Date().toISOString(), degraded },

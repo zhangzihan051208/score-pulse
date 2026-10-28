@@ -203,6 +203,18 @@ async function getKashRockBySlug(slug: string, game: EsportsGameConfig, tail: st
   return match ? kashRockMatchToEvent(game, match) : null;
 }
 
+const DETAIL_TTL_MS = 6 * 60 * 1000;
+const detailCache = new Map<string, { at: number; event: MatchEvent }>();
+
+/** One upstream read per match every six minutes. Live page polls reuse this copy. */
+export async function readEsportsMatch(slug: string): Promise<MatchEvent | null> {
+  const hit = detailCache.get(slug);
+  if (hit && Date.now() - hit.at < DETAIL_TTL_MS) return hit.event;
+  const event = await getEsportsMatchBySlug(slug);
+  if (event) detailCache.set(slug, { at: Date.now(), event });
+  return event ?? hit?.event ?? null;
+}
+
 export async function getEsportsMatchBySlug(slug: string): Promise<MatchEvent | null> {
   if (!isEsportsDataConfigured()) return null;
   const m = slug.match(/^es-(lol|cs2|dota2|valorant)-(.+)$/);

@@ -17,7 +17,7 @@ export async function GET(request: Request) {
   if (!degraded.cacheOnly && liveTick) {
     liveRefreshed = await maybeRefreshLiveFixturesFromTsdb(
       refreshLiveFixturesFromTsdb,
-      8,
+      4,
     );
   }
 

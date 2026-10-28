@@ -9,6 +9,6 @@ export function cachedEsportsMatchEvents(
   return unstable_cache(
     () => listEsportsMatchEvents(gameSlug, limit, { enrichKrBoards: true }),
     ["esports-match-events", gameSlug ?? "all", String(limit), "v2"],
-    { revalidate: 30, tags: ["esports"] },
+    { revalidate: 360, tags: ["esports"] },
   )();
 }
