@@ -521,7 +521,6 @@ export async function listFixtures(
   return data
     .map((row) => hydrateFixtureRow(row))
     .filter((row) => isLiveLeagueRow(row))
-    .filter((row) => rowHasLineup(row))
     .filter((row) => {
       if (!leagueFilter) return true;
       return (
