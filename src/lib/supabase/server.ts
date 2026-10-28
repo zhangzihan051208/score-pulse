@@ -30,12 +30,23 @@ export async function createClient() {
   });
 }
 
+function serviceSupabaseCredentials(): { url: string; key: string } | null {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim();
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY?.trim();
+  if (!url || !key) return null;
+  if (!/^https?:\/\/.+/i.test(url)) return null;
+  return { url, key };
+}
+
 /** Bypasses RLS — server-only (sync jobs). */
 export function createServiceClient() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!url || !key) return null;
-  return createSupabaseClient(url, key, {
-    auth: { persistSession: false, autoRefreshToken: false },
-  });
+  const creds = serviceSupabaseCredentials();
+  if (!creds) return null;
+  try {
+    return createSupabaseClient(creds.url, creds.key, {
+      auth: { persistSession: false, autoRefreshToken: false },
+    });
+  } catch {
+    return null;
+  }
 }
