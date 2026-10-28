@@ -30,6 +30,7 @@ import {
   tsdbEventBelongsToLeague,
   type LeagueConfig,
 } from "@/lib/leagues";
+import { fillMissingTeamLogos } from "@/lib/team-badges";
 import { enrichTeamSearchHit } from "@/lib/team-league";
 import { matchSearchBoost } from "@/lib/team-popularity";
 import {
@@ -55,6 +56,12 @@ function fixtureRowToMatchEvent(row: LiveFixtureRow): MatchEvent | null {
   const hasLineup = rowHasLineup(row);
   const event = fixtureToMatchEvent(row, { scoreOnly: !hasLineup });
   return event;
+}
+
+async function withTeamLogos(event: MatchEvent | null): Promise<MatchEvent | null> {
+  if (!event) return null;
+  const [filled] = await fillMissingTeamLogos([event]);
+  return filled ?? null;
 }
 const ENRICH_PER_LEAGUE = 6;
 const EVENTS_FETCH_PER_LEAGUE = 35;
@@ -546,7 +553,8 @@ export async function listLiveMatchEvents(
     if (a.status === "ended") return b.startAt.localeCompare(a.startAt);
     return a.startAt.localeCompare(b.startAt);
   });
-  return events.slice(0, limit);
+  const filled = await fillMissingTeamLogos(events);
+  return filled.slice(0, limit);
 }
 
 export async function getLiveMatchBySlug(slug: string) {
@@ -590,11 +598,11 @@ export async function getLiveMatchBySlug(slug: string) {
     const batch = await listFixtures(["nba", "soccer"], 120);
     const row = batch.find((r) => r.slug === slug);
     if (!row) return null;
-    return fixtureRowToMatchEvent(row);
+    return withTeamLogos(fixtureRowToMatchEvent(row));
   }
   const row = hydrateFixtureRow(rowData as Record<string, unknown>);
   if (!isLiveLeagueRow(row)) return null;
-  return fixtureRowToMatchEvent(row);
+  return withTeamLogos(fixtureRowToMatchEvent(row));
 }
 
 export type SearchPlayerHit = {
@@ -835,7 +843,7 @@ export async function listFixturesForTeam(
     })
     .slice(0, limit);
 
-  return rows
+  const events = rows
     .map((r) => fixtureRowToMatchEvent(r))
     .filter((e): e is MatchEvent => Boolean(e))
     .sort((a, b) => {
@@ -843,6 +851,7 @@ export async function listFixturesForTeam(
       if (sr !== 0) return sr;
       return b.startAt.localeCompare(a.startAt);
     });
+  return fillMissingTeamLogos(events);
 }
 
 export async function refreshFixtureFromTsdb(idEvent: string): Promise<MatchEvent | null> {
@@ -943,8 +952,10 @@ export async function getLiveMatchById(idEvent: string) {
       .eq("id_event", idEvent)
       .maybeSingle();
     if (!res.error && res.data) {
-      return fixtureRowToMatchEvent(
-        hydrateFixtureRow(res.data as unknown as Record<string, unknown>),
+      return withTeamLogos(
+        fixtureRowToMatchEvent(
+          hydrateFixtureRow(res.data as unknown as Record<string, unknown>),
+        ),
       );
     }
   }
