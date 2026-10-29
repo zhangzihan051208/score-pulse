@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { HonorBoard } from "@/components/honor-board";
 import { PlayerAvatar } from "@/components/player-avatar";
+import { TeamCrest } from "@/components/team-crest";
 import { Overall } from "@/components/score-rows";
 import { useI18n } from "@/i18n/use-i18n";
 import { dimensionIds, POSITION_PROFILES, type PositionKey } from "@/lib/position-ratings";
@@ -72,6 +73,14 @@ export function RankingsPageInner() {
   const [teamPick, setTeamPick] = useState<{ id: string; name: string } | null>(
     null,
   );
+  const [teamMeta, setTeamMeta] = useState<{
+    id: string;
+    name: string;
+    badgeUrl?: string;
+  } | null>(null);
+
+  const teamSearchSport =
+    communitySport === "soccer" ? "soccer" : communitySport === "nba" ? "nba" : null;
 
   const load = useCallback(() => {
     setLoading(true);
@@ -94,6 +103,30 @@ export function RankingsPageInner() {
     load();
   }, [hall, load]);
 
+  useEffect(() => {
+    if (!teamId || !teamSearchSport) {
+      setTeamMeta(null);
+      return;
+    }
+    let cancelled = false;
+    fetch(`/api/teams/${encodeURIComponent(teamId)}?sport=${teamSearchSport}`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d: { team?: { id: string; name: string; badgeUrl?: string } } | null) => {
+        if (cancelled || !d?.team) return;
+        setTeamMeta({
+          id: d.team.id,
+          name: d.team.name,
+          badgeUrl: d.team.badgeUrl,
+        });
+      })
+      .catch(() => {
+        if (!cancelled) setTeamMeta(null);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [teamId, teamSearchSport]);
+
   const setParam = (patch: Record<string, string | null>) => {
     const sp = new URLSearchParams(searchParams.toString());
     for (const [k, v] of Object.entries(patch)) {
@@ -102,9 +135,6 @@ export function RankingsPageInner() {
     }
     router.replace(`/rankings?${sp.toString()}`);
   };
-
-  const teamSearchSport =
-    communitySport === "soccer" ? "soccer" : communitySport === "nba" ? "nba" : null;
 
   const searchTeam = async () => {
     const q = teamQuery.trim();
@@ -222,6 +252,23 @@ export function RankingsPageInner() {
           {t.rankings.scopeTeam}
         </button>
       </div>
+
+      {teamId && teamMeta ? (
+        <Link
+          href={`/teams/${encodeURIComponent(teamMeta.id)}?sport=${communitySport}`}
+          className="mt-4 flex items-center gap-3 rounded-xl border bg-card px-3 py-2.5 hover:border-primary/40"
+        >
+          <TeamCrest
+            name={teamMeta.name}
+            badgeUrl={teamMeta.badgeUrl}
+            size="md"
+          />
+          <div className="min-w-0">
+            <p className="truncate font-medium">{teamMeta.name}</p>
+            <p className="text-xs text-muted-foreground">{t.rankings.scopeTeam}</p>
+          </div>
+        </Link>
+      ) : null}
 
       {teamSearchSport && (scope === "team" || teamQuery) ? (
         <div className="mt-3 flex gap-2">

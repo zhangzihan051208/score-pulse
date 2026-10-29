@@ -4,6 +4,7 @@ import Link from "next/link";
 import { memo, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { DimensionRadar } from "@/components/dimension-radar";
 import { PlayerAvatar } from "@/components/player-avatar";
+import { TeamCrest } from "@/components/team-crest";
 import { Overall } from "@/components/score-rows";
 import { initials } from "@/lib/reputation/initials";
 import { useI18n } from "@/i18n/use-i18n";
@@ -95,7 +96,10 @@ const HonorCard = memo(function HonorCard({
   const honor = locale === "zh" ? entry.honors.zh : entry.honors.en;
   const sportName = t.sports[entry.sport];
   const roleName = entry.positionKey ? positionRoleLabel(locale, entry.positionKey) : "";
-  const avatar = (
+  const isTeamCard = !entry.positionKey;
+  const avatar = isTeamCard ? (
+    <TeamCrest name={entry.name} badgeUrl={entry.photoUrl} size="sm" />
+  ) : (
     <PlayerAvatar
       athlete={{
         name: entry.name,
