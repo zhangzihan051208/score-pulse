@@ -1,5 +1,6 @@
 import { honorBoard, type HonorBoardKind } from "@/lib/reputation/catalog";
 import { loadLiveHonorSamples } from "@/lib/reputation/live-samples";
+import { enrichHonorTeamBadges } from "@/lib/team-badges";
 import { SPORTS, type ScoreMap, type Sport } from "@/lib/types";
 import { NextResponse } from "next/server";
 
@@ -38,11 +39,14 @@ export async function GET(request: Request) {
   } catch {
     extras = { byPlayer: new Map(), byTeam: new Map() };
   }
-  const entries = honorBoard(
+  let entries = honorBoard(
     kind,
     sport,
     kind === "teams" ? extras.byTeam : extras.byPlayer,
   );
+  if (kind === "teams") {
+    entries = await enrichHonorTeamBadges(entries);
+  }
   const body = JSON.stringify({ kind, sport, entries });
   boardCache.set(cacheKey, { at: Date.now(), body });
   return new NextResponse(body, {

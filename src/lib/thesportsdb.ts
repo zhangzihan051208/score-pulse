@@ -148,7 +148,11 @@ export async function fetchLineup(idEvent: string) {
   return data?.lineup ?? [];
 }
 
-type SearchTeamsResponse = { teams: { idTeam: string; strTeam: string; strLeague?: string }[] | null };
+type SearchTeamsResponse = {
+  teams:
+    | { idTeam: string; strTeam: string; strLeague?: string; strTeamBadge?: string }[]
+    | null;
+};
 
 export async function searchTeamsByName(query: string) {
   const q = query.trim();

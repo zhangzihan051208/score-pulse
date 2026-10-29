@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { DimensionRadar } from "@/components/dimension-radar";
 import { MatchScoreboard } from "@/components/match-scoreboard";
+import { TeamCrest } from "@/components/team-crest";
 import { PlayerAvatar } from "@/components/player-avatar";
 import { Overall } from "@/components/score-rows";
 import { StatusPill } from "@/components/status-pill";
@@ -66,18 +67,7 @@ export function TeamPageInner({
       </Link>
 
       <header className="mt-4 flex gap-4">
-        {hub.badgeUrl ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={hub.badgeUrl}
-            alt=""
-            className="size-16 object-contain sm:size-20"
-          />
-        ) : (
-          <div className="flex size-16 items-center justify-center rounded-xl bg-muted text-lg font-bold sm:size-20">
-            {hub.name.slice(0, 2).toUpperCase()}
-          </div>
-        )}
+        <TeamCrest name={hub.name} badgeUrl={hub.badgeUrl} size="lg" />
         <div>
           <h1 className="text-2xl font-bold">{hub.name}</h1>
           <p className="text-sm text-muted-foreground">
