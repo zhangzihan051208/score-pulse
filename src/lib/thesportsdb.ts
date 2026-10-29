@@ -148,9 +148,21 @@ export async function fetchLineup(idEvent: string) {
   return data?.lineup ?? [];
 }
 
+type TsdbTeamBadgeFields = {
+  strBadge?: string | null;
+  strTeamBadge?: string | null;
+};
+
+export function pickTsdbTeamBadge(
+  team: TsdbTeamBadgeFields | null | undefined,
+): string | undefined {
+  const url = team?.strBadge?.trim() || team?.strTeamBadge?.trim();
+  return url || undefined;
+}
+
 type SearchTeamsResponse = {
   teams:
-    | { idTeam: string; strTeam: string; strLeague?: string; strTeamBadge?: string }[]
+    | ({ idTeam: string; strTeam: string; strLeague?: string } & TsdbTeamBadgeFields)[]
     | null;
 };
 
@@ -168,6 +180,7 @@ export type TsdbTeam = {
   idTeam: string;
   strTeam: string;
   strLeague?: string;
+  strBadge?: string;
   strTeamBadge?: string;
   strStadium?: string;
   strDescriptionEN?: string;

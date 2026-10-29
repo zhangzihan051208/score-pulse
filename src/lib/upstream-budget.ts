@@ -59,10 +59,10 @@ export function resetUpstreamBudgets() {
   windows.clear();
 }
 
-/** TheSportsDB premium is 100 requests/minute. Stay at 40, and stop a runaway day at 20k. */
+/** TheSportsDB premium is 100 requests/minute. Stay under that; cap runaway traffic per day. */
 const TSDB_PREMIUM: BudgetWindow[] = [
-  { key: "minute", limit: 40, windowMs: 60_000 },
-  { key: "day", limit: 20_000, windowMs: 86_400_000 },
+  { key: "minute", limit: 90, windowMs: 60_000 },
+  { key: "day", limit: 50_000, windowMs: 86_400_000 },
 ];
 
 /** Shared free key. Keep it far under the public 30/minute cap. */
