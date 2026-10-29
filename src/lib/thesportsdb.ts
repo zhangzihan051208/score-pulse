@@ -148,7 +148,7 @@ export async function fetchLineup(idEvent: string) {
   return data?.lineup ?? [];
 }
 
-type TsdbTeamBadgeFields = {
+export type TsdbTeamBadgeFields = {
   strBadge?: string | null;
   strTeamBadge?: string | null;
 };

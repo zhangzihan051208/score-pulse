@@ -7,7 +7,7 @@ import { teamTimeline } from "@/lib/reputation/dossier";
 import { portraitFor } from "@/lib/reputation/portraits";
 import { loadLiveHonorSamples } from "@/lib/reputation/live-samples";
 import { buildTeamHub } from "@/lib/team-hub";
-import { honorTeamBadgeUrl, resolveTeamBadgeUrl } from "@/lib/team-badges";
+import { resolveHonorTeamBadge } from "@/lib/team-badges";
 import type { TeamEventCard, TeamHub } from "@/lib/team-hub";
 import { SPORTS, type ScoreMap, type Sport } from "@/lib/types";
 import { NextResponse } from "next/server";
@@ -70,11 +70,9 @@ export async function GET(
     const reputation = presentTeam(honor, teamSamples);
     const fixtures = timelineCards(honor.id, sport, honor.name);
     const badgeUrl =
-      honorTeamBadgeUrl(honor.id) ??
-      (await resolveTeamBadgeUrl({
-        teamName: honor.name,
-        sport,
-      }));
+      sport === "nba" || sport === "soccer"
+        ? await resolveHonorTeamBadge(honor.id, honor.name, sport)
+        : undefined;
     const synthetic: TeamHub = {
       id: teamId,
       name: honor.name,

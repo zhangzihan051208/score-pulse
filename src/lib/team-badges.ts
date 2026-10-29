@@ -4,6 +4,7 @@ import {
   searchTeamsByName,
 } from "@/lib/thesportsdb";
 import honorBadgeUrls from "@/lib/honor-team-badge-urls.json";
+import { honorTsdbId } from "@/lib/honor-tsdb-team-ids";
 import { thesportsdbBudgets, upstreamAllows } from "@/lib/upstream-budget";
 import type { MatchEvent, Sport } from "@/lib/types";
 import type { ReputationCard } from "@/lib/reputation/types";
@@ -91,6 +92,67 @@ function nameCacheKey(sport: "nba" | "soccer", name: string) {
   return `${sport}:${normTeamName(name)}`;
 }
 
+const TOP_SOCCER_LEAGUE_MARKERS = [
+  "English Premier League",
+  "Spanish La Liga",
+  "Italian Serie A",
+  "German Bundesliga",
+  "French Ligue 1",
+  "Portuguese Primeira Liga",
+  "Dutch Eredivisie",
+  "UEFA Champions League",
+];
+
+function isLowPrioritySoccerTeam(teamName: string, league: string) {
+  const blob = `${teamName} ${league}`;
+  return /esports|league of legends|dota|women|femin|u19|u21|u23|national 3|amateur|youth|reserves| ii\b| b\b|w\.? \d/i.test(
+    blob,
+  );
+}
+
+function pickTeamFromSearch(
+  teams: { idTeam: string; strTeam: string; strLeague?: string; strBadge?: string | null; strTeamBadge?: string | null }[],
+  queryName: string,
+  sport: "nba" | "soccer",
+) {
+  const normQ = normTeamName(queryName);
+  let best: (typeof teams)[number] | undefined;
+  let bestScore = -Infinity;
+
+  for (const t of teams) {
+    const league = t.strLeague ?? "";
+    const isNba = league.includes("NBA") || league.includes("Basketball");
+    if (sport === "nba") {
+      if (!isNba) continue;
+    } else if (isNba || isLowPrioritySoccerTeam(t.strTeam, league)) {
+      continue;
+    }
+
+    const normT = normTeamName(t.strTeam);
+    let score = 0;
+    if (normT === normQ) score += 200;
+    else {
+      const a = normQ.length >= normT.length ? normQ : normT;
+      const b = normQ.length >= normT.length ? normT : normQ;
+      if (a.includes(b) && b.length >= 4) score += 50;
+    }
+    for (const marker of TOP_SOCCER_LEAGUE_MARKERS) {
+      if (league.includes(marker)) {
+        score += 35;
+        break;
+      }
+    }
+    if (pickTsdbTeamBadge(t)) score += 1;
+
+    if (score > bestScore) {
+      bestScore = score;
+      best = t;
+    }
+  }
+
+  return best;
+}
+
 /** Resolve a club crest from TSDB id and/or display name (NBA/soccer). */
 export async function resolveTeamBadgeUrl(opts: {
   tsdbTeamId?: string;
@@ -114,11 +176,7 @@ export async function resolveTeamBadgeUrl(opts: {
     }
 
     const teams = await searchTeamsByName(opts.teamName);
-    const match = teams.find((t) => {
-      const league = t.strLeague ?? "";
-      const isNba = league.includes("NBA") || league.includes("Basketball");
-      return opts.sport === "nba" ? isNba : !isNba;
-    });
+    const match = pickTeamFromSearch(teams, opts.teamName, opts.sport);
     if (match) {
       const fromSearch = pickTsdbTeamBadge(match);
       if (fromSearch) {
@@ -160,6 +218,26 @@ export function honorTeamBadgeUrl(honorId: string): string | undefined {
   return honorBadgeById[honorId];
 }
 
+/** Honor-board club crest: pinned TSDB id, then static URL, then name search. */
+export async function resolveHonorTeamBadge(
+  honorId: string,
+  teamName: string,
+  sport: "nba" | "soccer",
+): Promise<string | undefined> {
+  const pinnedId = honorTsdbId(honorId);
+  if (pinnedId) {
+    const fromId = await lookupBadge(pinnedId);
+    if (fromId) return fromId;
+  }
+  const staticUrl = honorBadgeById[honorId];
+  if (staticUrl) return staticUrl;
+  return resolveTeamBadgeUrl({
+    teamName,
+    sport,
+    tsdbTeamId: pinnedId,
+  });
+}
+
 /** Attach TSDB crest URLs to honor-board team cards. */
 export async function enrichHonorTeamBadges(
   entries: ReputationCard[],
@@ -174,6 +252,14 @@ export async function enrichHonorTeamBadges(
     if (entry.sport !== "nba" && entry.sport !== "soccer") {
       out.push(entry);
       continue;
+    }
+    const pinnedId = honorTsdbId(entry.id);
+    if (pinnedId) {
+      const fromId = await lookupBadge(pinnedId);
+      if (fromId) {
+        out.push({ ...entry, photoUrl: fromId });
+        continue;
+      }
     }
     const staticUrl = honorBadgeById[entry.id];
     if (staticUrl) {
