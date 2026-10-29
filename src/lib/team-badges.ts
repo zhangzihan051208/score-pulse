@@ -1,7 +1,13 @@
-import { fetchTeamById, searchTeamsByName } from "@/lib/thesportsdb";
+import {
+  fetchTeamById,
+  pickTsdbTeamBadge,
+  searchTeamsByName,
+} from "@/lib/thesportsdb";
+import honorBadgeUrls from "@/lib/honor-team-badge-urls.json";
 import { thesportsdbBudgets, upstreamAllows } from "@/lib/upstream-budget";
 import type { MatchEvent, Sport } from "@/lib/types";
 import type { ReputationCard } from "@/lib/reputation/types";
+import { unstable_cache } from "next/cache";
 
 const BADGE_CACHE_MS = 86_400_000;
 const MAX_LOOKUPS_PER_CALL = 12;
@@ -15,8 +21,8 @@ export function teamBadgeFromTsdbRaw(
   if (!raw) return undefined;
   const keys =
     side === "home"
-      ? ["strHomeTeamBadge", "strHomeBadge"]
-      : ["strAwayTeamBadge", "strAwayBadge"];
+      ? ["strHomeTeamBadge", "strHomeBadge", "strBadgeHome"]
+      : ["strAwayTeamBadge", "strAwayBadge", "strBadgeAway"];
   for (const key of keys) {
     const v = raw[key];
     if (typeof v === "string" && v.trim()) return v.trim();
@@ -39,7 +45,7 @@ async function lookupBadge(teamId: string): Promise<string | undefined> {
   if (mem) return mem;
   if (!upstreamAllows("thesportsdb", thesportsdbBudgets())) return undefined;
   const team = await fetchTeamById(teamId);
-  const url = team?.strTeamBadge?.trim();
+  const url = pickTsdbTeamBadge(team);
   if (url) badgeByTeamId.set(teamId, { url, at: Date.now() });
   return url;
 }
@@ -113,36 +119,54 @@ export async function resolveTeamBadgeUrl(opts: {
       const isNba = league.includes("NBA") || league.includes("Basketball");
       return opts.sport === "nba" ? isNba : !isNba;
     });
-    if (match?.idTeam) {
-      const url = await lookupBadge(match.idTeam);
-      if (url) {
-        badgeByName.set(key, { url, at: Date.now() });
-        return url;
+    if (match) {
+      const fromSearch = pickTsdbTeamBadge(match);
+      if (fromSearch) {
+        badgeByName.set(key, { url: fromSearch, at: Date.now() });
+        if (match.idTeam) {
+          badgeByTeamId.set(match.idTeam, { url: fromSearch, at: Date.now() });
+        }
+        return fromSearch;
       }
-    }
-    if (match?.strTeamBadge?.trim()) {
-      const url = match.strTeamBadge.trim();
-      badgeByName.set(key, { url, at: Date.now() });
-      if (match.idTeam) badgeByTeamId.set(match.idTeam, { url, at: Date.now() });
-      return url;
+      if (match.idTeam) {
+        const url = await lookupBadge(match.idTeam);
+        if (url) {
+          badgeByName.set(key, { url, at: Date.now() });
+          return url;
+        }
+      }
     }
   }
   return undefined;
 }
 
-const HONOR_BADGE_CAP = 55;
+function honorBadgeLookupCap(): number {
+  const key = process.env.THESPORTSDB_API_KEY?.trim();
+  return key && key !== "123" ? 120 : 40;
+}
+
+const honorBadgeById = honorBadgeUrls as Record<string, string>;
+
+function resolveBadgeCached(teamName: string, sport: "nba" | "soccer") {
+  return unstable_cache(
+    async () => resolveTeamBadgeUrl({ teamName, sport }),
+    ["honor-team-badge", sport, normTeamName(teamName)],
+    { revalidate: 86_400 * 7 },
+  )();
+}
+
+/** Static crest URL for honor-board clubs (no upstream call). */
+export function honorTeamBadgeUrl(honorId: string): string | undefined {
+  return honorBadgeById[honorId];
+}
 
 /** Attach TSDB crest URLs to honor-board team cards. */
 export async function enrichHonorTeamBadges(
   entries: ReputationCard[],
 ): Promise<ReputationCard[]> {
   const out: ReputationCard[] = [];
-  let budget = HONOR_BADGE_CAP;
+  let budget = honorBadgeLookupCap();
   for (const entry of entries) {
-    if (budget <= 0) {
-      out.push(entry);
-      continue;
-    }
     if (entry.photoUrl) {
       out.push(entry);
       continue;
@@ -151,11 +175,17 @@ export async function enrichHonorTeamBadges(
       out.push(entry);
       continue;
     }
+    const staticUrl = honorBadgeById[entry.id];
+    if (staticUrl) {
+      out.push({ ...entry, photoUrl: staticUrl });
+      continue;
+    }
+    if (budget <= 0) {
+      out.push(entry);
+      continue;
+    }
     budget -= 1;
-    const photoUrl = await resolveTeamBadgeUrl({
-      teamName: entry.name,
-      sport: entry.sport,
-    });
+    const photoUrl = await resolveBadgeCached(entry.name, entry.sport);
     out.push(photoUrl ? { ...entry, photoUrl } : entry);
   }
   return out;

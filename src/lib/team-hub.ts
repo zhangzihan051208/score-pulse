@@ -8,6 +8,7 @@ import {
   fetchTeamHonours,
   fetchTeamRoster,
   mapTsdbStatus,
+  pickTsdbTeamBadge,
 } from "./thesportsdb";
 import { resolveTeamBadgeUrl } from "./team-badges";
 import type { MatchEvent, Sport } from "./types";
@@ -149,7 +150,7 @@ export async function buildTeamHub(
     .filter((h) => h.title);
 
   const badgeUrl =
-    team?.strTeamBadge?.trim() ||
+    pickTsdbTeamBadge(team) ||
     (await resolveTeamBadgeUrl({ tsdbTeamId: teamId, teamName: name, sport }));
 
   return {
