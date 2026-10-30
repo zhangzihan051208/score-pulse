@@ -1052,6 +1052,61 @@ export async function searchTeamsInFixtures(
   return [...byId.values()];
 }
 
+function teamRowMatches(
+  row: LiveFixtureRow,
+  teamId: string,
+  nameLower?: string,
+): boolean {
+  if (row.id_home_team === teamId || row.id_away_team === teamId) return true;
+  if (!nameLower) return false;
+  return (
+    row.str_home_team?.toLowerCase() === nameLower ||
+    row.str_away_team?.toLowerCase() === nameLower
+  );
+}
+
+/** Next kickoffs for push reminders — future dates first. */
+export async function listUpcomingFixturesForTeam(
+  teamId: string,
+  sport: "nba" | "soccer",
+  teamName?: string,
+  limit = 20,
+): Promise<MatchEvent[]> {
+  const admin = createServiceClient();
+  if (!admin) return [];
+
+  const today = new Date().toISOString().slice(0, 10);
+  const nameLower = teamName?.toLowerCase();
+  const data = await fetchFixtureRows((select) =>
+    admin
+      .from("sportsdb_fixtures")
+      .select(select)
+      .eq("sport", sport)
+      .gte("date_event", today)
+      .order("date_event", { ascending: true })
+      .order("str_time", { ascending: true })
+      .limit(400)
+      .then((r) => ({ data: r.data, error: r.error })),
+  );
+
+  const now = Date.now();
+  const events = data
+    .map((row) => hydrateFixtureRow(row as Record<string, unknown>))
+    .filter((row) => isTrackedFixture(row))
+    .filter((row) => teamRowMatches(row, teamId, nameLower))
+    .map((r) => fixtureRowToMatchEvent(r))
+    .filter((e): e is MatchEvent => Boolean(e))
+    .map((e) => alignEventToNow(e))
+    .filter((e) => {
+      const start = Date.parse(e.startAt);
+      return Number.isFinite(start) && start > now && e.status !== "ended";
+    })
+    .sort((a, b) => a.startAt.localeCompare(b.startAt))
+    .slice(0, limit);
+
+  return events;
+}
+
 export async function listFixturesForTeam(
   teamId: string,
   sport: "nba" | "soccer",
@@ -1076,14 +1131,7 @@ export async function listFixturesForTeam(
     .map((row) => hydrateFixtureRow(row as Record<string, unknown>))
     .filter((row) => isTrackedFixture(row))
     .filter((row) => isVisibleFixtureRow(row))
-    .filter((row) => {
-      if (row.id_home_team === teamId || row.id_away_team === teamId) return true;
-      if (!nameLower) return false;
-      return (
-        row.str_home_team?.toLowerCase() === nameLower ||
-        row.str_away_team?.toLowerCase() === nameLower
-      );
-    })
+    .filter((row) => teamRowMatches(row, teamId, nameLower))
     .slice(0, limit);
 
   const events = rows

@@ -147,6 +147,13 @@ const copy = {
     obZone3: "专区评论同样走自动审核，与体育帖一致。",
     obZone4: "可在专区页或个人主页查看和管理。",
     profileTeamsHint: "按联赛设置主队和副队",
+    kickoffAlertsTitle: "主队开赛提醒",
+    kickoffAlertsLead: "每支主队下一场开赛前约 1 小时推送（需通知权限）。",
+    kickoffAlertsOff: "已关闭开赛提醒。",
+    kickoffAlertsNeedPermission: "请在系统设置里允许通知。",
+    kickoffAlertsEmpty: "暂无已排队的提醒。请先在「我的主队」设主队，并确认网站赛程已同步。",
+    kickoffAlertsScheduled: "已排队 {n} 场提醒。",
+    kickoffAlertsRefresh: "刷新赛程提醒",
   },
   en: {
     brand: "Grandstand",
@@ -293,6 +300,13 @@ const copy = {
     obZone3: "Zone comments use the same automatic review as match threads.",
     obZone4: "Open them from the Zones tab or your profile.",
     profileTeamsHint: "Primary and secondary club, by league",
+    kickoffAlertsTitle: "Primary club kickoff alerts",
+    kickoffAlertsLead: "About one hour before each primary club match (requires notification permission).",
+    kickoffAlertsOff: "Kickoff alerts are off.",
+    kickoffAlertsNeedPermission: "Allow notifications in system settings.",
+    kickoffAlertsEmpty: "No reminders queued. Set a primary club under My clubs and ensure schedules sync from the site.",
+    kickoffAlertsScheduled: "{n} kickoff reminder(s) scheduled.",
+    kickoffAlertsRefresh: "Refresh schedule alerts",
   },
 } as const;
 
