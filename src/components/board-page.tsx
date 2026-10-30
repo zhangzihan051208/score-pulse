@@ -242,7 +242,12 @@ function BoardEventCard({
           </span>
         </Link>
         {event.status === "live" || event.status === "ended" ? (
-          <MatchScoreboard event={event} size="sm" matchHref={`/events/${event.slug}`} />
+          <MatchScoreboard
+            event={event}
+            size="sm"
+            matchHref={`/events/${event.slug}`}
+            playerCount={event.performances.length}
+          />
         ) : (
           <Link href={`/events/${event.slug}`} className="font-semibold hover:underline">
             {tx(event.title, locale)}

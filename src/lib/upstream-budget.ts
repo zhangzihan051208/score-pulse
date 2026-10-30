@@ -76,6 +76,15 @@ export function thesportsdbBudgets(): BudgetWindow[] {
   return key && key !== "123" ? TSDB_PREMIUM : TSDB_FREE;
 }
 
+/** Lineup/roster pulls use their own cap so score sync does not starve them on the free key. */
+export function thesportsdbLineupBudgets(): BudgetWindow[] {
+  const key = process.env.THESPORTSDB_API_KEY?.trim();
+  const premium = key && key !== "123";
+  return premium
+    ? [{ key: "lineup-minute", limit: 60, windowMs: 60_000 }]
+    : [{ key: "lineup-minute", limit: 20, windowMs: 60_000 }];
+}
+
 /** PandaScore free fixtures: 1,000 requests/hour. Leave a third unused. */
 export const PANDASCORE_BUDGET: BudgetWindow[] = [
   { key: "hour", limit: 600, windowMs: 3_600_000 },

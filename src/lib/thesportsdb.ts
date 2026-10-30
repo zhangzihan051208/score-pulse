@@ -1,4 +1,10 @@
-import { blockUpstream, takeUpstreamSlot, thesportsdbBudgets } from "@/lib/upstream-budget";
+import {
+  blockUpstream,
+  takeUpstreamSlot,
+  thesportsdbBudgets,
+  thesportsdbLineupBudgets,
+  type BudgetWindow,
+} from "@/lib/upstream-budget";
 
 /** TheSportsDB V1 — https://www.thesportsdb.com/api.php */
 
@@ -26,12 +32,22 @@ function apiKey() {
   return process.env.THESPORTSDB_API_KEY || "123";
 }
 
-async function tsdb<T>(
-  path: string,
-  opts?: { optional?: boolean },
-): Promise<T | null> {
-  const budgets = thesportsdbBudgets();
-  if (!takeUpstreamSlot("thesportsdb", budgets)) {
+type TsdbCallOpts = {
+  optional?: boolean;
+  /** Use a separate minute budget so roster fetches are not blocked by score/logo traffic. */
+  lineupBudget?: boolean;
+};
+
+function tsdbBudgetFor(opts?: TsdbCallOpts): { name: string; budgets: BudgetWindow[] } {
+  if (opts?.lineupBudget) {
+    return { name: "thesportsdb-lineup", budgets: thesportsdbLineupBudgets() };
+  }
+  return { name: "thesportsdb", budgets: thesportsdbBudgets() };
+}
+
+async function tsdb<T>(path: string, opts?: TsdbCallOpts): Promise<T | null> {
+  const { name, budgets } = tsdbBudgetFor(opts);
+  if (!takeUpstreamSlot(name, budgets)) {
     if (opts?.optional) return null;
     throw new UpstreamBudgetError();
   }
@@ -49,7 +65,7 @@ async function tsdb<T>(
     throw new UpstreamBudgetError();
   }
   if (res.status === 429) {
-    blockUpstream("thesportsdb", budgets, 120_000);
+    blockUpstream(name, budgets, 120_000);
     if (opts?.optional) return null;
     throw new UpstreamBudgetError();
   }
@@ -143,18 +159,18 @@ export async function fetchEventsOnDay(date: string, sport: "Soccer" | "Basketba
   return data?.events ?? [];
 }
 
-export async function fetchEventById(idEvent: string) {
+export async function fetchEventById(idEvent: string, opts?: { lineupBudget?: boolean }) {
   const data = await tsdb<EventLookupResponse>(
     `lookupevent.php?id=${encodeURIComponent(idEvent)}`,
-    { optional: true },
+    { optional: true, lineupBudget: opts?.lineupBudget },
   );
   return data?.events?.[0] ?? null;
 }
 
-export async function fetchLineup(idEvent: string) {
+export async function fetchLineup(idEvent: string, opts?: { lineupBudget?: boolean }) {
   const data = await tsdb<LineupResponse>(
     `lookuplineup.php?id=${encodeURIComponent(idEvent)}`,
-    { optional: true },
+    { optional: true, lineupBudget: opts?.lineupBudget },
   );
   return data?.lineup ?? [];
 }
@@ -252,10 +268,10 @@ export async function fetchTeamHonours(idTeam: string) {
   return alt?.trophies ?? [];
 }
 
-export async function fetchTeamRoster(idTeam: string) {
+export async function fetchTeamRoster(idTeam: string, opts?: { lineupBudget?: boolean }) {
   const data = await tsdb<PlayersResponse>(
     `lookup_all_players.php?id=${encodeURIComponent(idTeam)}`,
-    { optional: true },
+    { optional: true, lineupBudget: opts?.lineupBudget },
   );
   return data?.player ?? [];
 }

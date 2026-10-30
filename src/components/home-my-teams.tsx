@@ -115,6 +115,7 @@ export function HomeMyTeams({
                       event={featured}
                       size="sm"
                       matchHref={`/events/${featured.slug}`}
+                      playerCount={featured.performances.length}
                     />
                   </div>
                 ) : (

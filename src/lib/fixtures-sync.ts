@@ -49,6 +49,7 @@ import {
   shouldPruneFixtureRow,
   shouldRetainFixtureRow,
 } from "@/lib/fixture-retention";
+import { alignEventToNow } from "@/lib/match-clock";
 import type { MatchEvent } from "./types";
 
 const LIVE_SYNC_MS = SCHEDULE_SYNC_MS;
@@ -63,6 +64,59 @@ function fixtureRowToMatchEvent(row: LiveFixtureRow): MatchEvent | null {
   const hasLineup = rowHasLineup(row);
   const event = fixtureToMatchEvent(row, { scoreOnly: !hasLineup });
   return event;
+}
+
+function rowNeedsLineupEnrich(row: LiveFixtureRow): boolean {
+  if (rowHasLineup(row)) return false;
+  const seed = fixtureToMatchEvent(row, { scoreOnly: true });
+  if (!seed) return shouldEnrichFixtureRow(row);
+  const status = alignEventToNow(seed).status;
+  if (status === "live") return true;
+  if (status === "ended" || status === "upcoming") return shouldEnrichFixtureRow(row);
+  return false;
+}
+
+async function enrichRowsLineups(
+  rows: LiveFixtureRow[],
+  maxItems: number,
+): Promise<LiveFixtureRow[]> {
+  const admin = createServiceClient();
+  if (!admin || getDegradedMode().cacheOnly) return rows;
+
+  const byId = new Map(rows.map((r) => [r.id_event, r]));
+  const candidates = rows.filter(rowNeedsLineupEnrich).slice(0, maxItems);
+
+  for (const row of candidates) {
+    const ev = row.raw as unknown as TsdbEvent;
+    const sport = row.sport as "nba" | "soccer";
+    if (sport !== "nba" && sport !== "soccer") continue;
+    try {
+      const lineup = await resolvePlayersForEvent(
+        {
+          ...ev,
+          idEvent: row.id_event,
+          idHomeTeam: row.id_home_team ?? ev.idHomeTeam,
+          idAwayTeam: row.id_away_team ?? ev.idAwayTeam,
+        },
+        sport,
+      );
+      if (lineup.length === 0) continue;
+      const updated: LiveFixtureRow = {
+        ...row,
+        lineup,
+        raw: {
+          ...(row.raw as Record<string, unknown>),
+          lineup,
+        },
+      };
+      byId.set(row.id_event, updated);
+      void applyLineupEnrichToRow(admin, updated);
+    } catch {
+      /* try next fixture */
+    }
+  }
+
+  return rows.map((r) => byId.get(r.id_event) ?? r);
 }
 
 async function withTeamLogos(event: MatchEvent | null): Promise<MatchEvent | null> {
@@ -314,19 +368,22 @@ async function resolvePlayersForEvent(
   ev: TsdbEvent,
   sport: "nba" | "soccer",
 ): Promise<StoredLineupPlayer[]> {
-  let lineup = await fetchLineup(ev.idEvent);
+  const lineupOpts = { lineupBudget: true as const };
+  let lineup = await fetchLineup(ev.idEvent, lineupOpts);
+  if (lineup.length >= 11) return lineup;
+
   let homeId = ev.idHomeTeam;
   let awayId = ev.idAwayTeam;
   if (!homeId || !awayId) {
-    const detail = await fetchEventById(ev.idEvent);
+    const detail = await fetchEventById(ev.idEvent, lineupOpts);
     homeId = detail?.idHomeTeam ?? homeId;
     awayId = detail?.idAwayTeam ?? awayId;
   }
 
   if (homeId && awayId) {
     const [homeRoster, awayRoster] = await Promise.all([
-      fetchTeamRoster(homeId),
-      fetchTeamRoster(awayId),
+      fetchTeamRoster(homeId, lineupOpts),
+      fetchTeamRoster(awayId, lineupOpts),
     ]);
     lineup = mergePlayers(lineup, [homeRoster, awayRoster]);
   }
@@ -675,8 +732,12 @@ export async function listLiveMatchEvents(
   sports: ("nba" | "soccer")[],
   limit = 12,
   leagueSlug?: string,
+  opts?: { enrichLineups?: boolean; enrichMax?: number },
 ): Promise<MatchEvent[]> {
-  const rows = await listFixtures(sports, Math.max(limit * 4, 48), leagueSlug);
+  let rows = await listFixtures(sports, Math.max(limit * 4, 48), leagueSlug);
+  if (opts?.enrichLineups) {
+    rows = await enrichRowsLineups(rows, opts.enrichMax ?? Math.min(limit, 12));
+  }
   const events = rows
     .map((r) => fixtureRowToMatchEvent(r))
     .filter((e): e is MatchEvent => Boolean(e))
@@ -1102,11 +1163,7 @@ export async function enrichLiveFixturesMissingLineup(maxItems = 5) {
 
   const liveRows = data
     .map((row) => hydrateFixtureRow(row))
-    .filter((row) => {
-      if (rowHasLineup(row)) return false;
-      const mapped = fixtureRowToMatchEvent(row);
-      return mapped?.status === "live";
-    })
+    .filter((row) => rowNeedsLineupEnrich(row))
     .slice(0, maxItems);
 
   let enriched = 0;

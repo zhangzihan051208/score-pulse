@@ -172,6 +172,7 @@ export function SearchPageInner() {
                       event={event}
                       size="sm"
                       matchHref={`/events/${event.slug}`}
+                      playerCount={event.performances.length}
                     />
                   ) : (
                     <Link href={`/events/${event.slug}`} className="font-semibold hover:underline">

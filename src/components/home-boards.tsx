@@ -285,7 +285,12 @@ function FeaturedEventRow({
       </Link>
       {event.status === "live" || event.status === "ended" ? (
         <div className="mt-2">
-          <MatchScoreboard event={event} size="sm" matchHref={matchHref} />
+          <MatchScoreboard
+            event={event}
+            size="sm"
+            matchHref={matchHref}
+            playerCount={event.performances.length}
+          />
         </div>
       ) : (
         <Link href={matchHref} className="mt-1 block font-medium hover:underline">
