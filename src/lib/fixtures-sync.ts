@@ -660,16 +660,7 @@ export async function listLiveMatchEvents(
   limit = 12,
   leagueSlug?: string,
 ): Promise<MatchEvent[]> {
-  let rows: FixtureRow[] = [];
-  try {
-    rows = await withUpstreamTimeout(
-      listFixtures(sports, Math.max(limit * 4, 48), leagueSlug),
-      isProductionBuild() ? 8_000 : 12_000,
-      () => {},
-    );
-  } catch {
-    return [];
-  }
+  const rows = await listFixtures(sports, Math.max(limit * 4, 48), leagueSlug);
   const events = rows
     .map((r) => fixtureRowToMatchEvent(r))
     .filter((e): e is MatchEvent => Boolean(e))
