@@ -1,5 +1,9 @@
 import { pinBayernArsenal } from "@/lib/featured/bayern-arsenal";
-import { listLiveMatchEvents, refreshLiveFixturesFromTsdb } from "@/lib/fixtures-sync";
+import {
+  enrichLiveFixturesMissingLineup,
+  listLiveMatchEvents,
+  refreshLiveFixturesFromTsdb,
+} from "@/lib/fixtures-sync";
 import { cachedLiveMatchEvents } from "@/lib/live-data-cache";
 import { getDegradedMode } from "@/lib/service-degraded";
 import { maybeRefreshLiveFixturesFromTsdb } from "@/lib/sync-throttle";
@@ -19,6 +23,7 @@ export async function GET(request: Request) {
       refreshLiveFixturesFromTsdb,
       4,
     );
+    await enrichLiveFixturesMissingLineup(5);
   }
 
   const sports =

@@ -43,7 +43,10 @@ export function useLiveEvents(
       const hasLive = eventsRef.current.some(
         (e) => e.status === "live" || kickoffIsSoon(e.startAt),
       );
-      if (refresh) params.set("sync", "1");
+      const needsLineup = eventsRef.current.some(
+        (e) => e.status === "live" && e.performances.length === 0,
+      );
+      if (refresh || needsLineup) params.set("sync", "1");
       else if (hasLive) params.set("live", "1");
       try {
         const res = await fetch(`/api/events?${params}`, {
@@ -129,6 +132,13 @@ export function useLiveEvent(slug: string, seed?: MatchEvent | null) {
     pollMs,
     { deferFirstMs: seed ? POLL.seedGraceMs : 0 },
   );
+
+  useEffect(() => {
+    const s = seed ?? null;
+    if (s?.status === "live" && s.performances.length === 0) {
+      void load(true);
+    }
+  }, [load, seed, slug]);
 
   return { event: current, loading, syncedAt, refresh: () => load(true) };
 }

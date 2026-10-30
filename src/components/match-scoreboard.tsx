@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useCallback, useEffect, useState } from "react";
 import { useI18n } from "@/i18n/use-i18n";
 import { elapsedMatchMinutes } from "@/lib/match-clock";
 import { cn } from "cn";
@@ -60,6 +61,10 @@ export function MatchScoreboard({
   matchHref?: string;
 }) {
   const { t } = useI18n();
+  const router = useRouter();
+  const openMatch = useCallback(() => {
+    if (matchHref) router.push(matchHref);
+  }, [matchHref, router]);
   const home = event.homeTeamName ?? "Home";
   const away = event.awayTeamName ?? "Away";
   const hasScore = event.homeScore != null && event.awayScore != null;
@@ -106,6 +111,7 @@ export function MatchScoreboard({
       <Link
         href={href}
         className="pointer-events-auto relative z-20 max-w-full hover:underline"
+        onClick={(e) => e.stopPropagation()}
       >
         {inner}
       </Link>
@@ -168,19 +174,27 @@ export function MatchScoreboard({
 
   return (
     <div
+      role={matchHref ? "link" : undefined}
+      tabIndex={matchHref ? 0 : undefined}
+      aria-label={matchHref ? t.team.openMatch : undefined}
+      onClick={matchHref ? openMatch : undefined}
+      onKeyDown={
+        matchHref
+          ? (e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                openMatch();
+              }
+            }
+          : undefined
+      }
       className={cn(
         "relative grid grid-cols-[1fr_auto_1fr] items-center gap-3",
+        matchHref && "cursor-pointer rounded-lg hover:bg-foreground/5",
         inverted && "text-white [&_.text-muted-foreground]:text-white/65",
         className,
       )}
     >
-      {matchHref ? (
-        <Link
-          href={matchHref}
-          aria-label={t.team.openMatch}
-          className="absolute inset-0 z-30 rounded-lg hover:bg-foreground/5"
-        />
-      ) : null}
       <div className="pointer-events-none relative z-20 text-right">
         <TeamName side="home" name={home} win={homeWin} />
       </div>

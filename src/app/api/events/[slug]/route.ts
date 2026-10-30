@@ -50,7 +50,8 @@ export async function GET(
   }
 
   if (liveRefresh && !degraded.cacheOnly) {
-    const refreshed = await maybeRefreshFixtureFromTsdb(event.id, refreshFixtureFromTsdb);
+    await maybeRefreshFixtureFromTsdb(event.id, refreshFixtureFromTsdb);
+    const refreshed = await getLiveMatchBySlug(slug);
     if (refreshed) event = refreshed;
   }
 
