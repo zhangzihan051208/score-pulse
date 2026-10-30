@@ -145,7 +145,10 @@ export function fixtureToMatchEvent(
     (raw.idAwayTeam as string | undefined) ??
     undefined;
 
-  return alignEventToNow({
+  const homeScore = row.int_home_score;
+  const awayScore = row.int_away_score;
+
+  const aligned = alignEventToNow({
     id: row.id_event,
     slug,
     sport,
@@ -157,8 +160,8 @@ export function fixtureToMatchEvent(
     awayTeamName: row.str_away_team ?? undefined,
     homeTeamLogoUrl: teamBadgeFromTsdbRaw(raw, "home"),
     awayTeamLogoUrl: teamBadgeFromTsdbRaw(raw, "away"),
-    homeScore: row.int_home_score,
-    awayScore: row.int_away_score,
+    homeScore,
+    awayScore,
     statusDetail: row.str_status ?? undefined,
     title: S(title),
     subtitle: S(
@@ -167,6 +170,7 @@ export function fixtureToMatchEvent(
     venue: S("—"),
     startAt: startIso(row.date_event, row.str_time),
     status,
+    live: status === "live",
     summary:
       scoreOnly || performances.length === 0
         ? score
@@ -196,6 +200,7 @@ export function fixtureToMatchEvent(
     cover: SPORT_ACCENT[sport],
     performances: scoreOnly && performances.length === 0 ? [] : performances,
     roster: scoreOnly && performances.length === 0 ? {} : roster,
-    live: true,
   });
+
+  return { ...aligned, live: aligned.status === "live" };
 }

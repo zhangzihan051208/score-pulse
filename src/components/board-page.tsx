@@ -241,7 +241,7 @@ function BoardEventCard({
             {formatWhen(event.startAt, locale)}
           </span>
         </Link>
-        {event.live ? (
+        {event.status === "live" || event.status === "ended" ? (
           <MatchScoreboard event={event} size="sm" matchHref={`/events/${event.slug}`} />
         ) : (
           <Link href={`/events/${event.slug}`} className="font-semibold hover:underline">

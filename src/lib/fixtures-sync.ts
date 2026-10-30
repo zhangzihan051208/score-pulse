@@ -125,6 +125,24 @@ function isLiveLeagueRow(row: {
   return isTrackedFixture(row);
 }
 
+function fixtureScoreFromRow(
+  row: Record<string, unknown>,
+  raw: Record<string, unknown>,
+  column: "int_home_score" | "int_away_score",
+  rawKey: "intHomeScore" | "intAwayScore",
+): number | null {
+  const direct = row[column];
+  if (direct != null && direct !== "") {
+    const n = Number(direct);
+    if (Number.isFinite(n)) return n;
+  }
+  return parseTsdbScore(
+    typeof raw[rawKey] === "string" || typeof raw[rawKey] === "number"
+      ? String(raw[rawKey])
+      : null,
+  );
+}
+
 function hydrateFixtureRow(row: Record<string, unknown>): LiveFixtureRow {
   const raw = (row.raw as Record<string, unknown> | null) ?? {};
   const lineup =
@@ -151,6 +169,8 @@ function hydrateFixtureRow(row: Record<string, unknown>): LiveFixtureRow {
       (row.id_away_team as string | null | undefined) ??
       (raw.idAwayTeam as string | undefined) ??
       null,
+    int_home_score: fixtureScoreFromRow(row, raw, "int_home_score", "intHomeScore"),
+    int_away_score: fixtureScoreFromRow(row, raw, "int_away_score", "intAwayScore"),
   };
 }
 
@@ -720,7 +740,7 @@ export async function getLiveMatchBySlug(slug: string) {
 
   if (
     !rowHasLineup(row) &&
-    (fixtureRowStatus(row) === "live" || fixtureRowStatus(row) === "upcoming") &&
+    isVisibleFixtureRow(row) &&
     !getDegradedMode().cacheOnly &&
     upstreamAllows("thesportsdb", thesportsdbBudgets())
   ) {
