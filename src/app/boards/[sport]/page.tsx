@@ -1,5 +1,4 @@
 import { notFound } from "next/navigation";
-import { connection } from "next/server";
 import { BoardPage } from "@/components/board-page";
 import { cachedLiveMatchEvents } from "@/lib/live-data-cache";
 import { SPORTS, type Sport } from "@/lib/types";
@@ -29,7 +28,6 @@ export default async function SportBoard({
   const s = sport as Sport;
   let initialEvents: Awaited<ReturnType<typeof cachedLiveMatchEvents>> = [];
   if (s === "nba" || s === "soccer") {
-    await connection();
     initialEvents = await cachedLiveMatchEvents([s], 32);
   }
   return <BoardPage sport={s} initialEvents={initialEvents} />;
