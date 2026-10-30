@@ -1,4 +1,6 @@
 import { mergeTakes } from "@/lib/community-takes";
+import { localizeCommentsForViewer } from "@/lib/comment-translate";
+import { localeFromRequest } from "@/lib/request-locale";
 import { requestUser } from "@/lib/supabase/request-user";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 import { NextResponse } from "next/server";
@@ -30,7 +32,9 @@ export async function GET(
   const [{ data: comments }, { data: ratings }] = await Promise.all([
     supabase
       .from("comments")
-      .select("id, athlete_id, author, body, scores, created_at, user_id, parent_id, hidden, moderation_status")
+      .select(
+        "id, athlete_id, author, body, body_locale, translations, scores, created_at, user_id, parent_id, hidden, moderation_status",
+      )
       .eq("event_id", eventId)
       .is("parent_id", null)
       .order("created_at", { ascending: false })
@@ -60,6 +64,23 @@ export async function GET(
     }
   }
 
+  const visibleComments = (comments ?? []).filter(
+    (c) =>
+      c.athlete_id &&
+      !c.hidden &&
+      (!c.moderation_status || c.moderation_status === "approved"),
+  );
+  const localized = await localizeCommentsForViewer(
+    visibleComments.map((c) => ({
+      id: c.id,
+      body: c.body,
+      body_locale: c.body_locale,
+      translations: c.translations as Record<string, string> | null,
+    })),
+    localeFromRequest(_request),
+    20,
+  );
+
   const byAthlete = new Map<string, SummaryTake[]>();
 
   const push = (athleteId: string, row: SummaryTake) => {
@@ -68,13 +89,14 @@ export async function GET(
     byAthlete.set(athleteId, list);
   };
 
-  for (const c of comments ?? []) {
-    if (!c.athlete_id || c.hidden) continue;
-    if (c.moderation_status && c.moderation_status !== "approved") continue;
+  for (const c of visibleComments) {
     push(c.athlete_id, {
       userId: c.user_id,
       author: c.author ?? profileMap.get(c.user_id) ?? "Fan",
-      body: c.body ?? undefined,
+      body:
+        user?.id === c.user_id
+          ? (c.body ?? undefined)
+          : (localized.get(c.id)?.body ?? c.body ?? undefined),
       scores: (c.scores as ScoreMap | null) ?? {},
       updatedAt: c.created_at,
       isYou: user?.id === c.user_id,

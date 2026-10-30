@@ -1,4 +1,5 @@
 import { moderateComment } from "@/lib/ai-moderation";
+import { commentLocaleForInsert } from "@/lib/comment-translate";
 import { moderationErrorPayload } from "@/lib/comment-moderation";
 import { createClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
@@ -84,6 +85,7 @@ export async function POST(
       zone_item_id: itemId,
       author,
       body: trimmed || "—",
+      body_locale: commentLocaleForInsert(trimmed || "—"),
       scores: body.scores ?? null,
       moderation_status,
     })

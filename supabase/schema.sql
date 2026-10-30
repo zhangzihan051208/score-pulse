@@ -42,6 +42,8 @@ create table if not exists public.comments (
   athlete_id text not null,
   author text not null default 'Fan',
   body text not null,
+  body_locale text,
+  translations jsonb not null default '{}'::jsonb,
   scores jsonb,
   parent_id uuid references public.comments (id) on delete cascade,
   hidden boolean not null default false,

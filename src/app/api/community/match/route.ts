@@ -1,4 +1,6 @@
 import { moderateComment } from "@/lib/ai-moderation";
+import { commentLocaleForInsert, localizeCommentsForViewer } from "@/lib/comment-translate";
+import { localeFromRequest } from "@/lib/request-locale";
 import { moderationErrorPayload } from "@/lib/comment-moderation";
 import { blockedUserIds } from "@/lib/safety-server";
 import { requestUser, upsertRating, writeClient } from "@/lib/supabase/request-user";
@@ -35,7 +37,9 @@ export async function GET(request: Request) {
       .eq("athlete_id", MATCH_ATHLETE_ID),
     supabase
       .from("comments")
-      .select("id, user_id, author, body, created_at, hidden, moderation_status")
+      .select(
+        "id, user_id, author, body, body_locale, translations, created_at, hidden, moderation_status",
+      )
       .eq("event_id", eventId)
       .eq("athlete_id", MATCH_ATHLETE_ID)
       .is("parent_id", null)
@@ -48,19 +52,40 @@ export async function GET(request: Request) {
       .map((row) => [row.user_id, row]),
   );
 
+  const viewerLocale = localeFromRequest(request);
+  const commentRows = (comments ?? []).filter(
+    (row) =>
+      !row.hidden &&
+      (row.moderation_status === "approved" || !row.moderation_status),
+  );
+  const localizedBodies = await localizeCommentsForViewer(
+    commentRows.map((row) => ({
+      id: row.id,
+      body: row.body,
+      body_locale: row.body_locale,
+      translations: row.translations as Record<string, string> | null,
+    })),
+    viewerLocale,
+  );
+
   const takes = (ratings ?? [])
     .filter((row) => !hidden.has(row.user_id))
     .map((row) => {
       const scores = row.scores as { match?: number } | null;
       const comment = commentByUser.get(row.user_id);
+      const loc = comment ? localizedBodies.get(comment.id) : undefined;
+      const isYou = user?.id === row.user_id;
       return {
         userId: row.user_id,
         author: comment?.author ?? "Fan",
         score: typeof scores?.match === "number" ? scores.match : 0,
-        body: comment?.body ?? "",
+        body: isYou ? (comment?.body ?? "") : (loc?.body ?? comment?.body ?? ""),
+        bodyOriginal: isYou ? undefined : loc?.bodyOriginal,
+        bodyLocale: isYou ? undefined : loc?.bodyLocale,
+        isTranslated: isYou ? false : loc?.isTranslated,
         commentId: comment?.id,
         createdAt: comment?.created_at ?? row.updated_at,
-        isYou: user?.id === row.user_id,
+        isYou,
       };
     })
     .sort((a, b) => +new Date(b.createdAt) - +new Date(a.createdAt));
@@ -143,6 +168,7 @@ export async function POST(request: Request) {
       athlete_id: MATCH_ATHLETE_ID,
       author,
       body: comment,
+      body_locale: commentLocaleForInsert(comment),
       scores: { match: score },
       moderation_status: "approved",
     });

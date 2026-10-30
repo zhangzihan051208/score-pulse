@@ -3,13 +3,14 @@
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { GradeSlider } from "@/components/grade-slider";
+import { CommentBody } from "@/components/comment-body";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/hooks/use-auth";
 import { useI18n } from "@/i18n/use-i18n";
 import { meanScore } from "@/lib/score-display";
 import { moderationMessage } from "@/lib/moderation-message";
-import type { ScoreMap } from "@/lib/types";
+import type { Locale, ScoreMap } from "@/lib/types";
 
 type Payload = {
   zone: {
@@ -26,6 +27,9 @@ type Payload = {
     id: string;
     author: string;
     body: string;
+    bodyOriginal?: string;
+    bodyLocale?: Locale;
+    isTranslated?: boolean;
     createdAt: string;
     pending?: boolean;
     isYou?: boolean;
@@ -199,7 +203,13 @@ export function ZoneItemPageInner({
                     <span className="ml-2 text-xs text-amber-600">{t.zones.pending}</span>
                   ) : null}
                 </p>
-                <p className="mt-1 leading-relaxed">{c.body}</p>
+                <CommentBody
+                  className="mt-1"
+                  body={c.body}
+                  bodyOriginal={c.bodyOriginal}
+                  bodyLocale={c.bodyLocale}
+                  isTranslated={c.isTranslated}
+                />
               </li>
             ))
           )}
