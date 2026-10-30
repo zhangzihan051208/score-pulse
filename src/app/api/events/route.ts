@@ -1,11 +1,8 @@
 import { pinBayernArsenal } from "@/lib/featured/bayern-arsenal";
-import {
-  enrichLiveFixturesMissingLineup,
-  listLiveMatchEvents,
-  refreshLiveFixturesFromTsdb,
-} from "@/lib/fixtures-sync";
+import { listLiveMatchEvents, refreshLiveFixturesFromTsdb } from "@/lib/fixtures-sync";
 import { cachedLiveMatchEvents } from "@/lib/live-data-cache";
 import { getDegradedMode } from "@/lib/service-degraded";
+import { thesportsdbListEnrichMax } from "@/lib/upstream-budget";
 import { maybeRefreshLiveFixturesFromTsdb } from "@/lib/sync-throttle";
 import { NextResponse } from "next/server";
 
@@ -23,7 +20,6 @@ export async function GET(request: Request) {
       refreshLiveFixturesFromTsdb,
       4,
     );
-    await enrichLiveFixturesMissingLineup(5);
   }
 
   const sports =
@@ -35,7 +31,11 @@ export async function GET(request: Request) {
 
   const limit = Number(searchParams.get("limit") ?? "12");
   const capped = Math.min(limit, 48);
-  const readLive = () => listLiveMatchEvents([...sports], capped, league);
+  const readLive = () =>
+    listLiveMatchEvents([...sports], capped, league, {
+      enrichLineups: !degraded.cacheOnly,
+      enrichMax: thesportsdbListEnrichMax(capped),
+    });
   const loaded =
     liveTick || liveRefreshed
       ? await readLive()

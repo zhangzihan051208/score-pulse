@@ -19,7 +19,7 @@ Open `http://127.0.0.1:43147` or use Cursor **Preview** (Desktop). Styling needs
 2. In Supabase **SQL Editor**, run `supabase/schema.sql`. Existing projects: also run `supabase/migrate-profile-fields.sql`, `supabase/migrate-vip.sql`, `supabase/migrate-social.sql`, `supabase/migrate-athlete-profiles.sql`, `supabase/migrate-zones-moderation.sql` (DIY rating zones + comment moderation), and `supabase/migrate-safety.sql` (reports and blocks).
 3. **Authentication → URL Configuration**: Site URL `http://127.0.0.1:43147`, redirect `http://127.0.0.1:43147/**`.
 4. Sign in at `/login`. Edit nickname, avatar URL, and signature at `/profile`. Ratings/comments post to Supabase when configured.
-5. **Soccer + NBA (TheSportsDB)** — set `THESPORTSDB_API_KEY` to your premium key (not `123`).
+5. **Soccer + NBA (TheSportsDB)** — set `THESPORTSDB_API_KEY` to your premium key (not `123`). Production uses **premium rate limits** automatically when that env var is set. Check `GET /api/status` → `thesportsdb.tier` is `"premium"`.
    - **Every 3 minutes:** pull the latest fixtures for all seven leagues into Supabase (`/api/cron/fixtures` or `GET /api/sync/fixtures?force=1`).
    - **Every 15 minutes:** fill missing lineups (`/api/cron/enrich`).
    - **While someone watches live:** refresh in-play scores at most every **2 minutes** (up to four matches per tick), within the 40/min and 20k/day cap.

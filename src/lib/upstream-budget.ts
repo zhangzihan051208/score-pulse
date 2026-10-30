@@ -71,9 +71,32 @@ const TSDB_FREE: BudgetWindow[] = [
   { key: "day", limit: 1_500, windowMs: 86_400_000 },
 ];
 
-export function thesportsdbBudgets(): BudgetWindow[] {
+/** Premium when `THESPORTSDB_API_KEY` is set and not the public demo key `123`. */
+export function thesportsdbKeyTier(): "premium" | "demo" {
   const key = process.env.THESPORTSDB_API_KEY?.trim();
-  return key && key !== "123" ? TSDB_PREMIUM : TSDB_FREE;
+  if (!key || key === "123") return "demo";
+  return "premium";
+}
+
+export function isThesportsdbPremium(): boolean {
+  return thesportsdbKeyTier() === "premium";
+}
+
+export function thesportsdbBudgets(): BudgetWindow[] {
+  return isThesportsdbPremium() ? TSDB_PREMIUM : TSDB_FREE;
+}
+
+/** Lineup/roster pulls use their own cap so score sync does not starve them on the free key. */
+export function thesportsdbLineupBudgets(): BudgetWindow[] {
+  return isThesportsdbPremium()
+    ? [{ key: "lineup-minute", limit: 90, windowMs: 60_000 }]
+    : [{ key: "lineup-minute", limit: 20, windowMs: 60_000 }];
+}
+
+/** How many fixtures may pull a full roster on one list API response. */
+export function thesportsdbListEnrichMax(requestedLimit: number): number {
+  const cap = isThesportsdbPremium() ? 24 : 12;
+  return Math.min(requestedLimit, cap);
 }
 
 /** PandaScore free fixtures: 1,000 requests/hour. Leave a third unused. */
