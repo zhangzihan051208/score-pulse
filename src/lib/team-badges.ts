@@ -4,7 +4,7 @@ import {
   searchTeamsByName,
 } from "@/lib/thesportsdb";
 import honorBadgeUrls from "@/lib/honor-team-badge-urls.json";
-import { honorTsdbId } from "@/lib/honor-tsdb-team-ids";
+import { honorTsdbId, tsdbIdForTeamName } from "@/lib/honor-tsdb-team-ids";
 import { thesportsdbBudgets, upstreamAllows } from "@/lib/upstream-budget";
 import type { MatchEvent, Sport } from "@/lib/types";
 import type { ReputationCard } from "@/lib/reputation/types";
@@ -150,7 +150,7 @@ function pickTeamFromSearch(
     }
   }
 
-  return best;
+  return bestScore >= 50 ? best : undefined;
 }
 
 /** Resolve a club crest from TSDB id and/or display name (NBA/soccer). */
@@ -159,8 +159,9 @@ export async function resolveTeamBadgeUrl(opts: {
   teamName?: string;
   sport: Sport;
 }): Promise<string | undefined> {
-  if (opts.tsdbTeamId) {
-    const fromId = await lookupBadge(opts.tsdbTeamId);
+  const knownId = opts.tsdbTeamId || tsdbIdForTeamName(opts.teamName);
+  if (knownId) {
+    const fromId = await lookupBadge(knownId);
     if (fromId) return fromId;
   }
   if (
@@ -218,19 +219,19 @@ export function honorTeamBadgeUrl(honorId: string): string | undefined {
   return honorBadgeById[honorId];
 }
 
-/** Honor-board club crest: pinned TSDB id, then static URL, then name search. */
+/** Honor-board club crest: verified static URL, then pinned TSDB id, then name search. */
 export async function resolveHonorTeamBadge(
   honorId: string,
   teamName: string,
   sport: "nba" | "soccer",
 ): Promise<string | undefined> {
-  const pinnedId = honorTsdbId(honorId);
+  const staticUrl = honorBadgeById[honorId];
+  if (staticUrl) return staticUrl;
+  const pinnedId = honorTsdbId(honorId) ?? tsdbIdForTeamName(teamName);
   if (pinnedId) {
     const fromId = await lookupBadge(pinnedId);
     if (fromId) return fromId;
   }
-  const staticUrl = honorBadgeById[honorId];
-  if (staticUrl) return staticUrl;
   return resolveTeamBadgeUrl({
     teamName,
     sport,
@@ -253,18 +254,18 @@ export async function enrichHonorTeamBadges(
       out.push(entry);
       continue;
     }
-    const pinnedId = honorTsdbId(entry.id);
+    const staticUrl = honorBadgeById[entry.id];
+    if (staticUrl) {
+      out.push({ ...entry, photoUrl: staticUrl });
+      continue;
+    }
+    const pinnedId = honorTsdbId(entry.id) ?? tsdbIdForTeamName(entry.name);
     if (pinnedId) {
       const fromId = await lookupBadge(pinnedId);
       if (fromId) {
         out.push({ ...entry, photoUrl: fromId });
         continue;
       }
-    }
-    const staticUrl = honorBadgeById[entry.id];
-    if (staticUrl) {
-      out.push({ ...entry, photoUrl: staticUrl });
-      continue;
     }
     if (budget <= 0) {
       out.push(entry);

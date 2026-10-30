@@ -12,10 +12,17 @@ import {
   teamQueryRelevance,
 } from "@/lib/team-popularity";
 import { getDegradedMode } from "@/lib/service-degraded";
-import { searchTeamsByName } from "@/lib/thesportsdb";
+import { tsdbIdForTeamName } from "@/lib/honor-tsdb-team-ids";
+import { fetchTeamById, searchTeamsByName } from "@/lib/thesportsdb";
 
 function inferSport(league: string): "nba" | "soccer" {
   return league.includes("NBA") || league.includes("Basketball") ? "nba" : "soccer";
+}
+
+function skipRemoteTeam(name: string, league: string) {
+  return /esports|league of legends|dota|women|femin|u19|u21|u23|national 3|amateur|youth|reserves/i.test(
+    `${name} ${league}`,
+  );
 }
 
 function mergeTeam(pool: Map<string, TeamSearchHit>, hit: TeamSearchHit) {
@@ -73,6 +80,7 @@ export async function intelligentTeamSearch(
     for (const t of teams) {
       if (!t.idTeam || !t.strTeam) continue;
       const league = t.strLeague ?? "";
+      if (skipRemoteTeam(t.strTeam, league)) continue;
       const sport = inferSport(league);
       if (opts?.sport && sport !== opts.sport) continue;
       const hit = enrichTeamSearchHit({
@@ -87,6 +95,26 @@ export async function intelligentTeamSearch(
       mergeTeam(pool, hit);
     }
   };
+
+  const knownId = tsdbIdForTeamName(q);
+  if (knownId && opts?.sport !== "nba") {
+    try {
+      const team = await fetchTeamById(knownId);
+      mergeTeam(pool, {
+        id: knownId,
+        name: team?.strTeam?.trim() || q,
+        league: team?.strLeague,
+        sport: "soccer",
+      });
+    } catch {
+      mergeTeam(pool, {
+        id: knownId,
+        name: q,
+        league: "French Ligue 1",
+        sport: "soccer",
+      });
+    }
+  }
 
   const remoteOk = !getDegradedMode().noRemoteSearch;
 
