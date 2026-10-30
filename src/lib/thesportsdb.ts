@@ -42,7 +42,7 @@ async function tsdb<T>(
   try {
     res = await fetch(url, {
       signal: controller.signal,
-      next: { revalidate: 120 },
+      cache: "no-store",
     });
   } catch {
     if (opts?.optional) return null;

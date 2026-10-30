@@ -1,10 +1,5 @@
 import { pinBayernArsenal } from "@/lib/featured/bayern-arsenal";
-import {
-  listLiveMatchEvents,
-  refreshLiveFixturesFromTsdb,
-  syncFixturesFast,
-} from "@/lib/fixtures-sync";
-import { cachedLiveMatchEvents } from "@/lib/live-data-cache";
+import { listLiveMatchEvents, refreshLiveFixturesFromTsdb } from "@/lib/fixtures-sync";
 import { getDegradedMode } from "@/lib/service-degraded";
 import { maybeRefreshLiveFixturesFromTsdb } from "@/lib/sync-throttle";
 import { NextResponse } from "next/server";
@@ -17,12 +12,8 @@ export async function GET(request: Request) {
     searchParams.get("live") === "1" || searchParams.get("sync") === "1";
   const degraded = getDegradedMode();
 
-  let liveRefreshed = false;
   if (!degraded.cacheOnly && liveTick) {
-    liveRefreshed = await maybeRefreshLiveFixturesFromTsdb(
-      refreshLiveFixturesFromTsdb,
-      4,
-    );
+    await maybeRefreshLiveFixturesFromTsdb(refreshLiveFixturesFromTsdb, 4);
   }
 
   const sports =
@@ -34,17 +25,7 @@ export async function GET(request: Request) {
 
   const limit = Number(searchParams.get("limit") ?? "12");
   const capped = Math.min(limit, 48);
-  const readLive = () => listLiveMatchEvents([...sports], capped, league);
-  let loaded =
-    liveTick || liveRefreshed
-      ? await readLive()
-      : await cachedLiveMatchEvents([...sports], capped, league);
-  if (loaded.length === 0 && !degraded.cacheOnly) {
-    const synced = await syncFixturesFast(false);
-    if (synced.ok && !("skipped" in synced && synced.skipped) && synced.count > 0) {
-      loaded = await readLive();
-    }
-  }
+  const loaded = await listLiveMatchEvents([...sports], capped, league);
   const events =
     !sport || sport === "soccer" ? pinBayernArsenal(loaded, league) : loaded;
 

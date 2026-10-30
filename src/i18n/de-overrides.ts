@@ -336,6 +336,10 @@ export const deOverrides = {
     empty: "Keine Spiele in diesem Filter.",
     backHome: "Alle Bereiche",
     allLeagues: "Alle Ligen",
+    statusEnded: "Beendet",
+    statusLive: "Live",
+    statusUpcoming: "Nicht begonnen",
+    statusEmpty: "Nichts in dieser Spalte.",
   },
   esports: {
     empty: "Keine Spiele für dieses Game. Kurz warten oder anderes Tab.",
