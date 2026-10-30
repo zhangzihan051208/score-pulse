@@ -1,13 +1,9 @@
 import { pinBayernArsenal } from "@/lib/featured/bayern-arsenal";
-import {
-  listLiveMatchEvents,
-  refreshLiveFixturesFromTsdb,
-  syncFixturesFast,
-} from "@/lib/fixtures-sync";
+import { listLiveMatchEvents, refreshLiveFixturesFromTsdb } from "@/lib/fixtures-sync";
 import { cachedLiveMatchEvents } from "@/lib/live-data-cache";
 import { getDegradedMode } from "@/lib/service-degraded";
 import { maybeRefreshLiveFixturesFromTsdb } from "@/lib/sync-throttle";
-import { after, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -41,12 +37,6 @@ export async function GET(request: Request) {
       : await cachedLiveMatchEvents([...sports], capped, league);
   const events =
     !sport || sport === "soccer" ? pinBayernArsenal(loaded, league) : loaded;
-
-  if (events.length === 0 && !degraded.cacheOnly) {
-    after(() => {
-      void syncFixturesFast(false).catch(() => undefined);
-    });
-  }
 
   return NextResponse.json(
     {

@@ -1,5 +1,4 @@
 import { notFound } from "next/navigation";
-import { connection } from "next/server";
 import { BoardPage } from "@/components/board-page";
 import { getEsportsGame, isEsportsGameSlug } from "@/lib/esports-games";
 import { cachedEsportsMatchEvents } from "@/lib/esports-data-cache";
@@ -50,10 +49,8 @@ export default async function LeagueBoard({
   }
   let initialEvents: Awaited<ReturnType<typeof cachedLiveMatchEvents>> = [];
   if (s === "nba" || s === "soccer") {
-    await connection();
     initialEvents = await cachedLiveMatchEvents([s], 32, league);
   } else if (s === "esports" && isEsportsGameSlug(league)) {
-    await connection();
     initialEvents = await cachedEsportsMatchEvents(league, 28);
   }
   return <BoardPage sport={s} leagueSlug={league} initialEvents={initialEvents} />;

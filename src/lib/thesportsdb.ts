@@ -36,18 +36,7 @@ async function tsdb<T>(
     throw new UpstreamBudgetError();
   }
   const url = `${BASE}/${apiKey()}/${path}`;
-  let res: Response;
-  try {
-    // Don't use the Next data cache here. A revalidating fetch stays open
-    // until it settles, and the match-list response is held with it.
-    res = await fetch(url, {
-      cache: "no-store",
-      signal: AbortSignal.timeout(8_000),
-    });
-  } catch {
-    if (opts?.optional) return null;
-    throw new UpstreamBudgetError();
-  }
+  const res = await fetch(url, { next: { revalidate: 120 } });
   if (res.status === 429) {
     blockUpstream("thesportsdb", budgets, 120_000);
     if (opts?.optional) return null;
@@ -177,26 +166,14 @@ type SearchTeamsResponse = {
     | null;
 };
 
-function teamSearchQueries(query: string) {
-  const q = query.trim();
-  const spaced = q.replace(/[-‐‑–—]/g, " ").replace(/\s+/g, " ").trim();
-  const queries = [q];
-  if (spaced.length >= 2 && spaced !== q) queries.push(spaced);
-  return queries;
-}
-
 export async function searchTeamsByName(query: string) {
-  const queries = teamSearchQueries(query);
-  if (queries.length === 0 || queries[0]!.length < 2) return [];
-  for (const q of queries) {
-    const data = await tsdb<SearchTeamsResponse>(
-      `searchteams.php?t=${encodeURIComponent(q)}`,
-      { optional: true },
-    );
-    const teams = data?.teams ?? [];
-    if (teams.length > 0) return teams;
-  }
-  return [];
+  const q = query.trim();
+  if (q.length < 2) return [];
+  const data = await tsdb<SearchTeamsResponse>(
+    `searchteams.php?t=${encodeURIComponent(q)}`,
+    { optional: true },
+  );
+  return data?.teams ?? [];
 }
 
 export type TsdbTeam = {

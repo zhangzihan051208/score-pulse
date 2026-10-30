@@ -13,7 +13,6 @@ export const POLL = {
   listLiveMs: CLIENT_LIVE_POLL_MS,
   listSoonMs: CLIENT_KICKOFF_SOON_POLL_MS,
   listIdleMs: 45_000,
-  listEmptyMs: 12_000,
   backgroundMs: 60_000,
   seedGraceMs: 4_000,
 } as const;
@@ -29,7 +28,7 @@ export function listPollIntervalMs(
   tabVisible: boolean,
   now = Date.now(),
 ): number | null {
-  if (events.length === 0) return POLL.listEmptyMs;
+  if (events.length === 0) return POLL.listIdleMs;
   if (!tabVisible) return POLL.backgroundMs;
   const hasLive = events.some((e) => e.status === "live");
   if (hasLive) return POLL.listLiveMs;
