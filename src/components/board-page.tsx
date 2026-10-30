@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo } from "react";
+import { useMemo, type ReactNode } from "react";
 import { LoadingView } from "@/components/loading-view";
 import { StatusPill } from "@/components/status-pill";
 import { useEsportsEvents } from "@/hooks/use-esports-events";
@@ -13,6 +13,7 @@ import { pinBayernArsenal } from "@/lib/featured/bayern-arsenal";
 import { SPORT_ACCENT } from "@/lib/sports";
 import { EventSpotlightGrid } from "@/components/event-spotlight-card";
 import { LeagueTabs } from "@/components/league-tabs";
+import { MatchStatusTabs, useMatchStatus } from "@/components/match-status-tabs";
 import { MatchScoreboard } from "@/components/match-scoreboard";
 import { useCommunity } from "@/hooks/use-community";
 import { leagueLabel } from "@/i18n/league-labels";
@@ -144,12 +145,10 @@ export function BoardPage({
                       {t.home.enter}
                     </Link>
                   </div>
-                  {section.events.length === 0 ? (
-                    <p className="rounded-xl border border-dashed px-4 py-8 text-center text-sm text-muted-foreground">
-                      {t.esports.emptyGame}
-                    </p>
-                  ) : (
-                    section.events.map((event) => (
+                  <StatusEventList
+                    events={section.events}
+                    empty={t.esports.emptyGame}
+                    renderEvent={(event) => (
                       <BoardEventCard
                         key={event.id}
                         event={event}
@@ -158,8 +157,8 @@ export function BoardPage({
                         state={state}
                         showGameTag={false}
                       />
-                    ))
-                  )}
+                    )}
+                  />
                 </section>
               ))}
             </div>
@@ -168,18 +167,46 @@ export function BoardPage({
               {isEsports ? t.esports.empty : showLiveBoard ? t.home.liveEmpty : t.board.empty}
             </p>
           ) : (
-            list.map((event) => (
-              <BoardEventCard
-                key={event.id}
-                event={event}
-                locale={locale}
-                t={t}
-                state={state}
-                showGameTag={isEsports && !esportsGame}
-              />
-            ))
+            <StatusEventList
+              events={list}
+              empty={t.board.statusEmpty}
+              renderEvent={(event) => (
+                <BoardEventCard
+                  key={event.id}
+                  event={event}
+                  locale={locale}
+                  t={t}
+                  state={state}
+                  showGameTag={isEsports && !esportsGame}
+                />
+              )}
+            />
           )}
       </div>
+    </div>
+  );
+}
+
+function StatusEventList({
+  events,
+  empty,
+  renderEvent,
+}: {
+  events: MatchEvent[];
+  empty: string;
+  renderEvent: (event: MatchEvent) => ReactNode;
+}) {
+  const { status, setStatus, visible } = useMatchStatus(events);
+  return (
+    <div className="space-y-3">
+      <MatchStatusTabs events={events} status={status} onChange={setStatus} />
+      {visible.length === 0 ? (
+        <p className="rounded-xl border border-dashed px-4 py-8 text-center text-sm text-muted-foreground">
+          {empty}
+        </p>
+      ) : (
+        visible.map((event) => renderEvent(event))
+      )}
     </div>
   );
 }

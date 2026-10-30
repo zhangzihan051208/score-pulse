@@ -365,6 +365,10 @@ const ja: Dict = {
       empty: "該当する試合はありません。",
       backHome: "すべての板",
       allLeagues: "全リーグ",
+      statusEnded: "終了",
+      statusLive: "進行中",
+      statusUpcoming: "未開始",
+      statusEmpty: "このタブに試合はありません。",
     },
     esports: {
       empty:

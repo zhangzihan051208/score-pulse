@@ -364,6 +364,10 @@ const zh: Dict = {
       empty: "没有符合筛选的比赛。",
       backHome: "全部分区",
       allLeagues: "全部联赛",
+      statusEnded: "已结束",
+      statusLive: "进行中",
+      statusUpcoming: "未开始",
+      statusEmpty: "这个分栏没有比赛。",
     },
     esports: {
       empty: "该游戏暂无赛程，请稍候刷新或切换其他游戏标签。",

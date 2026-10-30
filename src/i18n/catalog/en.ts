@@ -370,6 +370,10 @@ const en: Dict = {
       empty: "No matches in this filter.",
       backHome: "All boards",
       allLeagues: "All leagues",
+      statusEnded: "Final",
+      statusLive: "Live",
+      statusUpcoming: "Upcoming",
+      statusEmpty: "Nothing in this column.",
     },
     esports: {
       empty:
