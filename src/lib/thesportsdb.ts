@@ -166,14 +166,26 @@ type SearchTeamsResponse = {
     | null;
 };
 
-export async function searchTeamsByName(query: string) {
+function teamSearchQueries(query: string) {
   const q = query.trim();
-  if (q.length < 2) return [];
-  const data = await tsdb<SearchTeamsResponse>(
-    `searchteams.php?t=${encodeURIComponent(q)}`,
-    { optional: true },
-  );
-  return data?.teams ?? [];
+  const spaced = q.replace(/[-‐‑–—]/g, " ").replace(/\s+/g, " ").trim();
+  const queries = [q];
+  if (spaced.length >= 2 && spaced !== q) queries.push(spaced);
+  return queries;
+}
+
+export async function searchTeamsByName(query: string) {
+  const queries = teamSearchQueries(query);
+  if (queries.length === 0 || queries[0]!.length < 2) return [];
+  for (const q of queries) {
+    const data = await tsdb<SearchTeamsResponse>(
+      `searchteams.php?t=${encodeURIComponent(q)}`,
+      { optional: true },
+    );
+    const teams = data?.teams ?? [];
+    if (teams.length > 0) return teams;
+  }
+  return [];
 }
 
 export type TsdbTeam = {
