@@ -466,6 +466,9 @@ const en: Dict = {
       fullLimitError:
         "Daily full rating limit reached. Use overall-only or activate VIP in Profile.",
       vipWeightHint: "VIP members’ ratings count double in board averages.",
+      translatedFrom: "AI translation from {lang}",
+      showOriginal: "Show original",
+      showTranslation: "Show translation",
       postComment: "Post rating & comment",
       backToPlayer: "Back to player card",
       detailScores: "Community breakdown",

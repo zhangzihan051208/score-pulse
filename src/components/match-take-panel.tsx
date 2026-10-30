@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
 import { GradeSlider } from "@/components/grade-slider";
 import { SafetyActions } from "@/components/safety-actions";
+import { CommentBody } from "@/components/comment-body";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/hooks/use-auth";
@@ -22,6 +23,9 @@ type RemoteTake = {
   author: string;
   score: number;
   body: string;
+  bodyOriginal?: string;
+  bodyLocale?: import("@/lib/types").Locale;
+  isTranslated?: boolean;
   commentId?: string;
   createdAt: string;
   isYou: boolean;
@@ -67,6 +71,9 @@ export function MatchTakePanel({ event }: { event: MatchEvent }) {
       author: take.author,
       score: take.score,
       body: take.body,
+      bodyOriginal: take.bodyOriginal,
+      bodyLocale: take.bodyLocale,
+      isTranslated: take.isTranslated,
       createdAt: take.createdAt,
       isYou: take.isYou,
       userId: take.userId,
@@ -81,6 +88,9 @@ export function MatchTakePanel({ event }: { event: MatchEvent }) {
               author: mine.author,
               score: mine.score,
               body: mine.body,
+              bodyOriginal: undefined,
+              bodyLocale: undefined,
+              isTranslated: false,
               createdAt: mine.createdAt,
               isYou: true,
               userId: undefined as string | undefined,
@@ -93,6 +103,9 @@ export function MatchTakePanel({ event }: { event: MatchEvent }) {
       author: take.author,
       score: take.score,
       body: tx(take.body, locale),
+      bodyOriginal: undefined,
+      bodyLocale: undefined,
+      isTranslated: false,
       createdAt: take.createdAt,
       isYou: false,
       userId: undefined as string | undefined,
@@ -230,9 +243,17 @@ export function MatchTakePanel({ event }: { event: MatchEvent }) {
                       minute: "2-digit",
                     })}
                   </p>
-                  <p className="mt-1 text-sm leading-6">
-                    {row.body || t.event.matchScoreOnly}
-                  </p>
+                  {row.body ? (
+                    <CommentBody
+                      className="mt-1 text-sm leading-6"
+                      body={row.body}
+                      bodyOriginal={row.bodyOriginal}
+                      bodyLocale={row.bodyLocale}
+                      isTranslated={row.isTranslated}
+                    />
+                  ) : (
+                    <p className="mt-1 text-sm leading-6">{t.event.matchScoreOnly}</p>
+                  )}
                   {!row.isYou && (row.userId || row.commentId) ? (
                     <SafetyActions
                       targetUserId={row.userId}

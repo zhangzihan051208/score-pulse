@@ -423,6 +423,9 @@ export type Dict = {
     postComment: string;
     backToPlayer: string;
     detailScores: string;
+    translatedFrom: string;
+    showOriginal: string;
+    showTranslation: string;
   };
   feed: {
     title: string;
