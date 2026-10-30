@@ -2,8 +2,6 @@ import { blockedUserIds } from "@/lib/safety-server";
 import { requestUser } from "@/lib/supabase/request-user";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 import { enrichTakesWithSocial } from "@/lib/comment-enrich";
-import { localizeCommunityTakes } from "@/lib/comment-localize-api";
-import { localeFromRequest } from "@/lib/request-locale";
 import { mergeTakes } from "@/lib/community-takes";
 import { weightedAverageScores } from "@/lib/score-aggregate";
 import {
@@ -55,7 +53,7 @@ export async function GET(
     supabase
       .from("comments")
       .select(
-        "id, author, body, body_locale, translations, scores, created_at, user_id, parent_id, hidden, moderation_status",
+        "id, author, body, scores, created_at, user_id, parent_id, hidden, moderation_status",
       )
       .eq("event_id", eventId)
       .eq("athlete_id", athleteId)
@@ -142,29 +140,20 @@ export async function GET(
     }
   }
 
-  const takes = await localizeCommunityTakes(
-    enrichTakesWithSocial(
-      baseTakes,
-      allComments.map((c) => ({
-        id: c.id,
-        user_id: c.user_id,
-        author: c.author,
-        body: c.body,
-        created_at: c.created_at,
-        parent_id: c.parent_id,
-        hidden: c.hidden,
-      })),
-      likeCountById,
-      likedByYou,
-      user?.id,
-    ),
+  const takes = enrichTakesWithSocial(
+    baseTakes,
     allComments.map((c) => ({
       id: c.id,
+      user_id: c.user_id,
+      author: c.author,
       body: c.body,
-      body_locale: c.body_locale,
-      translations: c.translations as Record<string, string> | null,
+      created_at: c.created_at,
+      parent_id: c.parent_id,
+      hidden: c.hidden,
     })),
-    localeFromRequest(request),
+    likeCountById,
+    likedByYou,
+    user?.id,
   );
 
   const weightedRows = takes.map((take) => ({

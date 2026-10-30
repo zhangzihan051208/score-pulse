@@ -8,7 +8,6 @@ import { useI18n } from "@/i18n/use-i18n";
 import { formatWhen, overallScore } from "@/lib/score-display";
 import { overallFromScores } from "@/lib/store";
 import { averageScores } from "@/lib/score-aggregate";
-import { CommentBody } from "@/components/comment-body";
 import { CommentTakeActions } from "@/components/comment-take-actions";
 import type { CommunityTake } from "@/lib/community-take-types";
 import type { PositionKey, ScoreMap } from "@/lib/types";
@@ -160,13 +159,7 @@ export function CommunityRatingsPanel({
                   <Overall value={overallFromScores(row.scores, positionKey)} />
                 </div>
                 {row.body?.trim() ? (
-                  <CommentBody
-                    className="mt-2 text-sm leading-6"
-                    body={row.body}
-                    bodyOriginal={row.bodyOriginal}
-                    bodyLocale={row.bodyLocale}
-                    isTranslated={row.isTranslated}
-                  />
+                  <p className="mt-2 text-sm leading-6">{row.body}</p>
                 ) : (
                   <p className="mt-2 text-xs text-muted-foreground">{t.rate.scoreOnly}</p>
                 )}

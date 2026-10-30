@@ -1,5 +1,4 @@
 import { moderateComment } from "@/lib/ai-moderation";
-import { commentLocaleForInsert } from "@/lib/comment-translate";
 import { moderationErrorPayload } from "@/lib/comment-moderation";
 import { createClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
@@ -71,7 +70,6 @@ export async function POST(
       athlete_id: parent.athlete_id,
       author: author.slice(0, 32),
       body: text.slice(0, 500),
-      body_locale: commentLocaleForInsert(text),
       parent_id: commentId,
       zone_id: parentFull?.zone_id ?? null,
       zone_item_id: parentFull?.zone_item_id ?? null,

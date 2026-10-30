@@ -370,10 +370,6 @@ const es: Dict = {
       empty: "No hay partidos en este filtro.",
       backHome: "Todos",
       allLeagues: "Todas las ligas",
-      statusEnded: "Final",
-      statusLive: "En vivo",
-      statusUpcoming: "Por jugar",
-      statusEmpty: "Nada en esta columna.",
     },
     esports: {
       empty:
@@ -467,9 +463,6 @@ const es: Dict = {
       fullLimitError: "Límite diario alcanzado. Usa solo global o activa VIP.",
       vipWeightHint: "Las notas VIP cuentan doble en la media.",
       scoreOnly: "Solo nota numérica, sin texto.",
-      translatedFrom: "Traducción IA desde {lang}",
-      showOriginal: "Ver original",
-      showTranslation: "Ver traducción",
       postComment: "Publicar nota y comentario",
       backToPlayer: "Volver a la ficha",
       detailScores: "Desglose de la comunidad",
