@@ -271,9 +271,37 @@ export async function fetchPlayerById(idPlayer: string) {
 }
 
 export function mapTsdbStatus(strStatus?: string): "live" | "upcoming" | "ended" {
-  const s = (strStatus ?? "").toLowerCase();
-  if (s.includes("live") || s.includes("1h") || s.includes("2h") || s.includes("ht"))
+  const s = (strStatus ?? "").toLowerCase().trim();
+  if (
+    s.includes("live") ||
+    s.includes("1h") ||
+    s.includes("2h") ||
+    s.includes("ht") ||
+    s.includes("in play")
+  ) {
     return "live";
-  if (s.includes("not started") || s.includes("ns") || s === "") return "upcoming";
+  }
+  if (
+    s.includes("not started") ||
+    s === "ns" ||
+    s.includes("scheduled") ||
+    s.includes("postponed") ||
+    s === ""
+  ) {
+    return "upcoming";
+  }
+  if (
+    s.includes("ft") ||
+    s.includes("full time") ||
+    s.includes("finished") ||
+    s.includes("aet") ||
+    s.includes("after pen") ||
+    s.includes("pen ") ||
+    s === "p" ||
+    s.includes("match finished") ||
+    s.includes("final")
+  ) {
+    return "ended";
+  }
   return "ended";
 }

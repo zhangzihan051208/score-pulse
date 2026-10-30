@@ -283,7 +283,7 @@ function FeaturedEventRow({
           {formatWhen(event.startAt, locale as "en")}
         </span>
       </Link>
-      {event.live ? (
+      {event.status === "live" || event.status === "ended" ? (
         <div className="mt-2">
           <MatchScoreboard event={event} size="sm" matchHref={matchHref} />
         </div>

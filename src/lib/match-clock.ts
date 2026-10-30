@@ -26,12 +26,12 @@ export function alignEventToNow<T extends ClockEvent>(event: T, now = Date.now()
   if (event.status === "ended") return event;
 
   const dur = expectedMatchMs(event.sport);
-  let status: EventStatus = event.status;
+  const endWindow = start + dur + OT_GRACE_MS;
 
+  let status: EventStatus;
   if (now < start) status = "upcoming";
-  else if (now <= start + dur + OT_GRACE_MS) status = "live";
-  else if (event.status === "live") status = "live";
-  else status = "ended";
+  else if (now > endWindow) status = "ended";
+  else status = "live";
 
   if (status === event.status) return event;
   return { ...event, status };

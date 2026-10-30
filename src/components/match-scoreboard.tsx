@@ -24,7 +24,7 @@ function LiveClock({ startAt, detail }: { startAt?: string; detail?: string }) {
 
 function teamHref(event: MatchEvent, side: "home" | "away") {
   const id = side === "home" ? event.homeTeamId : event.awayTeamId;
-  if (!id || !event.live) return null;
+  if (!id || event.status !== "live") return null;
   const sport = event.sport === "nba" || event.sport === "soccer" ? event.sport : "soccer";
   return `/teams/${id}?sport=${sport}`;
 }
@@ -51,6 +51,7 @@ export function MatchScoreboard({
     | "awayTeamId"
     | "sport"
     | "live"
+    | "status"
   >;
   size?: "sm" | "md" | "lg";
   className?: string;
@@ -177,7 +178,7 @@ export function MatchScoreboard({
         <Link
           href={matchHref}
           aria-label={t.team.openMatch}
-          className="absolute inset-0 z-10 rounded-lg hover:bg-foreground/5"
+          className="absolute inset-0 z-30 rounded-lg hover:bg-foreground/5"
         />
       ) : null}
       <div className="pointer-events-none relative z-20 text-right">
