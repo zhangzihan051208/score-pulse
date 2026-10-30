@@ -667,8 +667,9 @@ export async function listLiveMatchEvents(
     if (a.status === "ended") return b.startAt.localeCompare(a.startAt);
     return a.startAt.localeCompare(b.startAt);
   });
-  const filled = await fillMissingTeamLogos(events);
-  return filled.slice(0, limit);
+  // Stored badge URLs are already copied onto the row. Looking the rest up
+  // here keeps the list response open until TheSportsDB answers.
+  return events.slice(0, limit);
 }
 
 export async function getLiveMatchBySlug(slug: string) {
@@ -988,7 +989,7 @@ export async function listFixturesForTeam(
       if (sr !== 0) return sr;
       return b.startAt.localeCompare(a.startAt);
     });
-  return fillMissingTeamLogos(events);
+  return events;
 }
 
 export async function refreshFixtureFromTsdb(idEvent: string): Promise<MatchEvent | null> {
