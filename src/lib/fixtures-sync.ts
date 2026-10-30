@@ -625,7 +625,7 @@ export async function listFixtures(
       .in("sport", sports)
       .order("date_event", { ascending: false })
       .order("synced_at", { ascending: false })
-      .limit(Math.max(limit * 16, 160))
+      .limit(Math.max(limit * 3, 80))
       .then((r) => ({ data: r.data, error: r.error })),
   );
   if (!data.length) return [];
@@ -651,10 +651,6 @@ export async function listFixtures(
   return filtered.slice(0, limit);
 }
 
-function isProductionBuild() {
-  return process.env.NEXT_PHASE === "phase-production-build";
-}
-
 export async function listLiveMatchEvents(
   sports: ("nba" | "soccer")[],
   limit = 12,
@@ -671,17 +667,7 @@ export async function listLiveMatchEvents(
     if (a.status === "ended") return b.startAt.localeCompare(a.startAt);
     return a.startAt.localeCompare(b.startAt);
   });
-  if (isProductionBuild()) return events.slice(0, limit);
-  try {
-    const filled = await withUpstreamTimeout(
-      fillMissingTeamLogos(events),
-      8_000,
-      () => {},
-    );
-    return filled.slice(0, limit);
-  } catch {
-    return events.slice(0, limit);
-  }
+  return events.slice(0, limit);
 }
 
 export async function getLiveMatchBySlug(slug: string) {

@@ -8,7 +8,6 @@ import { honorTsdbId, tsdbIdForTeamName } from "@/lib/honor-tsdb-team-ids";
 import { thesportsdbBudgets, upstreamAllows } from "@/lib/upstream-budget";
 import type { MatchEvent, Sport } from "@/lib/types";
 import type { ReputationCard } from "@/lib/reputation/types";
-import { unstable_cache } from "next/cache";
 
 const BADGE_CACHE_MS = 86_400_000;
 const MAX_LOOKUPS_PER_CALL = 12;
@@ -199,20 +198,7 @@ export async function resolveTeamBadgeUrl(opts: {
   return undefined;
 }
 
-function honorBadgeLookupCap(): number {
-  const key = process.env.THESPORTSDB_API_KEY?.trim();
-  return key && key !== "123" ? 120 : 40;
-}
-
 const honorBadgeById = honorBadgeUrls as Record<string, string>;
-
-function resolveBadgeCached(teamName: string, sport: "nba" | "soccer") {
-  return unstable_cache(
-    async () => resolveTeamBadgeUrl({ teamName, sport }),
-    ["honor-team-badge", sport, normTeamName(teamName)],
-    { revalidate: 86_400 * 7 },
-  )();
-}
 
 /** Static crest URL for honor-board clubs (no upstream call). */
 export function honorTeamBadgeUrl(honorId: string): string | undefined {
@@ -244,7 +230,6 @@ export async function enrichHonorTeamBadges(
   entries: ReputationCard[],
 ): Promise<ReputationCard[]> {
   const out: ReputationCard[] = [];
-  let budget = honorBadgeLookupCap();
   for (const entry of entries) {
     if (entry.photoUrl) {
       out.push(entry);
@@ -255,25 +240,7 @@ export async function enrichHonorTeamBadges(
       continue;
     }
     const staticUrl = honorBadgeById[entry.id];
-    if (staticUrl) {
-      out.push({ ...entry, photoUrl: staticUrl });
-      continue;
-    }
-    const pinnedId = honorTsdbId(entry.id) ?? tsdbIdForTeamName(entry.name);
-    if (pinnedId) {
-      const fromId = await lookupBadge(pinnedId);
-      if (fromId) {
-        out.push({ ...entry, photoUrl: fromId });
-        continue;
-      }
-    }
-    if (budget <= 0) {
-      out.push(entry);
-      continue;
-    }
-    budget -= 1;
-    const photoUrl = await resolveBadgeCached(entry.name, entry.sport);
-    out.push(photoUrl ? { ...entry, photoUrl } : entry);
+    out.push(staticUrl ? { ...entry, photoUrl: staticUrl } : entry);
   }
   return out;
 }
