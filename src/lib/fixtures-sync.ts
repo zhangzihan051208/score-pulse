@@ -744,20 +744,45 @@ export async function getLiveMatchBySlug(slug: string) {
     !getDegradedMode().cacheOnly &&
     upstreamAllows("thesportsdb", thesportsdbBudgets())
   ) {
-    if (admin) {
-      await applyLineupEnrichToRow(admin, row);
-      const refreshed = await admin
-        .from("sportsdb_fixtures")
-        .select(FIXTURE_SELECT_WITH_TEAM_COLS)
-        .eq("slug", slug)
-        .maybeSingle();
-      if (refreshed.data) {
-        row = hydrateFixtureRow(refreshed.data as unknown as Record<string, unknown>);
+    const ev = row.raw as unknown as TsdbEvent;
+    const sport = row.sport as "nba" | "soccer";
+    try {
+      const lineup = await resolvePlayersForEvent(
+        { ...ev, idEvent: row.id_event },
+        sport,
+      );
+      if (lineup.length > 0) {
+        row = {
+          ...row,
+          lineup,
+          raw: {
+            ...(row.raw as Record<string, unknown>),
+            lineup,
+          },
+        };
+        if (admin) {
+          void applyLineupEnrichToRow(admin, row);
+        }
+      } else if (admin) {
+        await applyLineupEnrichToRow(admin, row);
+        const refreshed = await admin
+          .from("sportsdb_fixtures")
+          .select(FIXTURE_SELECT_WITH_TEAM_COLS)
+          .eq("slug", slug)
+          .maybeSingle();
+        if (refreshed.data) {
+          row = hydrateFixtureRow(refreshed.data as unknown as Record<string, unknown>);
+        }
       }
+    } catch {
+      /* keep score-only row */
     }
   }
 
-  return withTeamLogos(fixtureRowToMatchEvent(row));
+  const event = fixtureRowToMatchEvent(row);
+  if (!event) return null;
+  if (event.homeTeamLogoUrl && event.awayTeamLogoUrl) return event;
+  return withTeamLogos(event);
 }
 
 export type SearchPlayerHit = {
@@ -1057,6 +1082,40 @@ export async function refreshFixtureFromTsdb(idEvent: string): Promise<MatchEven
   }
 
   return getLiveMatchById(idEvent);
+}
+
+/** Pull rosters for in-progress fixtures missing a lineup (list/detail live polls). */
+export async function enrichLiveFixturesMissingLineup(maxItems = 5) {
+  const admin = createServiceClient();
+  if (!admin || getDegradedMode().cacheOnly) return 0;
+  if (!upstreamAllows("thesportsdb", thesportsdbBudgets())) return 0;
+
+  const data = await fetchFixtureRows((select) =>
+    admin
+      .from("sportsdb_fixtures")
+      .select(select)
+      .in("sport", ["nba", "soccer"])
+      .order("date_event", { ascending: false })
+      .limit(120)
+      .then((r) => ({ data: r.data, error: r.error })),
+  );
+
+  const liveRows = data
+    .map((row) => hydrateFixtureRow(row))
+    .filter((row) => {
+      if (rowHasLineup(row)) return false;
+      const mapped = fixtureRowToMatchEvent(row);
+      return mapped?.status === "live";
+    })
+    .slice(0, maxItems);
+
+  let enriched = 0;
+  for (const row of liveRows) {
+    if (!upstreamAllows("thesportsdb", thesportsdbBudgets())) break;
+    const ok = await applyLineupEnrichToRow(admin, row);
+    if (ok) enriched += 1;
+  }
+  return enriched;
 }
 
 export async function refreshLiveFixturesFromTsdb(limit = 10) {
