@@ -89,7 +89,7 @@ export function RateCard({
 
   const loadRemote = useCallback(async () => {
     if (!cloudReads) return;
-    const qs = new URLSearchParams({ positionKey });
+    const qs = new URLSearchParams({ positionKey, locale });
     const res = await fetch(
       `/api/community/${encodeURIComponent(event.id)}/${encodeURIComponent(athlete.id)}?${qs}`,
       { cache: "no-store" },
@@ -108,7 +108,7 @@ export function RateCard({
       setBody(data.mineComment ?? "");
       commentPrefilled.current = true;
     }
-  }, [athlete.id, cloudReads, event.id, positionKey]);
+  }, [athlete.id, cloudReads, event.id, locale, positionKey]);
 
   useLivePoll(loadRemote, cloudReads);
 

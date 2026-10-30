@@ -1,12 +1,14 @@
+import { localizeCommentBodies } from "@/lib/comment-translate";
 import { averageScores } from "@/lib/score-aggregate";
 import { createClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
+import { viewerLocaleFromRequest } from "@/lib/viewer-locale";
 import { normalizeDimensions } from "@/lib/zones";
 import type { ScoreMap } from "@/lib/types";
 import { NextResponse } from "next/server";
 
 export async function GET(
-  _request: Request,
+  request: Request,
   context: { params: Promise<{ slug: string; itemId: string }> },
 ) {
   if (!isSupabaseConfigured()) {
@@ -14,6 +16,7 @@ export async function GET(
   }
 
   const { slug, itemId } = await context.params;
+  const viewerLocale = viewerLocaleFromRequest(request);
   const supabase = await createClient();
   const {
     data: { user },
@@ -51,7 +54,7 @@ export async function GET(
   const { data: comments } = await supabase
     .from("comments")
     .select(
-      "id, author, body, scores, created_at, user_id, moderation_status, parent_id, hidden",
+      "id, author, body, body_translations, scores, created_at, user_id, moderation_status, parent_id, hidden",
     )
     .eq("zone_item_id", itemId)
     .order("created_at", { ascending: false })
@@ -74,6 +77,17 @@ export async function GET(
     ? (ratings ?? []).find((r) => r.user_id === user.id)
     : undefined;
 
+  const localized = await localizeCommentBodies(
+    visibleComments.map((c) => ({
+      id: c.id,
+      body: c.body,
+      user_id: c.user_id,
+      body_translations: c.body_translations,
+    })),
+    viewerLocale,
+    user?.id,
+  );
+
   return NextResponse.json({
     zone: {
       id: zone.id,
@@ -86,14 +100,18 @@ export async function GET(
     communityAvg,
     ratingCount: ratings?.length ?? 0,
     mine: (mine?.scores as ScoreMap | undefined) ?? null,
-    comments: visibleComments.map((c) => ({
-      id: c.id,
-      author: c.author,
-      body: c.body,
-      createdAt: c.created_at,
-      moderationStatus: c.moderation_status,
-      isYou: c.user_id === user?.id,
-      pending: c.moderation_status === "pending",
-    })),
+    comments: visibleComments.map((c) => {
+      const loc = localized.get(c.id);
+      return {
+        id: c.id,
+        author: c.author,
+        body: loc?.body ?? c.body,
+        bodyOriginal: loc?.bodyOriginal,
+        createdAt: c.created_at,
+        moderationStatus: c.moderation_status,
+        isYou: c.user_id === user?.id,
+        pending: c.moderation_status === "pending",
+      };
+    }),
   });
 }

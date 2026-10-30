@@ -99,7 +99,7 @@ export function EventRosterColumns({
 }) {
   const { locale, t } = useI18n();
   const { home, away } = performancesBySide(event, state, locale);
-  const { byAthlete } = useEventTakesSummary(event.id);
+  const { byAthlete } = useEventTakesSummary(event.id, locale);
   const homeTitle = event.homeTeamName ?? t.event.homeSpotlight;
   const awayTitle = event.awayTeamName ?? t.event.awaySpotlight;
   const [side, setSide] = useState<"home" | "away">("home");

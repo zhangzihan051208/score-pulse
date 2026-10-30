@@ -2,6 +2,11 @@ import { blockedUserIds } from "@/lib/safety-server";
 import { requestUser } from "@/lib/supabase/request-user";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 import { enrichTakesWithSocial } from "@/lib/comment-enrich";
+import {
+  attachTranslationToTakes,
+  localizeCommentBodies,
+} from "@/lib/comment-translate";
+import { viewerLocaleFromRequest } from "@/lib/viewer-locale";
 import { mergeTakes } from "@/lib/community-takes";
 import { weightedAverageScores } from "@/lib/score-aggregate";
 import {
@@ -32,6 +37,7 @@ export async function GET(
   }
 
   const { eventId, athleteId } = await context.params;
+  const viewerLocale = viewerLocaleFromRequest(request);
   const { searchParams } = new URL(request.url);
   const positionKey = (searchParams.get("positionKey") ??
     "nba.guard") as PositionKey;
@@ -53,7 +59,7 @@ export async function GET(
     supabase
       .from("comments")
       .select(
-        "id, author, body, scores, created_at, user_id, parent_id, hidden, moderation_status",
+        "id, author, body, body_translations, scores, created_at, user_id, parent_id, hidden, moderation_status",
       )
       .eq("event_id", eventId)
       .eq("athlete_id", athleteId)
@@ -93,13 +99,23 @@ export async function GET(
   const allComments = visibleComments.filter(
     (c) => c.moderation_status === "approved" || !c.moderation_status,
   );
+  const localized = await localizeCommentBodies(
+    allComments.map((c) => ({
+      id: c.id,
+      body: c.body,
+      user_id: c.user_id,
+      body_translations: c.body_translations,
+    })),
+    viewerLocale,
+    user?.id,
+  );
   const commentRows = allComments
     .filter((c) => !c.parent_id)
     .map((c) => ({
       id: c.id,
       userId: c.user_id,
       author: c.author ?? profileMap.get(c.user_id) ?? "Fan",
-      body: c.body,
+      body: localized.get(c.id)?.body ?? c.body,
       createdAt: c.created_at,
       scores: c.scores as ScoreMap | undefined,
       isYou: user?.id === c.user_id,
@@ -140,20 +156,23 @@ export async function GET(
     }
   }
 
-  const takes = enrichTakesWithSocial(
-    baseTakes,
-    allComments.map((c) => ({
-      id: c.id,
-      user_id: c.user_id,
-      author: c.author,
-      body: c.body,
-      created_at: c.created_at,
-      parent_id: c.parent_id,
-      hidden: c.hidden,
-    })),
-    likeCountById,
-    likedByYou,
-    user?.id,
+  const takes = attachTranslationToTakes(
+    enrichTakesWithSocial(
+      baseTakes,
+      allComments.map((c) => ({
+        id: c.id,
+        user_id: c.user_id,
+        author: c.author,
+        body: localized.get(c.id)?.body ?? c.body,
+        created_at: c.created_at,
+        parent_id: c.parent_id,
+        hidden: c.hidden,
+      })),
+      likeCountById,
+      likedByYou,
+      user?.id,
+    ),
+    localized,
   );
 
   const weightedRows = takes.map((take) => ({
@@ -170,7 +189,10 @@ export async function GET(
       ratingCount: takes.length,
       communityAvg,
       mine: mineTake?.scores ?? null,
-      mineComment: mineTake?.body ?? "",
+      mineComment:
+        allComments.find((c) => c.user_id === user?.id && !c.parent_id)?.body ??
+        mineTake?.body ??
+        "",
     },
     { headers: { "Cache-Control": "no-store" } },
   );

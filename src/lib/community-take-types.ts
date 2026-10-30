@@ -4,6 +4,7 @@ export type CommentReply = {
   id: string;
   author: string;
   body: string;
+  bodyOriginal?: string;
   createdAt: string;
   isYou: boolean;
   hidden: boolean;
@@ -15,6 +16,7 @@ export type CommunityTake = {
   scores: ScoreMap;
   updatedAt: string;
   body?: string;
+  bodyOriginal?: string;
   isYou: boolean;
   commentId?: string;
   likeCount?: number;

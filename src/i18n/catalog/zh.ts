@@ -242,6 +242,8 @@ const zh: Dict = {
       hide: "隐藏",
       replyPlaceholder: "写回复…",
       sendReply: "发送",
+      showOriginal: "查看原文",
+      showTranslation: "查看译文",
     },
     safety: {
       title: "评论审核",

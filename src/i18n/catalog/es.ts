@@ -247,6 +247,8 @@ const es: Dict = {
       hide: "Ocultar",
       replyPlaceholder: "Escribe una respuesta…",
       sendReply: "Enviar",
+      showOriginal: "Ver original",
+      showTranslation: "Ver traducción",
     },
     safety: {
       title: "Reportes",

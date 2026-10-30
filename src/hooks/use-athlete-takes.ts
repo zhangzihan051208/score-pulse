@@ -20,14 +20,14 @@ export function useAthleteTakes(
 
   const loadRemote = useCallback(async () => {
     if (!authEnabled || !isSupabaseConfigured()) return;
-    const qs = new URLSearchParams({ positionKey });
+    const qs = new URLSearchParams({ positionKey, locale });
     const res = await fetch(
       `/api/community/${encodeURIComponent(event.id)}/${encodeURIComponent(athleteId)}?${qs}`,
     );
     if (!res.ok) return;
     const data = (await res.json()) as { takes?: CommunityTake[] };
     setRemoteTakes(data.takes ?? []);
-  }, [athleteId, authEnabled, event.id, positionKey]);
+  }, [athleteId, authEnabled, event.id, locale, positionKey]);
 
   useEffect(() => {
     loadRemote();

@@ -242,6 +242,8 @@ const ja: Dict = {
       hide: "非表示",
       replyPlaceholder: "返信を書く…",
       sendReply: "送信",
+      showOriginal: "原文を表示",
+      showTranslation: "訳文を表示",
     },
     safety: {
       title: "通報",
