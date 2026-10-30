@@ -331,10 +331,6 @@ export type Dict = {
     empty: string;
     backHome: string;
     allLeagues: string;
-    statusEnded: string;
-    statusLive: string;
-    statusUpcoming: string;
-    statusEmpty: string;
   };
   esports: {
     empty: string;
@@ -427,9 +423,6 @@ export type Dict = {
     postComment: string;
     backToPlayer: string;
     detailScores: string;
-    translatedFrom: string;
-    showOriginal: string;
-    showTranslation: string;
   };
   feed: {
     title: string;

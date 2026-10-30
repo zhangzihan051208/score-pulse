@@ -19,7 +19,6 @@ import { useCommunity } from "@/hooks/use-community";
 import { pickEventSpotlights } from "@/lib/event-spotlight";
 import { SPORT_CHIP } from "@/lib/sports";
 import { LeagueTabs } from "@/components/league-tabs";
-import { MatchStatusTabs, useMatchStatus } from "@/components/match-status-tabs";
 import { leagueLabel } from "@/i18n/league-labels";
 import {
   HOME_LIVE_CHIP_PER_SPORT,
@@ -207,8 +206,7 @@ function LiveSportBlock({
 }) {
   const { locale, t } = useI18n();
   const { state } = useCommunity();
-  const { status, setStatus, visible } = useMatchStatus(list);
-  const featured = visible[0];
+  const featured = list[0];
 
   if (list.length === 0) {
     if (loading) {
@@ -224,6 +222,8 @@ function LiveSportBlock({
       </section>
     );
   }
+
+  if (!featured) return null;
 
   return (
     <section className="overflow-hidden rounded-xl border bg-card">
@@ -247,20 +247,12 @@ function LiveSportBlock({
           <LeagueTabs sport="soccer" />
         </div>
       )}
-      <div className="border-b px-3 py-2">
-        <MatchStatusTabs events={list} status={status} onChange={setStatus} />
-      </div>
-      {visible.length === 0 ? (
-        <p className="px-3 py-6 text-sm text-muted-foreground">{t.board.statusEmpty}</p>
-      ) : null}
-      {visible.slice(0, HOME_MATCH_ROWS_PER_SPORT).map((event) => (
+      {list.slice(0, HOME_MATCH_ROWS_PER_SPORT).map((event) => (
         <FeaturedEventRow key={event.id} event={event} locale={locale} t={t} />
       ))}
-      {featured ? (
-        <div className="border-t px-3 py-3">
-          <EventSpotlightGrid event={featured} state={state} compact />
-        </div>
-      ) : null}
+      <div className="border-t px-3 py-3">
+        <EventSpotlightGrid event={featured} state={state} compact />
+      </div>
     </section>
   );
 }

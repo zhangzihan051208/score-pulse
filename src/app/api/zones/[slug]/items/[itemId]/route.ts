@@ -1,6 +1,4 @@
 import { averageScores } from "@/lib/score-aggregate";
-import { localizeCommentsForViewer } from "@/lib/comment-translate";
-import { localeFromRequest } from "@/lib/request-locale";
 import { createClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 import { normalizeDimensions } from "@/lib/zones";
@@ -8,7 +6,7 @@ import type { ScoreMap } from "@/lib/types";
 import { NextResponse } from "next/server";
 
 export async function GET(
-  request: Request,
+  _request: Request,
   context: { params: Promise<{ slug: string; itemId: string }> },
 ) {
   if (!isSupabaseConfigured()) {
@@ -53,7 +51,7 @@ export async function GET(
   const { data: comments } = await supabase
     .from("comments")
     .select(
-      "id, author, body, body_locale, translations, scores, created_at, user_id, moderation_status, parent_id, hidden",
+      "id, author, body, scores, created_at, user_id, moderation_status, parent_id, hidden",
     )
     .eq("zone_item_id", itemId)
     .order("created_at", { ascending: false })
@@ -76,16 +74,6 @@ export async function GET(
     ? (ratings ?? []).find((r) => r.user_id === user.id)
     : undefined;
 
-  const localized = await localizeCommentsForViewer(
-    visibleComments.map((c) => ({
-      id: c.id,
-      body: c.body,
-      body_locale: c.body_locale,
-      translations: c.translations as Record<string, string> | null,
-    })),
-    localeFromRequest(request),
-  );
-
   return NextResponse.json({
     zone: {
       id: zone.id,
@@ -98,21 +86,14 @@ export async function GET(
     communityAvg,
     ratingCount: ratings?.length ?? 0,
     mine: (mine?.scores as ScoreMap | undefined) ?? null,
-    comments: visibleComments.map((c) => {
-      const loc = localized.get(c.id);
-      const isYou = c.user_id === user?.id;
-      return {
+    comments: visibleComments.map((c) => ({
       id: c.id,
       author: c.author,
-      body: isYou ? c.body : (loc?.body ?? c.body),
-      bodyOriginal: isYou ? undefined : loc?.bodyOriginal,
-      bodyLocale: isYou ? undefined : loc?.bodyLocale,
-      isTranslated: isYou ? false : loc?.isTranslated,
+      body: c.body,
       createdAt: c.created_at,
       moderationStatus: c.moderation_status,
       isYou: c.user_id === user?.id,
       pending: c.moderation_status === "pending",
-    };
-    }),
+    })),
   });
 }

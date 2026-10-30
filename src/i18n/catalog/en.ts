@@ -370,10 +370,6 @@ const en: Dict = {
       empty: "No matches in this filter.",
       backHome: "All boards",
       allLeagues: "All leagues",
-      statusEnded: "Final",
-      statusLive: "Live",
-      statusUpcoming: "Upcoming",
-      statusEmpty: "Nothing in this column.",
     },
     esports: {
       empty:
@@ -470,9 +466,6 @@ const en: Dict = {
       fullLimitError:
         "Daily full rating limit reached. Use overall-only or activate VIP in Profile.",
       vipWeightHint: "VIP members’ ratings count double in board averages.",
-      translatedFrom: "AI translation from {lang}",
-      showOriginal: "Show original",
-      showTranslation: "Show translation",
       postComment: "Post rating & comment",
       backToPlayer: "Back to player card",
       detailScores: "Community breakdown",

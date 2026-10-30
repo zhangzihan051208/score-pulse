@@ -9,7 +9,6 @@ import {
   type RatingMode,
 } from "@/lib/vip";
 import { moderateComment } from "@/lib/ai-moderation";
-import { commentLocaleForInsert } from "@/lib/comment-translate";
 import { moderationErrorPayload } from "@/lib/comment-moderation";
 import { upsertAthleteProfile } from "@/lib/athlete-profile-server";
 import { requestUser, upsertRating, writeClient } from "@/lib/supabase/request-user";
@@ -178,7 +177,6 @@ export async function POST(request: Request) {
       athlete_id: athleteId,
       author: author.slice(0, 32),
       body: trimmedComment,
-      body_locale: commentLocaleForInsert(trimmedComment),
       scores,
       moderation_status: "approved",
     });

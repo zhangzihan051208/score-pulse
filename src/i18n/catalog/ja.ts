@@ -365,10 +365,6 @@ const ja: Dict = {
       empty: "該当する試合はありません。",
       backHome: "すべての板",
       allLeagues: "全リーグ",
-      statusEnded: "終了",
-      statusLive: "進行中",
-      statusUpcoming: "未開始",
-      statusEmpty: "この欄に試合はありません。",
     },
     esports: {
       empty:
@@ -462,9 +458,6 @@ const ja: Dict = {
       fullLimitError: "五軸の日次上限です。総合のみか VIP をご利用ください。",
       vipWeightHint: "VIP 会員の採点は平均で 2 倍の重みになります。",
       scoreOnly: "採点のみ（コメントなし）。",
-      translatedFrom: "AI翻訳（原文: {lang}）",
-      showOriginal: "原文を表示",
-      showTranslation: "訳文を表示",
       postComment: "採点・コメントを投稿",
       backToPlayer: "選手カードに戻る",
       detailScores: "コミュニティ内訳",

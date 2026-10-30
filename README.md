@@ -71,8 +71,6 @@ Run `supabase/migrate-safety.sql` in that project. If the project was created be
 
 Comments are decided before they are stored. Local rules block ads, contact redirects, abuse, sexual or violent text, and spam. Set `OPENAI_API_KEY` and the same text is also sent to OpenAI Moderations (`omni-moderation-latest`). A flagged comment is rejected and never published. A report runs that check again and hides the comment when it fails, or dismisses the report when the text is allowed. Scores are numbers and are not sent. If the key is missing or the moderation service does not answer, the local rules still apply and an uncertain report stays open on `/safety`.
 
-The same key translates comments into the reader's language (English, 中文, Español, 日本語, Deutsch) with `gpt-4o-mini`. The original stays stored; translations are cached on the comment. Run `supabase/migrate-comment-translations.sql` once so those columns exist. Without the key, everyone sees the original text.
-
 ## Phone apps
 
 The phone client lives in `mobile/`. It follows the website at phone scale: matches, boards, zones, clubs, grading, and search. iOS, Android, and the website each keep an empty ad slot. See `mobile/README.md`.
