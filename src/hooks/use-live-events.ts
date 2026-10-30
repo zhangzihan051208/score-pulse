@@ -45,15 +45,22 @@ export function useLiveEvents(
       );
       if (refresh) params.set("sync", "1");
       else if (hasLive) params.set("live", "1");
-      const res = await fetch(`/api/events?${params}`);
-      if (!res.ok) return;
-      const data = (await res.json()) as {
-        events?: MatchEvent[];
-        syncedAt?: string;
-      };
-      setEvents(data.events ?? []);
-      setSyncedAt(data.syncedAt ?? null);
-      setLoading(false);
+      try {
+        const res = await fetch(`/api/events?${params}`, {
+          signal: AbortSignal.timeout(12_000),
+        });
+        if (!res.ok) return;
+        const data = (await res.json()) as {
+          events?: MatchEvent[];
+          syncedAt?: string;
+        };
+        setEvents(data.events ?? []);
+        setSyncedAt(data.syncedAt ?? null);
+      } catch {
+        /* keep the rows already on screen */
+      } finally {
+        setLoading(false);
+      }
     },
     [enabled, leagueSlug, sport],
   );
@@ -87,20 +94,26 @@ export function useLiveEvent(slug: string, seed?: MatchEvent | null) {
         current?.status === "live" ||
         (current ? kickoffIsSoon(current.startAt) : false);
       const liveQ = due ? (sync ? "?sync=1" : "?live=1") : "";
-      const res = await fetch(`/api/events/${encodeURIComponent(slug)}${liveQ}`);
-      if (res.status === 404) {
-        setEvent(null);
+      try {
+        const res = await fetch(`/api/events/${encodeURIComponent(slug)}${liveQ}`, {
+          signal: AbortSignal.timeout(12_000),
+        });
+        if (res.status === 404) {
+          setEvent(null);
+          return;
+        }
+        if (!res.ok) return;
+        const data = (await res.json()) as {
+          event?: MatchEvent;
+          syncedAt?: string;
+        };
+        setEvent(data.event ?? null);
+        setSyncedAt(data.syncedAt ?? null);
+      } catch {
+        /* keep the match already on screen */
+      } finally {
         setLoading(false);
-        return;
       }
-      if (!res.ok) return;
-      const data = (await res.json()) as {
-        event?: MatchEvent;
-        syncedAt?: string;
-      };
-      setEvent(data.event ?? null);
-      setSyncedAt(data.syncedAt ?? null);
-      setLoading(false);
     },
     [slug],
   );

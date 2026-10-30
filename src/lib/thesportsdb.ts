@@ -36,7 +36,18 @@ async function tsdb<T>(
     throw new UpstreamBudgetError();
   }
   const url = `${BASE}/${apiKey()}/${path}`;
-  const res = await fetch(url, { next: { revalidate: 120 } });
+  let res: Response;
+  try {
+    // A revalidating fetch stays in flight until it settles, and Next holds
+    // the page or API response open with it.
+    res = await fetch(url, {
+      cache: "no-store",
+      signal: AbortSignal.timeout(8_000),
+    });
+  } catch {
+    if (opts?.optional) return null;
+    throw new UpstreamBudgetError();
+  }
   if (res.status === 429) {
     blockUpstream("thesportsdb", budgets, 120_000);
     if (opts?.optional) return null;
