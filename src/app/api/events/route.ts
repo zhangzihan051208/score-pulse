@@ -1,5 +1,9 @@
 import { pinBayernArsenal } from "@/lib/featured/bayern-arsenal";
-import { listLiveMatchEvents, refreshLiveFixturesFromTsdb } from "@/lib/fixtures-sync";
+import {
+  listLiveMatchEvents,
+  refreshLiveFixturesFromTsdb,
+  syncFixturesFast,
+} from "@/lib/fixtures-sync";
 import { cachedLiveMatchEvents } from "@/lib/live-data-cache";
 import { getDegradedMode } from "@/lib/service-degraded";
 import { maybeRefreshLiveFixturesFromTsdb } from "@/lib/sync-throttle";
@@ -31,10 +35,16 @@ export async function GET(request: Request) {
   const limit = Number(searchParams.get("limit") ?? "12");
   const capped = Math.min(limit, 48);
   const readLive = () => listLiveMatchEvents([...sports], capped, league);
-  const loaded =
+  let loaded =
     liveTick || liveRefreshed
       ? await readLive()
       : await cachedLiveMatchEvents([...sports], capped, league);
+  if (loaded.length === 0 && !degraded.cacheOnly) {
+    const synced = await syncFixturesFast(false);
+    if (synced.ok && !("skipped" in synced && synced.skipped) && synced.count > 0) {
+      loaded = await readLive();
+    }
+  }
   const events =
     !sport || sport === "soccer" ? pinBayernArsenal(loaded, league) : loaded;
 
