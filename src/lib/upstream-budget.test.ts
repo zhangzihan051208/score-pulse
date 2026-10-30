@@ -5,6 +5,8 @@ import {
   resetUpstreamBudgets,
   takeUpstreamSlot,
   thesportsdbBudgets,
+  thesportsdbKeyTier,
+  thesportsdbListEnrichMax,
   upstreamAllows,
 } from "./upstream-budget";
 
@@ -35,9 +37,13 @@ test("429 blocks later calls without spending them", () => {
 test("a private sports key uses the premium cap, the shared key does not", () => {
   const previous = process.env.THESPORTSDB_API_KEY;
   process.env.THESPORTSDB_API_KEY = "premium-key";
-  assert.equal(thesportsdbBudgets()[0]?.limit, 40);
+  assert.equal(thesportsdbKeyTier(), "premium");
+  assert.equal(thesportsdbBudgets()[0]?.limit, 90);
+  assert.equal(thesportsdbListEnrichMax(48), 24);
   process.env.THESPORTSDB_API_KEY = "123";
+  assert.equal(thesportsdbKeyTier(), "demo");
   assert.equal(thesportsdbBudgets()[0]?.limit, 8);
+  assert.equal(thesportsdbListEnrichMax(48), 12);
   if (previous === undefined) delete process.env.THESPORTSDB_API_KEY;
   else process.env.THESPORTSDB_API_KEY = previous;
 });
