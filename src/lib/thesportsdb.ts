@@ -36,7 +36,20 @@ async function tsdb<T>(
     throw new UpstreamBudgetError();
   }
   const url = `${BASE}/${apiKey()}/${path}`;
-  const res = await fetch(url, { next: { revalidate: 120 } });
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 8_000);
+  let res: Response;
+  try {
+    res = await fetch(url, {
+      signal: controller.signal,
+      next: { revalidate: 120 },
+    });
+  } catch {
+    if (opts?.optional) return null;
+    throw new Error(`TheSportsDB timeout: ${path}`);
+  } finally {
+    clearTimeout(timer);
+  }
   if (res.status === 429) {
     blockUpstream("thesportsdb", budgets, 120_000);
     if (opts?.optional) return null;
