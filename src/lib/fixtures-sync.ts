@@ -651,12 +651,25 @@ export async function listFixtures(
   return filtered.slice(0, limit);
 }
 
+function isProductionBuild() {
+  return process.env.NEXT_PHASE === "phase-production-build";
+}
+
 export async function listLiveMatchEvents(
   sports: ("nba" | "soccer")[],
   limit = 12,
   leagueSlug?: string,
 ): Promise<MatchEvent[]> {
-  const rows = await listFixtures(sports, Math.max(limit * 4, 48), leagueSlug);
+  let rows: FixtureRow[] = [];
+  try {
+    rows = await withUpstreamTimeout(
+      listFixtures(sports, Math.max(limit * 4, 48), leagueSlug),
+      isProductionBuild() ? 8_000 : 12_000,
+      () => {},
+    );
+  } catch {
+    return [];
+  }
   const events = rows
     .map((r) => fixtureRowToMatchEvent(r))
     .filter((e): e is MatchEvent => Boolean(e))
@@ -667,8 +680,17 @@ export async function listLiveMatchEvents(
     if (a.status === "ended") return b.startAt.localeCompare(a.startAt);
     return a.startAt.localeCompare(b.startAt);
   });
-  const filled = await fillMissingTeamLogos(events);
-  return filled.slice(0, limit);
+  if (isProductionBuild()) return events.slice(0, limit);
+  try {
+    const filled = await withUpstreamTimeout(
+      fillMissingTeamLogos(events),
+      8_000,
+      () => {},
+    );
+    return filled.slice(0, limit);
+  } catch {
+    return events.slice(0, limit);
+  }
 }
 
 export async function getLiveMatchBySlug(slug: string) {
