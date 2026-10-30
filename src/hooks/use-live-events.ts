@@ -45,23 +45,15 @@ export function useLiveEvents(
       );
       if (refresh) params.set("sync", "1");
       else if (hasLive) params.set("live", "1");
-      const controller = new AbortController();
-      const timer = setTimeout(() => controller.abort(), 12_000);
-      try {
-        const res = await fetch(`/api/events?${params}`, { signal: controller.signal });
-        if (!res.ok) return;
-        const data = (await res.json()) as {
-          events?: MatchEvent[];
-          syncedAt?: string;
-        };
-        setEvents(data.events ?? []);
-        setSyncedAt(data.syncedAt ?? null);
-      } catch {
-        /* leave the last list; stop the spinner below */
-      } finally {
-        clearTimeout(timer);
-        setLoading(false);
-      }
+      const res = await fetch(`/api/events?${params}`);
+      if (!res.ok) return;
+      const data = (await res.json()) as {
+        events?: MatchEvent[];
+        syncedAt?: string;
+      };
+      setEvents(data.events ?? []);
+      setSyncedAt(data.syncedAt ?? null);
+      setLoading(false);
     },
     [enabled, leagueSlug, sport],
   );
