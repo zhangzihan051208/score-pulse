@@ -36,7 +36,18 @@ async function tsdb<T>(
     throw new UpstreamBudgetError();
   }
   const url = `${BASE}/${apiKey()}/${path}`;
-  const res = await fetch(url, { next: { revalidate: 120 } });
+  let res: Response;
+  try {
+    // Don't use the Next data cache here. A revalidating fetch stays open
+    // until it settles, and the match-list response is held with it.
+    res = await fetch(url, {
+      cache: "no-store",
+      signal: AbortSignal.timeout(8_000),
+    });
+  } catch {
+    if (opts?.optional) return null;
+    throw new UpstreamBudgetError();
+  }
   if (res.status === 429) {
     blockUpstream("thesportsdb", budgets, 120_000);
     if (opts?.optional) return null;
