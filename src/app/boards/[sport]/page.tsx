@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { BoardPage } from "@/components/board-page";
+import { cachedLiveMatchEvents } from "@/lib/live-data-cache";
 import { SPORTS, type Sport } from "@/lib/types";
 
 export const revalidate = 30;
@@ -24,5 +25,10 @@ export default async function SportBoard({
 }) {
   const { sport } = await params;
   if (!SPORTS.includes(sport as Sport)) notFound();
-  return <BoardPage sport={sport as Sport} />;
+  const s = sport as Sport;
+  let initialEvents: Awaited<ReturnType<typeof cachedLiveMatchEvents>> = [];
+  if (s === "nba" || s === "soccer") {
+    initialEvents = await cachedLiveMatchEvents([s], 32);
+  }
+  return <BoardPage sport={s} initialEvents={initialEvents} />;
 }

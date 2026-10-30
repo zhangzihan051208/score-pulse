@@ -56,7 +56,7 @@ export async function loadLiveHonorSamples(sport: Sport | "all"): Promise<{
     .from("ratings")
     .select("user_id, event_id, athlete_id, sport, scores");
   if (sport !== "all") query = query.eq("sport", sport);
-  const { data } = await query.order("updated_at", { ascending: false }).limit(400);
+  const { data } = await query.order("updated_at", { ascending: false }).limit(8000);
   const rows = ((data ?? []) as RatingRow[]).filter(
     (row) => isSport(row.sport) && !seededEventIds.has(row.event_id),
   );

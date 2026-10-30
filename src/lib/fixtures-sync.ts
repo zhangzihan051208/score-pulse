@@ -625,7 +625,7 @@ export async function listFixtures(
       .in("sport", sports)
       .order("date_event", { ascending: false })
       .order("synced_at", { ascending: false })
-      .limit(Math.max(limit * 3, 80))
+      .limit(Math.max(limit * 16, 160))
       .then((r) => ({ data: r.data, error: r.error })),
   );
   if (!data.length) return [];
@@ -667,7 +667,8 @@ export async function listLiveMatchEvents(
     if (a.status === "ended") return b.startAt.localeCompare(a.startAt);
     return a.startAt.localeCompare(b.startAt);
   });
-  return events.slice(0, limit);
+  const filled = await fillMissingTeamLogos(events);
+  return filled.slice(0, limit);
 }
 
 export async function getLiveMatchBySlug(slug: string) {

@@ -200,9 +200,7 @@ export function HonorBoard({
     const sp = new URLSearchParams({ kind });
     if (sport !== "all") sp.set("sport", sport);
     let cancelled = false;
-    const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), 12_000);
-    fetch(`/api/honor?${sp}`, { signal: controller.signal })
+    fetch(`/api/honor?${sp}`)
       .then((r) => (r.ok ? r.json() : null))
       .then((d: { entries?: ReputationCard[] } | null) => {
         if (!cancelled) {
@@ -212,12 +210,9 @@ export function HonorBoard({
       })
       .catch(() => {
         if (!cancelled) setEntries([]);
-      })
-      .finally(() => clearTimeout(timer));
+      });
     return () => {
       cancelled = true;
-      controller.abort();
-      clearTimeout(timer);
     };
   }, [kind, sport]);
 
