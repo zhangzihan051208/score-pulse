@@ -370,6 +370,10 @@ const es: Dict = {
       empty: "No hay partidos en este filtro.",
       backHome: "Todos",
       allLeagues: "Todas las ligas",
+      statusEnded: "Final",
+      statusLive: "En vivo",
+      statusUpcoming: "Por jugar",
+      statusEmpty: "Nada en esta columna.",
     },
     esports: {
       empty:
