@@ -216,13 +216,15 @@ export type Dict = {
       legend: string;
     };
   };
-  social: {
-    like: string;
-    reply: string;
-    hide: string;
-    replyPlaceholder: string;
-    sendReply: string;
-  };
+    social: {
+      like: string;
+      reply: string;
+      hide: string;
+      replyPlaceholder: string;
+      sendReply: string;
+      showOriginal: string;
+      showTranslation: string;
+    };
   safety: {
     title: string;
     lead: string;

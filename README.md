@@ -16,7 +16,7 @@ Open `http://127.0.0.1:43147` or use Cursor **Preview** (Desktop). Styling needs
 ## Supabase + TheSportsDB
 
 1. Copy `.env.example` → `.env.local` and fill keys.
-2. In Supabase **SQL Editor**, run `supabase/schema.sql`. Existing projects: also run `supabase/migrate-profile-fields.sql`, `supabase/migrate-vip.sql`, `supabase/migrate-social.sql`, `supabase/migrate-athlete-profiles.sql`, `supabase/migrate-zones-moderation.sql` (DIY rating zones + comment moderation), and `supabase/migrate-safety.sql` (reports and blocks).
+2. In Supabase **SQL Editor**, run `supabase/schema.sql`. Existing projects: also run `supabase/migrate-profile-fields.sql`, `supabase/migrate-vip.sql`, `supabase/migrate-social.sql`, `supabase/migrate-athlete-profiles.sql`, `supabase/migrate-zones-moderation.sql` (DIY rating zones + comment moderation), `supabase/migrate-comment-translations.sql` (cached AI comment translations), and `supabase/migrate-safety.sql` (reports and blocks).
 3. **Authentication → URL Configuration**: Site URL `http://127.0.0.1:43147`, redirect `http://127.0.0.1:43147/**`.
 4. Sign in at `/login`. Edit nickname, avatar URL, and signature at `/profile`. Ratings/comments post to Supabase when configured.
 5. **Soccer + NBA (TheSportsDB)** — set `THESPORTSDB_API_KEY` to your premium key (not `123`). Production uses **premium rate limits** automatically when that env var is set. Check `GET /api/status` → `thesportsdb.tier` is `"premium"`.
@@ -70,6 +70,8 @@ Before a store submission, fill `.env.local` (and the hosted environment) with:
 Run `supabase/migrate-safety.sql` in that project. If the project was created before profile fields and `rating_mode`, also run `supabase/repair-sync.sql` once. Scores still sync without that column; the daily five-axis cap is stored only after the repair. Account deletion needs the service role key.
 
 Comments are decided before they are stored. Local rules block ads, contact redirects, abuse, sexual or violent text, and spam. Set `OPENAI_API_KEY` and the same text is also sent to OpenAI Moderations (`omni-moderation-latest`). A flagged comment is rejected and never published. A report runs that check again and hides the comment when it fails, or dismisses the report when the text is allowed. Scores are numbers and are not sent. If the key is missing or the moderation service does not answer, the local rules still apply and an uncertain report stays open on `/safety`.
+
+When `OPENAI_API_KEY` is set, comment bodies are translated for other viewers based on UI locale (`?locale=` on community APIs). Translations are cached in `comments.body_translations` (run `supabase/migrate-comment-translations.sql` on existing databases).
 
 ## Phone apps
 

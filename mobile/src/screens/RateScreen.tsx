@@ -17,7 +17,7 @@ export function RateScreen({ route }: NativeStackScreenProps<RootStackParamList,
   const player = event?.players.find((row) => row.id === route.params.athleteId);
   const threadPath =
     event && player
-      ? `/api/community/${encodeURIComponent(event.id)}/${encodeURIComponent(player.id)}?positionKey=${encodeURIComponent(player.positionKey)}`
+      ? `/api/community/${encodeURIComponent(event.id)}/${encodeURIComponent(player.id)}?positionKey=${encodeURIComponent(player.positionKey)}&locale=${encodeURIComponent(locale)}`
       : null;
   const thread = useLiveJson<PlayerThread>(threadPath, session.accessToken);
   const dims = player ? Object.keys(player.scores) : [];

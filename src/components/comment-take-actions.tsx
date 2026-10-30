@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { CommentBody } from "@/components/comment-body";
 import { SafetyActions } from "@/components/safety-actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -116,8 +117,13 @@ export function CommentTakeActions({
       {take.replies && take.replies.length > 0 ? (
         <ul className="space-y-1.5 rounded-md bg-muted/40 px-2 py-2">
           {take.replies.map((r) => (
-            <li key={r.id} className="text-xs leading-relaxed">
-              <span className="font-medium">{r.author}</span>: {r.body}
+            <li key={r.id} className="text-xs">
+              <span className="font-medium">{r.author}</span>
+              <CommentBody
+                body={r.body}
+                bodyOriginal={r.bodyOriginal}
+                className="mt-0.5 leading-relaxed"
+              />
             </li>
           ))}
         </ul>

@@ -52,7 +52,7 @@ export function usePlayerCommunity({
 
   const loadRemote = useCallback(async () => {
     if (!cloudReads) return;
-    const qs = new URLSearchParams({ positionKey });
+    const qs = new URLSearchParams({ positionKey, locale });
     const res = await fetch(
       `/api/community/${encodeURIComponent(event.id)}/${encodeURIComponent(athlete.id)}?${qs}`,
       { cache: "no-store" },
@@ -69,7 +69,7 @@ export function usePlayerCommunity({
     setRemoteCommunityAvg(data.communityAvg ?? null);
     setMineComment(data.mineComment ?? "");
     return data;
-  }, [athlete.id, cloudReads, event.id, positionKey]);
+  }, [athlete.id, cloudReads, event.id, locale, positionKey]);
 
   useLivePoll(loadRemote, cloudReads);
 

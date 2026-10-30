@@ -3,6 +3,7 @@ import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { favoriteNames } from "../favorites";
+import { KickoffAlertsRow } from "./KickoffAlertsRow";
 import { useLocale } from "../i18n";
 import type { RootStackParamList } from "../navigation";
 import { useSession } from "../store";
@@ -47,6 +48,8 @@ export function ProfileScreen() {
           <Text style={ui.primaryBtnText}>{t.signIn}</Text>
         </Pressable>
       ) : null}
+
+      <KickoffAlertsRow />
 
       <SettingsCard
         rows={[

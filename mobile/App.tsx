@@ -29,6 +29,7 @@ import { ZoneCreateScreen } from "./src/screens/ZoneCreateScreen";
 import { ZoneItemScreen } from "./src/screens/ZoneItemScreen";
 import { ZoneScreen } from "./src/screens/ZoneScreen";
 import { ZonesScreen } from "./src/screens/ZonesScreen";
+import { KickoffNotificationSync } from "./src/KickoffNotificationSync";
 import { SessionProvider } from "./src/store";
 import { colors } from "./src/ui";
 
@@ -144,6 +145,7 @@ export default function App() {
         <View style={styles.column}>
           <LocaleProvider>
             <SessionProvider>
+              <KickoffNotificationSync />
               <View style={styles.column}>
                 <Root />
               </View>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
+import { CommentBody } from "@/components/comment-body";
 import { GradeSlider } from "@/components/grade-slider";
 import { SafetyActions } from "@/components/safety-actions";
 import { Button } from "@/components/ui/button";
@@ -22,6 +23,7 @@ type RemoteTake = {
   author: string;
   score: number;
   body: string;
+  bodyOriginal?: string;
   commentId?: string;
   createdAt: string;
   isYou: boolean;
@@ -42,13 +44,16 @@ export function MatchTakePanel({ event }: { event: MatchEvent }) {
 
   const loadRemote = useCallback(() => {
     if (!enabled) return;
-    fetch(`/api/community/match?eventId=${encodeURIComponent(event.id)}`, { cache: "no-store" })
+    fetch(
+      `/api/community/match?eventId=${encodeURIComponent(event.id)}&locale=${encodeURIComponent(locale)}`,
+      { cache: "no-store" },
+    )
       .then((res) => (res.ok ? res.json() : null))
       .then((data: { takes?: RemoteTake[] } | null) => {
         setRemote(data?.takes ?? []);
       })
       .catch(() => setRemote([]));
-  }, [enabled, event.id]);
+  }, [enabled, event.id, locale]);
 
   useLivePoll(loadRemote, enabled);
 
@@ -67,6 +72,7 @@ export function MatchTakePanel({ event }: { event: MatchEvent }) {
       author: take.author,
       score: take.score,
       body: take.body,
+      bodyOriginal: take.bodyOriginal,
       createdAt: take.createdAt,
       isYou: take.isYou,
       userId: take.userId,
@@ -81,6 +87,7 @@ export function MatchTakePanel({ event }: { event: MatchEvent }) {
               author: mine.author,
               score: mine.score,
               body: mine.body,
+              bodyOriginal: undefined as string | undefined,
               createdAt: mine.createdAt,
               isYou: true,
               userId: undefined as string | undefined,
@@ -93,6 +100,7 @@ export function MatchTakePanel({ event }: { event: MatchEvent }) {
       author: take.author,
       score: take.score,
       body: tx(take.body, locale),
+      bodyOriginal: undefined as string | undefined,
       createdAt: take.createdAt,
       isYou: false,
       userId: undefined as string | undefined,
@@ -230,9 +238,15 @@ export function MatchTakePanel({ event }: { event: MatchEvent }) {
                       minute: "2-digit",
                     })}
                   </p>
-                  <p className="mt-1 text-sm leading-6">
-                    {row.body || t.event.matchScoreOnly}
-                  </p>
+                  {row.body?.trim() ? (
+                    <CommentBody
+                      body={row.body}
+                      bodyOriginal={row.bodyOriginal}
+                      className="mt-1 text-sm"
+                    />
+                  ) : (
+                    <p className="mt-1 text-sm text-muted-foreground">{t.event.matchScoreOnly}</p>
+                  )}
                   {!row.isYou && (row.userId || row.commentId) ? (
                     <SafetyActions
                       targetUserId={row.userId}

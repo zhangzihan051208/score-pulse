@@ -238,6 +238,8 @@ export const deOverrides = {
     hide: "Ausblenden",
     replyPlaceholder: "Antwort schreiben…",
     sendReply: "Senden",
+    showOriginal: "Original anzeigen",
+    showTranslation: "Übersetzung anzeigen",
   },
   safety: {
     lead: "Meldungen werden automatisch geprüft. Verstößt der Kommentar, wird er sofort ausgeblendet. Er bleibt hier nur, wenn die Prüfung nicht antwortet.",

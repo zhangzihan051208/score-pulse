@@ -44,7 +44,7 @@ export function EventSpotlightCard({
 
   const loadRemote = useCallback(() => {
     if (!authEnabled || !isSupabaseConfigured()) return;
-    const qs = new URLSearchParams({ positionKey });
+    const qs = new URLSearchParams({ positionKey, locale });
     fetch(
       `/api/community/${encodeURIComponent(event.id)}/${encodeURIComponent(pick.athlete.id)}?${qs}`,
       { cache: "no-store" },
@@ -54,7 +54,7 @@ export function EventSpotlightCard({
         setRemoteTakes(d?.takes ?? []);
       })
       .catch(() => undefined);
-  }, [authEnabled, event.id, pick.athlete.id, positionKey]);
+  }, [authEnabled, event.id, locale, pick.athlete.id, positionKey]);
 
   useLivePoll(loadRemote, authEnabled && isSupabaseConfigured());
 

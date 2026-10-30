@@ -27,6 +27,16 @@
     "web": {
       "favicon": "./assets/favicon.png"
     },
-    "plugins": ["expo-status-bar", "expo-iap"]
+    "plugins": [
+      "expo-status-bar",
+      "expo-iap",
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/icon.png",
+          "color": "#E4572E"
+        }
+      ]
+    ]
   }
 }

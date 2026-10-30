@@ -1,5 +1,7 @@
 import { moderateComment } from "@/lib/ai-moderation";
 import { moderationErrorPayload } from "@/lib/comment-moderation";
+import { applyLocalizedBody, localizeCommentBodies } from "@/lib/comment-translate";
+import { viewerLocaleFromRequest } from "@/lib/viewer-locale";
 import { blockedUserIds } from "@/lib/safety-server";
 import { requestUser, upsertRating, writeClient } from "@/lib/supabase/request-user";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
@@ -21,6 +23,7 @@ export async function GET(request: Request) {
   if (!eventId) {
     return NextResponse.json({ error: "Missing event" }, { status: 400 });
   }
+  const viewerLocale = viewerLocaleFromRequest(request);
   const { supabase, user } = await requestUser(request);
   if (!supabase) {
     return NextResponse.json({ takes: [], mine: null });
@@ -35,29 +38,46 @@ export async function GET(request: Request) {
       .eq("athlete_id", MATCH_ATHLETE_ID),
     supabase
       .from("comments")
-      .select("id, user_id, author, body, created_at, hidden, moderation_status")
+      .select(
+        "id, user_id, author, body, body_translations, created_at, hidden, moderation_status",
+      )
       .eq("event_id", eventId)
       .eq("athlete_id", MATCH_ATHLETE_ID)
       .is("parent_id", null)
       .order("created_at", { ascending: false }),
   ]);
 
-  const commentByUser = new Map(
-    (comments ?? [])
-      .filter((row) => !row.hidden && (row.moderation_status === "approved" || !row.moderation_status))
-      .map((row) => [row.user_id, row]),
+  const visibleComments = (comments ?? []).filter(
+    (row) =>
+      !row.hidden &&
+      (row.moderation_status === "approved" || !row.moderation_status),
   );
+  const localized = await localizeCommentBodies(
+    visibleComments.map((row) => ({
+      id: row.id,
+      body: row.body,
+      user_id: row.user_id,
+      body_translations: row.body_translations,
+    })),
+    viewerLocale,
+    user?.id,
+  );
+  const commentByUser = new Map(visibleComments.map((row) => [row.user_id, row]));
 
   const takes = (ratings ?? [])
     .filter((row) => !hidden.has(row.user_id))
     .map((row) => {
       const scores = row.scores as { match?: number } | null;
       const comment = commentByUser.get(row.user_id);
+      const loc = comment
+        ? applyLocalizedBody(localized, comment.id, comment.body)
+        : { body: "" };
       return {
         userId: row.user_id,
         author: comment?.author ?? "Fan",
         score: typeof scores?.match === "number" ? scores.match : 0,
-        body: comment?.body ?? "",
+        body: loc.body,
+        bodyOriginal: loc.bodyOriginal,
         commentId: comment?.id,
         createdAt: comment?.created_at ?? row.updated_at,
         isYou: user?.id === row.user_id,

@@ -1,6 +1,8 @@
 import { mergeTakes } from "@/lib/community-takes";
+import { localizeCommentBodies } from "@/lib/comment-translate";
 import { requestUser } from "@/lib/supabase/request-user";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
+import { viewerLocaleFromRequest } from "@/lib/viewer-locale";
 import { NextResponse } from "next/server";
 import type { ScoreMap } from "@/lib/types";
 
@@ -14,7 +16,7 @@ export type SummaryTake = {
 };
 
 export async function GET(
-  _request: Request,
+  request: Request,
   context: { params: Promise<{ eventId: string }> },
 ) {
   if (!isSupabaseConfigured()) {
@@ -22,7 +24,8 @@ export async function GET(
   }
 
   const { eventId } = await context.params;
-  const { supabase, user } = await requestUser(_request);
+  const viewerLocale = viewerLocaleFromRequest(request);
+  const { supabase, user } = await requestUser(request);
   if (!supabase) {
     return NextResponse.json({ takesByAthlete: {} as Record<string, SummaryTake[]> });
   }
@@ -30,7 +33,9 @@ export async function GET(
   const [{ data: comments }, { data: ratings }] = await Promise.all([
     supabase
       .from("comments")
-      .select("id, athlete_id, author, body, scores, created_at, user_id, parent_id, hidden, moderation_status")
+      .select(
+        "id, athlete_id, author, body, body_translations, scores, created_at, user_id, parent_id, hidden, moderation_status",
+      )
       .eq("event_id", eventId)
       .is("parent_id", null)
       .order("created_at", { ascending: false })
@@ -60,6 +65,23 @@ export async function GET(
     }
   }
 
+  const visibleCommentRows = (comments ?? []).filter(
+    (c) =>
+      c.athlete_id &&
+      !c.hidden &&
+      (!c.moderation_status || c.moderation_status === "approved"),
+  );
+  const localized = await localizeCommentBodies(
+    visibleCommentRows.map((c) => ({
+      id: c.id,
+      body: c.body,
+      user_id: c.user_id,
+      body_translations: c.body_translations,
+    })),
+    viewerLocale,
+    user?.id,
+  );
+
   const byAthlete = new Map<string, SummaryTake[]>();
 
   const push = (athleteId: string, row: SummaryTake) => {
@@ -68,13 +90,12 @@ export async function GET(
     byAthlete.set(athleteId, list);
   };
 
-  for (const c of comments ?? []) {
-    if (!c.athlete_id || c.hidden) continue;
-    if (c.moderation_status && c.moderation_status !== "approved") continue;
-    push(c.athlete_id, {
+  for (const c of visibleCommentRows) {
+    const loc = localized.get(c.id);
+    push(c.athlete_id!, {
       userId: c.user_id,
       author: c.author ?? profileMap.get(c.user_id) ?? "Fan",
-      body: c.body ?? undefined,
+      body: loc?.body ?? c.body ?? undefined,
       scores: (c.scores as ScoreMap | null) ?? {},
       updatedAt: c.created_at,
       isYou: user?.id === c.user_id,
