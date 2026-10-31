@@ -1,5 +1,8 @@
 import type { ScoreMap } from "@/lib/types";
 
+/** When false, daily caps and VIP checkout are off; everyone gets full five-axis ratings. */
+export const VIP_BILLING_ENABLED = false;
+
 export const FREE_FULL_RATINGS_PER_DAY = 5;
 export const VIP_RATING_WEIGHT = 2;
 export const STANDARD_RATING_WEIGHT = 1;

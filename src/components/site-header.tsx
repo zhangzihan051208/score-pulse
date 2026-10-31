@@ -8,6 +8,7 @@ import { LocaleSwitcher } from "@/components/locale-switcher";
 import { Input } from "@/components/ui/input";
 import { useI18n } from "@/i18n/use-i18n";
 import { SPORTS } from "@/lib/types";
+import { VIP_BILLING_ENABLED } from "@/lib/vip";
 import { cn } from "cn";
 
 function NavLink({
@@ -87,11 +88,13 @@ export function SiteHeader() {
               label={t.nav.profile}
               active={pathname.startsWith("/profile") && !pathname.startsWith("/profile/vip")}
             />
-            <NavLink
-              href="/profile/vip"
-              label={t.nav.vip}
-              active={pathname.startsWith("/profile/vip")}
-            />
+            {VIP_BILLING_ENABLED ? (
+              <NavLink
+                href="/profile/vip"
+                label={t.nav.vip}
+                active={pathname.startsWith("/profile/vip")}
+              />
+            ) : null}
             <NavLink
               href="/rankings"
               label={t.nav.rankings}

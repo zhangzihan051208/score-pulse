@@ -1,5 +1,6 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { createContext, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { VIP_BILLING_ENABLED } from "./vip-config";
 import {
   deleteCloudAccount,
   favoritesFromCloud,
@@ -391,6 +392,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
           return { ...current, favorites };
         }),
       fullLeft: () => {
+        if (!VIP_BILLING_ENABLED) return 9999;
         if (session.vip) return FREE_FULL_RATINGS;
         const start = dayStartIso();
         const used = session.ratings.filter((rating) => rating.mode === "full" && rating.at >= start).length;

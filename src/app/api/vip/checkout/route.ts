@@ -1,9 +1,13 @@
 import { createMonthlyCheckout } from "@/lib/vip-billing";
 import { requestUser } from "@/lib/supabase/request-user";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
+import { VIP_BILLING_ENABLED } from "@/lib/vip";
 import { NextResponse } from "next/server";
 
 export async function POST(request: Request) {
+  if (!VIP_BILLING_ENABLED) {
+    return NextResponse.json({ error: "vip_disabled" }, { status: 503 });
+  }
   if (!isSupabaseConfigured()) {
     return NextResponse.json({ error: "supabase_not_configured" }, { status: 503 });
   }

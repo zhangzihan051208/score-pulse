@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { VIP_BILLING_ENABLED } from "@/lib/vip";
 import { useI18n } from "@/i18n/use-i18n";
 
 export function SiteFooter() {
@@ -32,9 +33,11 @@ export function SiteFooter() {
           <Link href="/profile" className="hover:text-white">
             {t.nav.profile}
           </Link>
-          <Link href="/profile/vip" className="hover:text-white">
-            {t.nav.vip}
-          </Link>
+          {VIP_BILLING_ENABLED ? (
+            <Link href="/profile/vip" className="hover:text-white">
+              {t.nav.vip}
+            </Link>
+          ) : null}
           <Link href="/search" className="hover:text-white">
             {t.nav.search}
           </Link>

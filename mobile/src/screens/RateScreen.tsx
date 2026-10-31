@@ -8,6 +8,7 @@ import { useLiveJson, type PlayerThread } from "../live";
 import { useLocale } from "../i18n";
 import type { RootStackParamList } from "../navigation";
 import { useSession } from "../store";
+import { VIP_BILLING_ENABLED } from "../vip-config";
 import { colors, ui } from "../ui";
 
 export function RateScreen({ route }: NativeStackScreenProps<RootStackParamList, "Rate">) {
@@ -21,7 +22,7 @@ export function RateScreen({ route }: NativeStackScreenProps<RootStackParamList,
       : null;
   const thread = useLiveJson<PlayerThread>(threadPath, session.accessToken);
   const dims = player ? Object.keys(player.scores) : [];
-  const full = session.fullLeft() > 0;
+  const full = VIP_BILLING_ENABLED ? session.fullLeft() > 0 : true;
   const [scores, setScores] = useState<Record<string, number>>(() =>
     Object.fromEntries(dims.map((id) => [id, Math.round(player?.scores[id] ?? 7)])),
   );

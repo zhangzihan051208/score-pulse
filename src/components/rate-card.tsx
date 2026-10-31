@@ -40,6 +40,7 @@ import {
 import { dimensionIds } from "@/lib/position-ratings";
 import {
   FREE_FULL_RATINGS_PER_DAY,
+  VIP_BILLING_ENABLED,
   isUniformOverallScores,
   scoresFromOverall,
   type RatingMode,
@@ -185,6 +186,7 @@ export function RateCard({
     !isUniformOverallScores(mineScores!, [...dims]);
 
   const allowsFullDimensions =
+    !VIP_BILLING_ENABLED ||
     !vipCloud ||
     !cloudPost ||
     quota.isVip ||
@@ -348,7 +350,7 @@ export function RateCard({
           });
         }}
       >
-        {cloudPost && user && vipCloud && !quota.isVip ? (
+        {VIP_BILLING_ENABLED && cloudPost && user && vipCloud && !quota.isVip ? (
           <p className="rounded-lg border border-dashed bg-muted/40 px-3 py-2 text-xs text-muted-foreground">
             {allowsFullDimensions
               ? t.rate.overallOnlyHint.replace(
@@ -363,7 +365,7 @@ export function RateCard({
             </Link>
           </p>
         ) : null}
-        {cloudPost && user && quota.isVip ? (
+        {VIP_BILLING_ENABLED && cloudPost && user && quota.isVip ? (
           <p className="text-xs text-muted-foreground">{t.rate.vipWeightHint}</p>
         ) : null}
 
@@ -374,7 +376,7 @@ export function RateCard({
                 ? t.rate.yourScores
                 : t.rate.overallOnly}
             </h2>
-            {allowsFullDimensions && !quota.isVip && cloudPost && user ? (
+            {VIP_BILLING_ENABLED && allowsFullDimensions && !quota.isVip && cloudPost && user ? (
               <div className="flex gap-1 rounded-lg border p-0.5 text-xs">
                 <button
                   type="button"
