@@ -162,9 +162,9 @@ export function BoardPage({
                 </section>
               ))}
             </div>
-          ) : list.length === 0 ? (
+          ) : list.length === 0 && !showLiveBoard ? (
             <p className="rounded-xl border border-dashed px-4 py-12 text-center text-sm text-muted-foreground">
-              {isEsports ? t.esports.empty : showLiveBoard ? t.home.liveEmpty : t.board.empty}
+              {isEsports ? t.esports.empty : t.board.empty}
             </p>
           ) : (
             <StatusEventList
@@ -241,25 +241,16 @@ function BoardEventCard({
             {formatWhen(event.startAt, locale)}
           </span>
         </Link>
-        {event.status === "live" || event.status === "ended" ? (
-          <MatchScoreboard
-            event={event}
-            size="sm"
-            matchHref={`/events/${event.slug}`}
-            playerCount={event.performances.length}
-          />
-        ) : (
-          <Link href={`/events/${event.slug}`} className="font-semibold hover:underline">
-            {tx(event.title, locale)}
-          </Link>
-        )}
-        <Link
-          href={`/events/${event.slug}`}
-          className="mt-2 block text-sm text-muted-foreground hover:text-foreground"
-        >
+        <MatchScoreboard
+          event={event}
+          size="sm"
+          matchHref={`/events/${event.slug}`}
+          playerCount={event.performances.length}
+        />
+        <p className="mt-2 text-sm text-muted-foreground">
           {tx(event.subtitle, locale)}
-          {event.live ? ` · ${event.performances.length} ${t.home.players}` : ""}
-        </Link>
+          {` · ${event.performances.length} ${t.home.players}`}
+        </p>
       </div>
       <div className="border-t px-3 py-3">
         <EventSpotlightGrid event={event} state={state} compact />

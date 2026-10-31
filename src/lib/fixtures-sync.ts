@@ -30,7 +30,7 @@ import {
   tsdbEventBelongsToLeague,
   type LeagueConfig,
 } from "@/lib/leagues";
-import { fillMissingTeamLogos } from "@/lib/team-badges";
+import { applyKnownCrests, fillMissingTeamLogos } from "@/lib/team-badges";
 import { enrichTeamSearchHit } from "@/lib/team-league";
 import { matchSearchBoost } from "@/lib/team-popularity";
 import {
@@ -88,12 +88,21 @@ async function enrichRowsLineups(
   if (!admin || getDegradedMode().cacheOnly) return rows;
 
   const byId = new Map(rows.map((r) => [r.id_event, r]));
-  const candidates = rows.filter(rowNeedsLineupEnrich).slice(0, maxItems);
+  const rank = (row: LiveFixtureRow) => {
+    const status = effectiveFixtureStatus(row);
+    if (status === "live") return 0;
+    if (status === "ended") return 1;
+    return 2;
+  };
+  const candidates = rows
+    .filter(rowNeedsLineupEnrich)
+    .sort((a, b) => rank(a) - rank(b))
+    .slice(0, maxItems);
 
-  for (const row of candidates) {
+  await mapWithConcurrency(candidates, 4, async (row) => {
     const ev = row.raw as unknown as TsdbEvent;
     const sport = row.sport as "nba" | "soccer";
-    if (sport !== "nba" && sport !== "soccer") continue;
+    if (sport !== "nba" && sport !== "soccer") return;
     try {
       const lineup = await resolvePlayersForEvent(
         {
@@ -104,7 +113,7 @@ async function enrichRowsLineups(
         },
         sport,
       );
-      if (lineup.length === 0) continue;
+      if (lineup.length === 0) return;
       const updated: LiveFixtureRow = {
         ...row,
         lineup,
@@ -118,7 +127,7 @@ async function enrichRowsLineups(
     } catch {
       /* try next fixture */
     }
-  }
+  });
 
   return rows.map((r) => byId.get(r.id_event) ?? r);
 }
@@ -279,7 +288,7 @@ function parseFixtureDate(date: string | null | undefined): number | null {
 /** Whether this row should receive a background roster fetch. */
 export function shouldEnrichFixtureRow(row: LiveFixtureRow): boolean {
   if (rowHasLineup(row)) return false;
-  const status = mapTsdbStatus(row.str_status ?? undefined);
+  const status = effectiveFixtureStatus(row);
   if (status === "live") return true;
   const t = parseFixtureDate(row.date_event);
   if (t == null) return false;
@@ -689,35 +698,41 @@ async function fetchFixtureRows(
   return [];
 }
 
-export async function listFixtures(
+async function loadFixturesForSports(
   sports: string[],
-  limit = 12,
+  limit: number,
   leagueSlug?: string,
 ) {
   const admin = createServiceClient();
   if (!admin) return [] as FixtureRow[];
 
   const leagueFilter = leagueSlug ? getLeagueBySlug(leagueSlug) : undefined;
-
   const since = new Date(Date.now() - ENDED_VISIBLE_DAYS * 86_400_000)
     .toISOString()
     .slice(0, 10);
   const until = new Date(Date.now() + UPCOMING_VISIBLE_DAYS * 86_400_000)
     .toISOString()
     .slice(0, 10);
-  const data = await fetchFixtureRows((select) =>
-    admin
-      .from("sportsdb_fixtures")
-      .select(select)
-      .in("sport", sports)
-      .gte("date_event", since)
-      .lte("date_event", until)
-      .order("date_event", { ascending: false })
-      .limit(Math.min(240, Math.max(limit * 2, 80)))
-      .then((r) => ({ data: r.data, error: r.error })),
+  const perSport = Math.max(Math.ceil(limit / Math.max(sports.length, 1)), 16);
+
+  const chunks = await Promise.all(
+    sports.map((sport) =>
+      fetchFixtureRows((select) =>
+        admin
+          .from("sportsdb_fixtures")
+          .select(select)
+          .eq("sport", sport)
+          .gte("date_event", since)
+          .lte("date_event", until)
+          .order("date_event", { ascending: false })
+          .limit(Math.min(180, Math.max(perSport * 3, 60)))
+          .then((r) => ({ data: r.data, error: r.error })),
+      ),
+    ),
   );
-  if (!data.length) return [];
-  const filtered = data
+
+  const filtered = chunks
+    .flat()
     .map((row) => hydrateFixtureRow(row))
     .filter((row) => isLiveLeagueRow(row))
     .filter((row) => isVisibleFixtureRow(row))
@@ -737,7 +752,46 @@ export async function listFixtures(
     }
     return (a.date_event ?? "").localeCompare(b.date_event ?? "");
   });
-  return balanceFixturesByStatus(filtered, limit);
+
+  if (sports.length <= 1) return balanceFixturesByStatus(filtered, limit);
+
+  const share = Math.ceil(limit / sports.length);
+  const picked: FixtureRow[] = [];
+  for (const sport of sports) {
+    const mine = filtered.filter((row) => row.sport === sport);
+    picked.push(...balanceFixturesByStatus(mine, share));
+  }
+  return picked.slice(0, limit);
+}
+
+function withTimeout<T>(work: Promise<T>, ms: number, fallback: T): Promise<T> {
+  return new Promise((resolve) => {
+    const timer = setTimeout(() => resolve(fallback), ms);
+    work.then(
+      (value) => {
+        clearTimeout(timer);
+        resolve(value);
+      },
+      () => {
+        clearTimeout(timer);
+        resolve(fallback);
+      },
+    );
+  });
+}
+
+export async function listFixtures(
+  sports: string[],
+  limit = 12,
+  leagueSlug?: string,
+) {
+  let rows = await loadFixturesForSports(sports, limit, leagueSlug);
+  const missing = sports.filter((sport) => !rows.some((row) => row.sport === sport));
+  if (missing.length > 0 && !getDegradedMode().cacheOnly) {
+    await withTimeout(syncFixturesFast(true), 7_000, { ok: true as const, count: 0 });
+    rows = await loadFixturesForSports(sports, limit, leagueSlug);
+  }
+  return rows;
 }
 
 export async function listLiveMatchEvents(
@@ -747,10 +801,14 @@ export async function listLiveMatchEvents(
   opts?: { enrichLineups?: boolean; enrichMax?: number },
 ): Promise<MatchEvent[]> {
   let rows = await listFixtures(sports, Math.max(limit, 24), leagueSlug);
-  if (opts?.enrichLineups) {
-    rows = await enrichRowsLineups(rows, opts.enrichMax ?? Math.min(limit, 12));
+  if (opts?.enrichLineups !== false) {
+    rows = await withTimeout(
+      enrichRowsLineups(rows, opts?.enrichMax ?? Math.min(limit, 8)),
+      5_000,
+      rows,
+    );
   }
-  const events = rows
+  let events = rows
     .map((r) => fixtureRowToMatchEvent(r))
     .filter((e): e is MatchEvent => Boolean(e))
     .filter((e) => isVisibleMatchStatus(e.status, e.startAt));
@@ -760,9 +818,9 @@ export async function listLiveMatchEvents(
     if (a.status === "ended") return b.startAt.localeCompare(a.startAt);
     return a.startAt.localeCompare(b.startAt);
   });
-  // Stored badge URLs are already copied onto the row. Looking the rest up
-  // here keeps the list response open until TheSportsDB answers.
-  return events.slice(0, limit);
+  events = applyKnownCrests(events.slice(0, limit));
+  events = await withTimeout(fillMissingTeamLogos(events), 4_000, events);
+  return events;
 }
 
 export async function getLiveMatchBySlug(slug: string) {

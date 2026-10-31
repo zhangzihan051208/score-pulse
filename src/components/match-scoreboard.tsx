@@ -85,7 +85,7 @@ export function MatchScoreboard({
   const crestSize = size === "lg" ? "lg" : size === "sm" ? "sm" : "md";
 
   function TeamName({ side, name, win }: { side: "home" | "away"; name: string; win: boolean }) {
-    const href = teamHref(event as MatchEvent, side);
+    const href = matchHref ? null : teamHref(event as MatchEvent, side);
     const inner = (
       <span
         className={cn(
@@ -150,9 +150,7 @@ export function MatchScoreboard({
         </span>
       ) : null}
       {matchHref && size !== "lg" ? (
-        <Link
-          href={matchHref}
-          aria-label={rateLabel}
+        <span
           className={cn(
             buttonVariants({
               variant: inverted ? "secondary" : "default",
@@ -163,16 +161,16 @@ export function MatchScoreboard({
           )}
         >
           {rateLabel}
-        </Link>
+        </span>
       ) : null}
     </>
   );
 
-  return (
+  const board = (
     <div
       className={cn(
         inverted && "text-white [&_.text-muted-foreground]:text-white/65",
-        className,
+        !matchHref && className,
       )}
     >
       <div className="mb-2 grid grid-cols-[1fr_auto_1fr] items-end gap-3">
@@ -200,9 +198,7 @@ export function MatchScoreboard({
       </div>
       {matchHref && size === "lg" ? (
         <div className="col-span-3 flex justify-center pt-2">
-          <Link
-            href={matchHref}
-            aria-label={rateLabel}
+          <span
             className={cn(
               buttonVariants({
                 variant: inverted ? "secondary" : "default",
@@ -212,10 +208,22 @@ export function MatchScoreboard({
             )}
           >
             {rateLabel}
-          </Link>
+          </span>
         </div>
       ) : null}
       </div>
     </div>
+  );
+
+  if (!matchHref) return board;
+
+  return (
+    <Link
+      href={matchHref}
+      aria-label={rateLabel}
+      className={cn("block rounded-md outline-none hover:opacity-95", className)}
+    >
+      {board}
+    </Link>
   );
 }
