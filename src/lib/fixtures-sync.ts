@@ -44,6 +44,9 @@ import {
 } from "@/lib/service-degraded";
 import {
   fixtureRowStatus,
+  balanceFixturesByStatus,
+  effectiveFixtureStatus,
+  ENDED_VISIBLE_DAYS,
   isVisibleFixtureRow,
   isVisibleMatchStatus,
   shouldPruneFixtureRow,
@@ -706,26 +709,55 @@ export async function listFixtures(
       .then((r) => ({ data: r.data, error: r.error })),
   );
   if (!data.length) return [];
-  const filtered = data
-    .map((row) => hydrateFixtureRow(row))
-    .filter((row) => isLiveLeagueRow(row))
-    .filter((row) => isVisibleFixtureRow(row))
-    .filter((row) => {
-      if (!leagueFilter) return true;
-      return (
-        row.league_id === leagueFilter.tsdbId ||
-        leagueMatchesRow(row)?.tsdbId === leagueFilter.tsdbId
-      );
-    });
+  const hydrateVisible = (rawRows: Record<string, unknown>[]) =>
+    rawRows
+      .map((row) => hydrateFixtureRow(row))
+      .filter((row) => isLiveLeagueRow(row))
+      .filter((row) => isVisibleFixtureRow(row))
+      .filter((row) => {
+        if (!leagueFilter) return true;
+        return (
+          row.league_id === leagueFilter.tsdbId ||
+          leagueMatchesRow(row)?.tsdbId === leagueFilter.tsdbId
+        );
+      });
+
+  let filtered = hydrateVisible(data);
+  const endedCount = filtered.filter(
+    (row) => effectiveFixtureStatus(row) === "ended",
+  ).length;
+  if (endedCount < 10) {
+    const since = new Date(Date.now() - ENDED_VISIBLE_DAYS * 86_400_000)
+      .toISOString()
+      .slice(0, 10);
+    const extra = await fetchFixtureRows((select) =>
+      admin
+        .from("sportsdb_fixtures")
+        .select(select)
+        .in("sport", sports)
+        .gte("date_event", since)
+        .order("date_event", { ascending: false })
+        .limit(400)
+        .then((r) => ({ data: r.data, error: r.error })),
+    );
+    if (extra.length) {
+      const byId = new Map(filtered.map((row) => [row.id_event, row]));
+      for (const row of hydrateVisible(extra)) {
+        byId.set(row.id_event, row);
+      }
+      filtered = [...byId.values()];
+    }
+  }
   filtered.sort((a, b) => {
-    const sr = statusRank(fixtureRowStatus(a)) - statusRank(fixtureRowStatus(b));
+    const sr =
+      statusRank(effectiveFixtureStatus(a)) - statusRank(effectiveFixtureStatus(b));
     if (sr !== 0) return sr;
-    if (fixtureRowStatus(a) === "ended") {
+    if (effectiveFixtureStatus(a) === "ended") {
       return (b.date_event ?? "").localeCompare(a.date_event ?? "");
     }
     return (a.date_event ?? "").localeCompare(b.date_event ?? "");
   });
-  return filtered.slice(0, limit);
+  return balanceFixturesByStatus(filtered, limit);
 }
 
 export async function listLiveMatchEvents(
