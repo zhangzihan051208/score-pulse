@@ -146,6 +146,21 @@ function parseTsdbScore(value: string | undefined | null): number | null {
   return Number.isFinite(n) ? n : null;
 }
 
+/** Keep only the fields the app reads. The full provider payload was filling the database. */
+function slimFixtureRaw(
+  ev: Pick<TsdbEvent, "idHomeTeam" | "idAwayTeam" | "strHomeTeamBadge" | "strAwayTeamBadge">,
+  extras: { slug: string; lineup?: StoredLineupPlayer[] },
+): Record<string, unknown> {
+  return {
+    sideline_slug: extras.slug,
+    idHomeTeam: ev.idHomeTeam,
+    idAwayTeam: ev.idAwayTeam,
+    strHomeTeamBadge: ev.strHomeTeamBadge,
+    strAwayTeamBadge: ev.strAwayTeamBadge,
+    lineup: extras.lineup ?? [],
+  };
+}
+
 function rowFromEvent(sport: "nba" | "soccer", leagueId: string, ev: TsdbEvent) {
   const home = ev.strHomeTeam ?? "Home";
   const away = ev.strAwayTeam ?? "Away";
@@ -164,13 +179,7 @@ function rowFromEvent(sport: "nba" | "soccer", leagueId: string, ev: TsdbEvent) 
     date_event: ev.dateEvent ?? null,
     str_time: ev.strTime ?? null,
     str_thumb: ev.strThumb ?? null,
-    raw: {
-      ...(ev as unknown as Record<string, unknown>),
-      sideline_slug: slug,
-      idHomeTeam: ev.idHomeTeam,
-      idAwayTeam: ev.idAwayTeam,
-      lineup: [] as StoredLineupPlayer[],
-    },
+    raw: slimFixtureRaw(ev, { slug }),
     synced_at: new Date().toISOString(),
   };
 }
@@ -414,19 +423,25 @@ async function applyLineupEnrichToRow(
       sport,
     );
     if (lineup.length === 0) return false;
-    const enrichedRaw = {
-      ...(row.raw as Record<string, unknown>),
-      lineup,
-      sideline_slug:
-        (row.raw as Record<string, unknown> | undefined)?.sideline_slug ??
-        fixtureSlug(
-          row.str_home_team ?? "Home",
-          row.str_away_team ?? "Away",
-          row.date_event,
-        ),
-      idHomeTeam: ev.idHomeTeam,
-      idAwayTeam: ev.idAwayTeam,
-    };
+    const prevRaw = (row.raw as Record<string, unknown> | undefined) ?? {};
+    const enrichedRaw = slimFixtureRaw(
+      {
+        idHomeTeam: (ev.idHomeTeam ?? prevRaw.idHomeTeam) as string | undefined,
+        idAwayTeam: (ev.idAwayTeam ?? prevRaw.idAwayTeam) as string | undefined,
+        strHomeTeamBadge: prevRaw.strHomeTeamBadge as string | undefined,
+        strAwayTeamBadge: prevRaw.strAwayTeamBadge as string | undefined,
+      },
+      {
+        slug:
+          (prevRaw.sideline_slug as string | undefined) ??
+          fixtureSlug(
+            row.str_home_team ?? "Home",
+            row.str_away_team ?? "Away",
+            row.date_event,
+          ),
+        lineup,
+      },
+    );
     const patch = {
       raw: enrichedRaw,
       synced_at: new Date().toISOString(),
