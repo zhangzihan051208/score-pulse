@@ -362,6 +362,9 @@ export type Dict = {
     squadRatingsLeadCompact: string;
     squadPlayers: string;
     squadEmpty: string;
+    lineupLoading: string;
+    lineupMissingShort: string;
+    lineupMissing: string;
     viewPlayer: string;
     matchupsTab: string;
     matchupsLead: string;

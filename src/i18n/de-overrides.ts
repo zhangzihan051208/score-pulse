@@ -368,6 +368,10 @@ export const deOverrides = {
     squadRatingsLeadCompact: "Spieler antippen für Details. Teams unten wechseln.",
     squadPlayers: "Spieler",
     squadEmpty: "Noch kein Lineup für diese Seite.",
+    lineupLoading: "Aufstellung wird geladen",
+    lineupMissingShort: "Aufstellung fehlt",
+    lineupMissing:
+      "Keine Spieler zum Bewerten. Beendete Spiele nutzen zuerst die offizielle Aufstellung, sonst die Kader. Setze THESPORTSDB_API_KEY auf einen Premium-Schlüssel (nicht den Gratis-Key 123) und öffne das Spiel erneut.",
     viewPlayer: "Karte ansehen",
     matchupsTab: "Positions-Duels",
     matchupsLead: "Alle Heim-vs-Auswärts-Paare nach Rolle — Radar-Overlay öffnen.",

@@ -249,7 +249,15 @@ function BoardEventCard({
         />
         <p className="mt-2 text-sm text-muted-foreground">
           {tx(event.subtitle, locale)}
-          {` · ${event.performances.length} ${t.home.players}`}
+          {" · "}
+          {event.lineupState === "loading" ||
+          ((event.status === "ended" || event.status === "live") &&
+            event.performances.length === 0 &&
+            event.lineupState !== "missing")
+            ? t.event.lineupLoading
+            : event.lineupState === "missing"
+              ? t.event.lineupMissingShort
+              : `${event.performances.length} ${t.home.players}`}
         </p>
       </div>
       <div className="border-t px-3 py-3">

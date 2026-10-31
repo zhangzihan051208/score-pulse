@@ -403,6 +403,10 @@ const en: Dict = {
       squadRatingsLeadCompact: "Tap a player for full grades and every take. Switch teams below.",
       squadPlayers: "players",
       squadEmpty: "No lineup for this side yet.",
+      lineupLoading: "Loading lineup",
+      lineupMissingShort: "Lineup unavailable",
+      lineupMissing:
+        "No players came back to rate. Ended matches ask for the official lineup first, then each club's squad. Set THESPORTSDB_API_KEY to a TheSportsDB premium key (not the free key 123) and reopen this match. If it still fails, this event has no home or away team id in the feed.",
       viewPlayer: "View card",
       matchupsTab: "Position matchups",
       matchupsLead: "Every paired role on home vs away — open overlay charts from each row.",

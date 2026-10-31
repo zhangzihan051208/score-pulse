@@ -149,9 +149,19 @@ export function EventRosterColumns({
           <h3 className="font-semibold leading-tight">{activeTitle}</h3>
         </div>
         {entries.length === 0 ? (
-          <p className="px-3 py-8 text-center text-sm text-muted-foreground">
-            {t.event.squadEmpty}
-          </p>
+          event.lineupState === "missing" ? (
+            <p className="px-3 py-8 text-center text-sm leading-6 text-muted-foreground">
+              {t.event.lineupMissing}
+            </p>
+          ) : event.status === "ended" || event.status === "live" ? (
+            <p className="px-3 py-8 text-center text-sm text-muted-foreground" role="status">
+              {t.event.lineupLoading}
+            </p>
+          ) : (
+            <p className="px-3 py-8 text-center text-sm text-muted-foreground">
+              {t.event.squadEmpty}
+            </p>
+          )
         ) : (
           <ul className="space-y-2 p-3">
             {entries.map((entry) => (

@@ -106,9 +106,7 @@ export function leagueMatchesRow(row: {
   const name = row.str_league ?? "";
   if (row.league_id) {
     const hit = byTsdbId.get(row.league_id);
-    if (hit && hit.sport === row.sport) {
-      if (!name || leagueNameMatches(hit, name)) return hit;
-    }
+    if (hit && hit.sport === row.sport) return hit;
   }
   for (const league of SIDELINE_LEAGUES) {
     if (league.sport !== row.sport) continue;
@@ -133,10 +131,6 @@ export function tsdbEventBelongsToLeague(ev: {
   strLeague?: string;
   strSport?: string;
 }, league: LeagueConfig): boolean {
-  const name = ev.strLeague ?? "";
-  if (ev.idLeague === league.tsdbId) {
-    if (!name) return true;
-    return leagueNameMatches(league, name);
-  }
-  return leagueNameMatches(league, name);
+  if (ev.idLeague && ev.idLeague !== league.tsdbId) return false;
+  return true;
 }

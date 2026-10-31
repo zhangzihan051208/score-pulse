@@ -22,7 +22,7 @@ export default async function EventPage({
   const { slug } = await params;
   const event = await resolveEventBySlug(slug);
   if (!event) notFound();
-  if (event.live) {
+  if (event.sport === "nba" || event.sport === "soccer" || event.live) {
     return <LiveEventPage slug={slug} initial={event} />;
   }
   const { EventThread } = await import("@/components/event-thread");

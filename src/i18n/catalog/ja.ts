@@ -397,6 +397,10 @@ const ja: Dict = {
       squadRatingsLeadCompact: "選手をタップで詳細採点と全コメント。下でチーム切替。",
       squadPlayers: "人",
       squadEmpty: "この側のメンバーはまだありません。",
+      lineupLoading: "メンバーを読み込み中",
+      lineupMissingShort: "メンバーを取得できません",
+      lineupMissing:
+        "採点できる選手を取得できませんでした。終了試合は公式スタメンのあと、両クラブの名簿を使います。THESPORTSDB_API_KEY に TheSportsDB のプレミアムキー（無料の 123 以外）を設定して、試合を開き直してください。",
       viewPlayer: "カードを見る",
       matchupsTab: "全ポジション対位",
       matchupsLead: "ホームとアウェイの同ポジションペア一覧。重ねレーダーへ。",
