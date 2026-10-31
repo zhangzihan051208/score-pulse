@@ -54,7 +54,11 @@ export function useLiveEvents(
           events?: MatchEvent[];
           syncedAt?: string;
         };
-        setEvents(data.events ?? []);
+        setEvents((prev) => {
+          const next = data.events ?? [];
+          if (next.length === 0 && prev.length > 0) return prev;
+          return next;
+        });
         setSyncedAt(data.syncedAt ?? null);
       } catch {
         /* keep the rows already on screen */

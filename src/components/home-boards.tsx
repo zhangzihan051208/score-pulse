@@ -210,17 +210,10 @@ function LiveSportBlock({
   const { status, setStatus, visible } = useMatchStatus(list);
   const featured = visible[0];
 
-  if (list.length === 0) {
-    if (loading) {
-      return (
-        <section className="rounded-xl border bg-card">
-          <LoadingView message="page" variant="section" />
-        </section>
-      );
-    }
+  if (list.length === 0 && loading) {
     return (
-      <section className="rounded-xl border border-dashed bg-card px-3 py-6 text-sm text-muted-foreground">
-        {t.home.liveEmpty}
+      <section className="rounded-xl border bg-card">
+        <LoadingView message="page" variant="section" />
       </section>
     );
   }
@@ -283,28 +276,22 @@ function FeaturedEventRow({
           {formatWhen(event.startAt, locale as "en")}
         </span>
       </Link>
-      {event.status === "live" || event.status === "ended" ? (
-        <div className="mt-2">
-          <MatchScoreboard
-            event={event}
-            size="sm"
-            matchHref={matchHref}
-            playerCount={event.performances.length}
-          />
-        </div>
-      ) : (
-        <Link href={matchHref} className="mt-1 block font-medium hover:underline">
-          {tx(event.title, locale as "en")}
-        </Link>
-      )}
+      <div className="mt-2">
+        <MatchScoreboard
+          event={event}
+          size="sm"
+          matchHref={matchHref}
+          playerCount={event.performances.length}
+        />
+      </div>
       <Link
         href={matchHref}
         className="mt-1 line-clamp-2 block text-sm text-muted-foreground hover:text-foreground"
       >
         {event.leagueSlug
           ? leagueLabel(locale as "en", event.leagueSlug)
-          : tx(event.subtitle, locale as "en")}{" "}
-        · {event.performances.length} {t.home.players}
+          : tx(event.subtitle, locale as "en")}
+        {` · ${event.performances.length} ${t.home.players}`}
       </Link>
     </div>
   );

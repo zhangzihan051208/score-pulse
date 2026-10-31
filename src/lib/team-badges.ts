@@ -11,7 +11,7 @@ import type { ReputationCard } from "@/lib/reputation/types";
 import { unstable_cache } from "next/cache";
 
 const BADGE_CACHE_MS = 86_400_000;
-const MAX_LOOKUPS_PER_CALL = 12;
+const MAX_LOOKUPS_PER_CALL = 16;
 
 const badgeByTeamId = new Map<string, { url: string; at: number }>();
 
@@ -49,6 +49,34 @@ async function lookupBadge(teamId: string): Promise<string | undefined> {
   const url = pickTsdbTeamBadge(team);
   if (url) badgeByTeamId.set(teamId, { url, at: Date.now() });
   return url;
+}
+
+const knownCrests = honorBadgeUrls as Record<string, string>;
+
+/** Crest from the bundled club list, matched on a normalized name. */
+export function knownCrestUrl(name: string | undefined): string | undefined {
+  if (!name) return undefined;
+  const n = normTeamName(name);
+  if (!n) return undefined;
+  if (knownCrests[n]) return knownCrests[n];
+  let bestKey = "";
+  let bestUrl: string | undefined;
+  for (const [key, url] of Object.entries(knownCrests)) {
+    if (key.length < 4) continue;
+    const hit = n === key || n.startsWith(key) || n.endsWith(key) || n.includes(key);
+    if (!hit || key.length <= bestKey.length) continue;
+    bestKey = key;
+    bestUrl = url;
+  }
+  return bestUrl;
+}
+
+export function applyKnownCrests(events: MatchEvent[]): MatchEvent[] {
+  return events.map((event) => ({
+    ...event,
+    homeTeamLogoUrl: event.homeTeamLogoUrl || knownCrestUrl(event.homeTeamName),
+    awayTeamLogoUrl: event.awayTeamLogoUrl || knownCrestUrl(event.awayTeamName),
+  }));
 }
 
 /** Fill missing home/away logo URLs from TSDB team lookup (budget-capped). */
