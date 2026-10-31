@@ -17,6 +17,7 @@ export const VIP_GOOGLE_PRODUCT_ID = "grandstand_vip_monthly";
 export type RatingMode = "full" | "overall_only";
 
 export function isVipActive(vipUntil: string | null | undefined): boolean {
+  if (!VIP_BILLING_ENABLED) return false;
   if (!vipUntil) return false;
   return new Date(vipUntil).getTime() > Date.now();
 }
