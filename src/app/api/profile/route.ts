@@ -14,6 +14,7 @@ function rowToProfile(row: ProfileRow) {
     avatarUrl: row.avatar_url?.trim() || null,
     bio: row.bio?.trim() || null,
     favoriteTeams: normalizeFavorites(row.favorite_teams),
+    hidePrimaryCrest: Boolean(row.hide_primary_crest),
     vipUntil,
     isVip: isVipActive(vipUntil),
     onboardingCompletedAt: row.onboarding_completed_at ?? null,
@@ -52,6 +53,7 @@ export async function GET(request: Request) {
         avatarUrl: null,
         bio: null,
         favoriteTeams: {},
+        hidePrimaryCrest: false,
         vipUntil: null,
         isVip: false,
         onboardingCompletedAt: null,
@@ -68,6 +70,7 @@ type PatchBody = {
   avatarUrl?: string | null;
   bio?: string | null;
   favoriteTeams?: Record<string, unknown>;
+  hidePrimaryCrest?: boolean;
   completeOnboarding?: boolean;
 };
 
@@ -118,6 +121,9 @@ export async function PATCH(request: Request) {
   if (body.bio !== undefined) patch.bio = bio ?? null;
   if (body.favoriteTeams !== undefined) {
     patch.favorite_teams = normalizeFavorites(body.favoriteTeams);
+  }
+  if (body.hidePrimaryCrest !== undefined) {
+    patch.hide_primary_crest = Boolean(body.hidePrimaryCrest);
   }
   if (body.completeOnboarding === true) {
     patch.onboarding_completed_at = new Date().toISOString();

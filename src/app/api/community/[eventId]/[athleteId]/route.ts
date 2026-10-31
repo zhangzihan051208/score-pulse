@@ -7,6 +7,7 @@ import {
   localizeCommentBodies,
 } from "@/lib/comment-translate";
 import { viewerLocaleFromRequest } from "@/lib/viewer-locale";
+import { crestBadgeFromProfileRow } from "@/lib/profile-crest";
 import { mergeTakes } from "@/lib/community-takes";
 import { weightedAverageScores } from "@/lib/score-aggregate";
 import {
@@ -85,14 +86,17 @@ export async function GET(
   ];
   const profileMap = new Map<string, string>();
   const vipMap = new Map<string, boolean>();
+  const crestMap = new Map<string, { url: string; name: string }>();
   if (userIds.length > 0) {
     const { data: profiles } = await supabase
       .from("profiles")
-      .select("id, display_name, vip_until")
+      .select("id, display_name, vip_until, favorite_teams, hide_primary_crest")
       .in("id", userIds);
     for (const p of profiles ?? []) {
       profileMap.set(p.id, p.display_name ?? "Fan");
       vipMap.set(p.id, isVipActive(p.vip_until));
+      const crest = crestBadgeFromProfileRow(p);
+      if (crest) crestMap.set(p.id, crest);
     }
   }
 
@@ -130,14 +134,19 @@ export async function GET(
   }));
 
   const merged = mergeTakes(ratingRows, commentRows);
-  const baseTakes = merged.map((t) => ({
-    userId: t.userId,
-    author: t.author,
-    scores: t.scores,
-    updatedAt: t.updatedAt,
-    body: t.body ?? "",
-    isYou: t.isYou,
-  }));
+  const baseTakes = merged.map((t) => {
+    const crest = crestMap.get(t.userId);
+    return {
+      userId: t.userId,
+      author: t.author,
+      scores: t.scores,
+      updatedAt: t.updatedAt,
+      body: t.body ?? "",
+      isYou: t.isYou,
+      primaryCrestUrl: crest?.url ?? null,
+      primaryCrestName: crest?.name ?? null,
+    };
+  });
 
   const commentIds = allComments.map((c) => c.id);
   const likeCountById = new Map<string, number>();

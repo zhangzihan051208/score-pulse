@@ -55,6 +55,7 @@ export type UserProfile = {
   avatarUrl: string | null;
   bio: string | null;
   favoriteTeams: FavoriteTeamsMap;
+  hidePrimaryCrest: boolean;
   vipUntil: string | null;
   isVip: boolean;
   onboardingCompletedAt: string | null;
@@ -118,6 +119,8 @@ export type SeedComment = {
   body: Localized;
   createdAt: string;
   scores?: ScoreMap;
+  primaryCrestUrl?: string;
+  primaryCrestName?: string;
 };
 
 export type UserComment = {

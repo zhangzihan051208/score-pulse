@@ -190,6 +190,8 @@ export type Dict = {
     likesStat: string;
     crestsTitle: string;
     crestsEmpty: string;
+    hidePrimaryCrestLabel: string;
+    hidePrimaryCrestHint: string;
     vipEntry: string;
     vipEntryHint: string;
     ratingsTitle: string;

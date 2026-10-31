@@ -9,6 +9,25 @@ export type ProfileTeamCrest = {
   leagueSlug?: string;
 };
 
+/** First primary club across league partitions (主页 / 评论角标用). */
+export function primaryCrestFromFavorites(
+  favorites: FavoriteTeamsMap,
+): ProfileTeamCrest | null {
+  for (const { key } of favoritePartitions()) {
+    const pair = favorites[key];
+    if (!pair?.primary) continue;
+    const { sport, leagueSlug } = parsePartition(key);
+    return {
+      partition: key,
+      role: "primary",
+      team: pair.primary,
+      sport,
+      leagueSlug,
+    };
+  }
+  return null;
+}
+
 export function crestTeamsFromFavorites(
   favorites: FavoriteTeamsMap,
 ): ProfileTeamCrest[] {

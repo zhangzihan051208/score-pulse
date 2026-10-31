@@ -213,6 +213,9 @@ const en: Dict = {
       likesStat: "Likes received",
       crestsTitle: "My teams",
       crestsEmpty: "Set primary teams to show crests here.",
+      hidePrimaryCrestLabel: "Hide primary team crest",
+      hidePrimaryCrestHint:
+        "Hides your primary club badge on your profile and on your comment cards.",
       vipEntry: "Grandstand VIP",
       vipEntryHint: "Unlimited five-axis ratings · 2× weight in averages",
       ratingsTitle: "Your rating history",

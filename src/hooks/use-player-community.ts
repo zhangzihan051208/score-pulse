@@ -91,6 +91,10 @@ export function usePlayerCommunity({
           updatedAt: c.createdAt,
           scores: c.scores,
           isYou: false as const,
+          primaryCrestUrl:
+            "primaryCrestUrl" in c ? (c.primaryCrestUrl ?? null) : null,
+          primaryCrestName:
+            "primaryCrestName" in c ? (c.primaryCrestName ?? null) : null,
         },
       ];
     });

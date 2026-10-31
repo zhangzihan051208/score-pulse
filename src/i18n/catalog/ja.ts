@@ -209,6 +209,8 @@ const ja: Dict = {
       likesStat: "いいね",
       crestsTitle: "マイチーム",
       crestsEmpty: "マイチームで設定するとエンブレムが表示されます。",
+      hidePrimaryCrestLabel: "主クラブのエンブレムを非表示",
+      hidePrimaryCrestHint: "プロフィールとコメント右上の主クラブバッジを隠します。",
       vipEntry: "Grandstand VIP",
       vipEntryHint: "五軸無制限 · 平均で 2 倍の重み",
       ratingsTitle: "採点履歴",

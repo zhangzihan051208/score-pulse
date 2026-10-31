@@ -10,6 +10,7 @@ import { overallFromScores } from "@/lib/store";
 import { averageScores } from "@/lib/score-aggregate";
 import { CommentBody } from "@/components/comment-body";
 import { CommentTakeActions } from "@/components/comment-take-actions";
+import { TeamCrest } from "@/components/team-crest";
 import type { CommunityTake } from "@/lib/community-take-types";
 import type { PositionKey, ScoreMap } from "@/lib/types";
 
@@ -148,7 +149,7 @@ export function CommunityRatingsPanel({
                 className={`rounded-lg border bg-card p-3 ${row.isYou ? "border-primary/40" : ""}`}
               >
                 <div className="flex items-start justify-between gap-2">
-                  <div>
+                  <div className="min-w-0">
                     <p className="text-sm font-medium">
                       {row.author}
                       {row.isYou ? ` · ${t.rate.you}` : ""}
@@ -157,7 +158,17 @@ export function CommunityRatingsPanel({
                       {formatWhen(row.updatedAt, locale)}
                     </time>
                   </div>
-                  <Overall value={overallFromScores(row.scores, positionKey)} />
+                  <div className="flex shrink-0 flex-col items-end gap-1">
+                    {row.primaryCrestUrl ? (
+                      <TeamCrest
+                        name={row.primaryCrestName ?? row.author}
+                        badgeUrl={row.primaryCrestUrl}
+                        size="sm"
+                        className="rounded-sm"
+                      />
+                    ) : null}
+                    <Overall value={overallFromScores(row.scores, positionKey)} />
+                  </div>
                 </div>
                 {row.body?.trim() ? (
                   <CommentBody

@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { PlayerAvatar } from "@/components/player-avatar";
 import { ProfileMyZones } from "@/components/profile-my-zones";
 import { ProfileRatingHistory } from "@/components/profile-rating-history";
+import { ProfilePrimaryCrest } from "@/components/profile-primary-crest";
 import { ProfileTeamCrests } from "@/components/profile-team-crests";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -23,6 +24,7 @@ export function ProfilePageInner() {
   const [displayName, setDisplayName] = useState("");
   const [avatarUrl, setAvatarUrl] = useState("");
   const [bio, setBio] = useState("");
+  const [hidePrimaryCrest, setHidePrimaryCrest] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -36,6 +38,7 @@ export function ProfilePageInner() {
     setDisplayName(profile.displayName);
     setAvatarUrl(profile.avatarUrl ?? "");
     setBio(profile.bio ?? "");
+    setHidePrimaryCrest(profile.hidePrimaryCrest ?? false);
   }, [profile]);
 
   useEffect(() => {
@@ -114,7 +117,16 @@ export function ProfilePageInner() {
       </Link>
 
       <div className="mt-6 flex items-center gap-4">
-        <PlayerAvatar athlete={previewAthlete} size="lg" showJerseyBadge={false} />
+        <div className="relative shrink-0">
+          <PlayerAvatar athlete={previewAthlete} size="lg" showJerseyBadge={false} />
+          {!hidePrimaryCrest && profile?.favoriteTeams ? (
+            <ProfilePrimaryCrest
+              favorites={profile.favoriteTeams}
+              size="sm"
+              className="absolute -right-1 -top-1 shadow-sm"
+            />
+          ) : null}
+        </div>
         <div className="min-w-0 flex-1">
           <p className="truncate font-semibold">{previewAthlete.name}</p>
           {profile?.isVip ? (
@@ -188,6 +200,7 @@ export function ProfilePageInner() {
             displayName,
             avatarUrl: avatarUrl.trim() || null,
             bio: bio.trim() || null,
+            hidePrimaryCrest,
           });
           setSaving(false);
           if (!result.ok) {
@@ -244,6 +257,23 @@ export function ProfilePageInner() {
           />
           <p className="text-xs text-muted-foreground">{t.profile.bioHint}</p>
         </div>
+        <label className="flex cursor-pointer items-start gap-3 rounded-lg border bg-card px-3 py-3">
+          <input
+            type="checkbox"
+            className="mt-0.5 size-4 rounded border-input"
+            checked={hidePrimaryCrest}
+            onChange={(e) => {
+              setHidePrimaryCrest(e.target.checked);
+              setSaved(false);
+            }}
+          />
+          <span className="text-sm">
+            <span className="font-medium">{t.profile.hidePrimaryCrestLabel}</span>
+            <span className="mt-0.5 block text-xs text-muted-foreground">
+              {t.profile.hidePrimaryCrestHint}
+            </span>
+          </span>
+        </label>
         {error ? <p className="text-sm text-destructive">{error}</p> : null}
         {saved ? <p className="text-sm text-primary">{t.profile.saved}</p> : null}
         <Button type="submit" className="w-full" disabled={saving}>
