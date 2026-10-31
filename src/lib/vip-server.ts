@@ -1,5 +1,6 @@
 import {
   FREE_FULL_RATINGS_PER_DAY,
+  VIP_BILLING_ENABLED,
   isVipActive,
   utcDayStartIso,
   type RatingMode,
@@ -47,6 +48,9 @@ export async function canPostFullDimensions(
   fullToday: number;
   existingMode: RatingMode | null;
 }> {
+  if (!VIP_BILLING_ENABLED) {
+    return { allowed: true, isVip: false, fullToday: 0, existingMode: null };
+  }
   const { isVip } = await fetchProfileVip(supabase, userId);
   if (isVip) {
     return { allowed: true, isVip: true, fullToday: 0, existingMode: null };
@@ -87,6 +91,16 @@ export async function buildVipQuota(
   supabase: SupabaseClient,
   userId: string,
 ): Promise<import("@/lib/types").VipQuota> {
+  if (!VIP_BILLING_ENABLED) {
+    return {
+      isVip: false,
+      vipUntil: null,
+      fullRatingsToday: 0,
+      fullRatingsLimit: 0,
+      fullRatingsRemaining: 9999,
+      canFullDimensions: true,
+    };
+  }
   const { vipUntil, isVip } = await fetchProfileVip(supabase, userId);
   const fullToday = isVip
     ? 0

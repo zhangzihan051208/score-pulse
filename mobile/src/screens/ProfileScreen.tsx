@@ -7,6 +7,7 @@ import { KickoffAlertsRow } from "./KickoffAlertsRow";
 import { useLocale } from "../i18n";
 import type { RootStackParamList } from "../navigation";
 import { useSession } from "../store";
+import { VIP_BILLING_ENABLED } from "../vip-config";
 import { colors, ui } from "../ui";
 
 export function ProfileScreen() {
@@ -38,10 +39,12 @@ export function ProfileScreen() {
         </View>
       </View>
 
-      <View style={styles.quota}>
-        <Text style={styles.quotaLabel}>{t.quota}</Text>
-        <Text style={styles.quotaValue}>{session.vip ? "VIP" : String(session.fullLeft())}</Text>
-      </View>
+      {VIP_BILLING_ENABLED ? (
+        <View style={styles.quota}>
+          <Text style={styles.quotaLabel}>{t.quota}</Text>
+          <Text style={styles.quotaValue}>{session.vip ? "VIP" : String(session.fullLeft())}</Text>
+        </View>
+      ) : null}
 
       {!session.email ? (
         <Pressable style={ui.primaryBtn} onPress={() => navigation.navigate("Login")}>
@@ -58,7 +61,9 @@ export function ProfileScreen() {
             hint: clubs.length ? clubs.slice(0, 3).join(" · ") : t.profileTeamsHint,
             onPress: () => navigation.navigate("MyTeams"),
           },
-          { label: t.vip, hint: session.vip ? "VIP" : undefined, onPress: () => navigation.navigate("Vip") },
+          ...(VIP_BILLING_ENABLED
+            ? [{ label: t.vip, hint: session.vip ? "VIP" : undefined, onPress: () => navigation.navigate("Vip") }]
+            : []),
           { label: t.history, onPress: () => navigation.navigate("Feed") },
           { label: t.privacy, onPress: () => navigation.navigate("Privacy") },
           { label: t.language, onPress: toggle },

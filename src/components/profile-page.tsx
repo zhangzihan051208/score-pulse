@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { VIP_BILLING_ENABLED } from "@/lib/vip";
 import { useEffect, useState } from "react";
 import { PlayerAvatar } from "@/components/player-avatar";
 import { ProfileMyZones } from "@/components/profile-my-zones";
@@ -163,16 +164,18 @@ export function ProfilePageInner() {
 
       <ProfileRatingHistory />
 
-      <Link
-        href="/profile/vip"
-        className="mt-6 flex items-center justify-between rounded-xl border bg-card px-4 py-3 transition-colors hover:bg-muted/50"
-      >
-        <div>
-          <p className="font-medium">{t.profile.vipEntry}</p>
-          <p className="text-xs text-muted-foreground">{t.profile.vipEntryHint}</p>
-        </div>
-        <span className="text-muted-foreground">→</span>
-      </Link>
+      {VIP_BILLING_ENABLED ? (
+        <Link
+          href="/profile/vip"
+          className="mt-6 flex items-center justify-between rounded-xl border bg-card px-4 py-3 transition-colors hover:bg-muted/50"
+        >
+          <div>
+            <p className="font-medium">{t.profile.vipEntry}</p>
+            <p className="text-xs text-muted-foreground">{t.profile.vipEntryHint}</p>
+          </div>
+          <span className="text-muted-foreground">→</span>
+        </Link>
+      ) : null}
 
       <form
         className="mt-8 space-y-4"
