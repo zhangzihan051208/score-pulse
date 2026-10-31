@@ -213,6 +213,9 @@ const es: Dict = {
       likesStat: "Me gusta",
       crestsTitle: "Mis equipos",
       crestsEmpty: "Configura equipos para ver escudos aquí.",
+      hidePrimaryCrestLabel: "Ocultar escudo del equipo principal",
+      hidePrimaryCrestHint:
+        "Oculta tu escudo en el perfil y en la esquina de tus comentarios.",
       vipEntry: "Grandstand VIP",
       vipEntryHint: "Notas de cinco ejes ilimitadas · peso ×2",
       ratingsTitle: "Historial de notas",

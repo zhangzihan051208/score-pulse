@@ -221,6 +221,29 @@ export const seedComments: SeedComment[] = [
     ),
   },
   {
+    id: "c-demo-retention-crest",
+    eventId: "lal-bos",
+    athleteId: "lebron",
+    author: "规则预览",
+    createdAt: "2026-10-30T12:00:00Z",
+    primaryCrestUrl:
+      "https://r2.thesportsdb.com/images/media/team/badge/d8uoxw1714254511.png",
+    primaryCrestName: "Lakers",
+    scores: {
+      scoring: 8,
+      defense: 7,
+      rebounding: 7.5,
+      versatility: 8.5,
+      clutch: 8,
+    },
+    body: L(
+      "Board rule check: ended matches and ratings stay 5 days; upcoming shows 5 days ahead. Crests sit above the scoreboard; your primary club badge appears here (top-right) and on your profile unless you hide it in settings.",
+      "赛程规则：已结束的比赛和评分保留近 5 天，未开始往后展示 5 天。比分板上方显示双方队徽；你在「我的主队」选的主队队徽会出现在个人主页和评论条右上角（可在资料里勾选隐藏）。",
+      "Reglas: finalizados y notas 5 días; próximos 5 días adelante. Escudos arriba del marcador; tu club principal aquí arriba a la derecha y en el perfil (ocultable en ajustes).",
+      "ルール：終了試合と評価は5日、未開始は5日先まで。スコアボード上にエンブレム、主クラブはコメント右上とプロフィール（設定で非表示可）。",
+    ),
+  },
+  {
     id: "c-bav-ars-saka",
     eventId: "bayern-arsenal-ucl-2026",
     athleteId: "saka",

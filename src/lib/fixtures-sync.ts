@@ -56,9 +56,9 @@ const LIVE_SYNC_MS = SCHEDULE_SYNC_MS;
 const ENRICH_SYNC_MS = 4 * 60 * 1000;
 const ENRICH_CONCURRENCY = 1;
 /** Upcoming fixtures within this many days may get roster enrichment. */
-const ENRICH_UPCOMING_DAYS = 3;
+const ENRICH_UPCOMING_DAYS = 5;
 /** Recently ended fixtures within this many days may still get rosters. */
-const ENRICH_ENDED_DAYS = 3;
+const ENRICH_ENDED_DAYS = 5;
 
 function fixtureRowToMatchEvent(row: LiveFixtureRow): MatchEvent | null {
   const hasLineup = rowHasLineup(row);

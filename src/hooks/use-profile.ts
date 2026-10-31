@@ -41,6 +41,7 @@ export function useProfile() {
     avatarUrl?: string | null;
     bio?: string | null;
     favoriteTeams?: FavoriteTeamsMap;
+    hidePrimaryCrest?: boolean;
     completeOnboarding?: boolean;
   }) {
     if (!cloud || !user) return { ok: false as const, error: "Not signed in" };

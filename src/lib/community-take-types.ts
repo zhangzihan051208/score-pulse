@@ -24,4 +24,6 @@ export type CommunityTake = {
   replyCount?: number;
   hidden?: boolean;
   replies?: CommentReply[];
+  primaryCrestUrl?: string | null;
+  primaryCrestName?: string | null;
 };

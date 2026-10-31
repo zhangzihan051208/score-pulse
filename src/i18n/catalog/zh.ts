@@ -209,6 +209,9 @@ const zh: Dict = {
       likesStat: "获赞",
       crestsTitle: "我的主队",
       crestsEmpty: "在「我的主队」里设置后会显示队徽。",
+      hidePrimaryCrestLabel: "隐藏主队队徽",
+      hidePrimaryCrestHint:
+        "开启后，个人主页头像角标和评论条右上角不再显示你设置的主队队徽。",
       vipEntry: "看台 VIP",
       vipEntryHint: "五维详评不限次 · 均分权重 ×2",
       ratingsTitle: "我的评分记录",

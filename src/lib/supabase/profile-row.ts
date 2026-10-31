@@ -6,6 +6,7 @@ export type ProfileRow = {
   avatar_url?: string | null;
   bio?: string | null;
   favorite_teams?: unknown;
+  hide_primary_crest?: boolean | null;
   vip_until?: string | null;
   onboarding_completed_at?: string | null;
   updated_at?: string;
@@ -22,6 +23,7 @@ const PROFILE_COLUMNS = [
   "avatar_url",
   "bio",
   "favorite_teams",
+  "hide_primary_crest",
   "vip_until",
   "onboarding_completed_at",
   "updated_at",

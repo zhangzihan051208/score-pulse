@@ -210,6 +210,9 @@ export const deOverrides = {
     likesStat: "Likes erhalten",
     crestsTitle: "Meine Vereinswappen",
     crestsEmpty: "Teams einrichten, um Wappen zu sehen.",
+    hidePrimaryCrestLabel: "Hauptvereins-Wappen ausblenden",
+    hidePrimaryCrestHint:
+      "Blendet dein Wappen auf dem Profil und in der Ecke deiner Kommentare aus.",
     vipEntry: "Grandstand VIP",
     vipEntryHint: "Unbegrenzt Fünf-Achsen · doppeltes Gewicht im Schnitt",
     ratingsTitle: "Deine Bewertungen",

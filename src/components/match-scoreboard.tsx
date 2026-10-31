@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { buttonVariants } from "@/components/ui/button";
 import { useI18n } from "@/i18n/use-i18n";
 import { elapsedMatchMinutes } from "@/lib/match-clock";
+import { TeamCrest } from "@/components/team-crest";
 import { cn } from "cn";
 import type { MatchEvent } from "@/lib/types";
 
@@ -81,10 +82,10 @@ export function MatchScoreboard({
   const nameClass =
     size === "lg" ? "text-base sm:text-lg" : size === "sm" ? "text-xs" : "text-sm";
 
+  const crestSize = size === "lg" ? "lg" : size === "sm" ? "sm" : "md";
+
   function TeamName({ side, name, win }: { side: "home" | "away"; name: string; win: boolean }) {
     const href = teamHref(event as MatchEvent, side);
-    const logoUrl =
-      side === "home" ? event.homeTeamLogoUrl : event.awayTeamLogoUrl;
     const inner = (
       <span
         className={cn(
@@ -95,17 +96,6 @@ export function MatchScoreboard({
         {name}
       </span>
     );
-    const logo =
-      logoUrl ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img
-          src={logoUrl}
-          alt=""
-          width={28}
-          height={28}
-          className="size-7 shrink-0 rounded-sm object-contain"
-        />
-      ) : null;
     const nameNode = href ? (
       <Link href={href} className="relative z-10 max-w-full hover:underline">
         {inner}
@@ -116,22 +106,12 @@ export function MatchScoreboard({
     return (
       <div
         className={cn(
-          "flex items-center gap-2",
+          "flex items-center",
           nameClass,
-          side === "home" ? "justify-end" : "justify-start",
+          side === "home" ? "justify-end text-right" : "justify-start text-left",
         )}
       >
-        {side === "home" ? (
-          <>
-            {nameNode}
-            {logo}
-          </>
-        ) : (
-          <>
-            {logo}
-            {nameNode}
-          </>
-        )}
+        {nameNode}
       </div>
     );
   }
@@ -191,11 +171,24 @@ export function MatchScoreboard({
   return (
     <div
       className={cn(
-        "grid grid-cols-[1fr_auto_1fr] items-center gap-3",
         inverted && "text-white [&_.text-muted-foreground]:text-white/65",
         className,
       )}
     >
+      <div className="mb-2 grid grid-cols-[1fr_auto_1fr] items-end gap-3">
+        <div className="flex justify-end">
+          <TeamCrest name={home} badgeUrl={event.homeTeamLogoUrl} size={crestSize} />
+        </div>
+        <div aria-hidden className="min-w-[5.5rem]" />
+        <div className="flex justify-start">
+          <TeamCrest name={away} badgeUrl={event.awayTeamLogoUrl} size={crestSize} />
+        </div>
+      </div>
+      <div
+        className={cn(
+          "grid grid-cols-[1fr_auto_1fr] items-center gap-3",
+        )}
+      >
       <div className="text-right">
         <TeamName side="home" name={home} win={homeWin} />
       </div>
@@ -222,6 +215,7 @@ export function MatchScoreboard({
           </Link>
         </div>
       ) : null}
+      </div>
     </div>
   );
 }
