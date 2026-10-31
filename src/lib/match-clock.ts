@@ -23,7 +23,7 @@ type ClockEvent = Pick<MatchEvent, "startAt" | "status" | "sport">;
 export function alignEventToNow<T extends ClockEvent>(event: T, now = Date.now()): T {
   const start = Date.parse(event.startAt);
   if (!Number.isFinite(start)) return event;
-  if (event.status === "ended") return event;
+  if (event.status === "ended" || event.status === "live") return event;
 
   const dur = expectedMatchMs(event.sport);
   const endWindow = start + dur + OT_GRACE_MS;

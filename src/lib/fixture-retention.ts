@@ -129,15 +129,12 @@ export function balanceFixturesByStatus<T extends LiveFixtureRow>(
   by.upcoming.sort(asc);
   by.ended.sort(desc);
 
+  const liveCap = Math.min(by.live.length, limit);
   const endedCap = Math.min(
     by.ended.length,
-    Math.max(12, Math.ceil(limit * 0.4)),
+    Math.max(0, Math.min(by.ended.length, limit - Math.min(liveCap, 8))),
   );
-  const liveCap = Math.min(by.live.length, Math.max(6, Math.ceil(limit * 0.25)));
-  const upcomingCap = Math.min(
-    by.upcoming.length,
-    Math.max(6, limit - endedCap - liveCap),
-  );
+  const upcomingCap = Math.max(0, limit - Math.min(liveCap, limit) - Math.min(endedCap, Math.ceil(limit * 0.45)));
 
   const picked = new Set<string>();
   const out: T[] = [];
