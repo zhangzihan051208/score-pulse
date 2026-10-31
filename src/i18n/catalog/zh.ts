@@ -396,6 +396,10 @@ const zh: Dict = {
       squadRatingsLeadCompact: "点球员看详细评分与全部短评；下方切换主客队。",
       squadPlayers: "人",
       squadEmpty: "该队暂无阵容数据。",
+      lineupLoading: "阵容加载中",
+      lineupMissingShort: "阵容拉取失败",
+      lineupMissing:
+        "没有拉到可评分的球员。已结束的比赛会先请求官方出场名单，没有名单时改用两队大名单。请在部署环境设置 THESPORTSDB_API_KEY（TheSportsDB 高级会员密钥，不要用免费的 123），保存后重新打开这场比赛。若仍失败，说明数据源这场没有主客队 ID。",
       viewPlayer: "查看球员卡",
       matchupsTab: "全位置对位",
       matchupsLead: "主客同位置自动配对一览，点「看重叠图」进入五维雷达对比。",

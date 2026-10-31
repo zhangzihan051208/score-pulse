@@ -202,5 +202,8 @@ export function fixtureToMatchEvent(
     roster: scoreOnly && performances.length === 0 ? {} : roster,
   });
 
-  return { ...aligned, live: aligned.status === "live" };
+  const lineupState: "ready" | "loading" =
+    aligned.performances.length > 0 || aligned.status === "upcoming" ? "ready" : "loading";
+
+  return { ...aligned, lineupState, live: aligned.status === "live" };
 }

@@ -291,7 +291,15 @@ function FeaturedEventRow({
         {event.leagueSlug
           ? leagueLabel(locale as "en", event.leagueSlug)
           : tx(event.subtitle, locale as "en")}
-        {` · ${event.performances.length} ${t.home.players}`}
+        {" · "}
+        {event.lineupState === "loading" ||
+        ((event.status === "ended" || event.status === "live") &&
+          event.performances.length === 0 &&
+          event.lineupState !== "missing")
+          ? t.event.lineupLoading
+          : event.lineupState === "missing"
+            ? t.event.lineupMissingShort
+            : `${event.performances.length} ${t.home.players}`}
       </Link>
     </div>
   );

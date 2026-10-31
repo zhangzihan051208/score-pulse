@@ -109,6 +109,8 @@ export type MatchEvent = {
   /** Live TheSportsDB roster keyed by player id */
   roster?: Record<string, Athlete>;
   live?: boolean;
+  /** ready = players loaded; loading = still fetching; missing = provider returned none */
+  lineupState?: "ready" | "loading" | "missing";
 };
 
 export type SeedComment = {

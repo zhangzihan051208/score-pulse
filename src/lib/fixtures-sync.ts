@@ -324,37 +324,34 @@ async function mapWithConcurrency<T, R>(
   return results;
 }
 
-async function fetchLeagueEventBuckets(): Promise<
-  { league: LeagueConfig; events: TsdbEvent[] }[]
-> {
-  const out: { league: LeagueConfig; events: TsdbEvent[] }[] = [];
-  for (const league of SIDELINE_LEAGUES) {
-    if (!upstreamAllows("thesportsdb", thesportsdbBudgets())) break;
-    try {
-      const [next, past, last] = await Promise.all([
-        withUpstreamTimeout(
-          fetchNextLeagueEvents(league.tsdbId, EVENTS_FETCH_PER_LEAGUE),
-          UPSTREAM_TIMEOUT_MS,
-          markTsdbUnavailable,
-        ),
-        withUpstreamTimeout(
-          fetchPastLeagueEvents(league.tsdbId, EVENTS_FETCH_PER_LEAGUE),
-          UPSTREAM_TIMEOUT_MS,
-          markTsdbUnavailable,
-        ),
-        withUpstreamTimeout(
-          fetchLastLeagueEvents(league.tsdbId, 20),
-          UPSTREAM_TIMEOUT_MS,
-          markTsdbUnavailable,
-        ),
-      ]);
-      out.push({ league, events: [...next, ...past, ...last] });
-    } catch (error) {
-      if (error instanceof UpstreamBudgetError) break;
-      throw error;
-    }
+async function fetchLeagueBucket(
+  league: LeagueConfig,
+): Promise<{ league: LeagueConfig; events: TsdbEvent[] } | null> {
+  if (league.sport !== "nba" && league.sport !== "soccer") return null;
+  if (!upstreamAllows("thesportsdb", thesportsdbBudgets())) return null;
+  try {
+    const [next, past, last] = await Promise.all([
+      withUpstreamTimeout(
+        fetchNextLeagueEvents(league.tsdbId, EVENTS_FETCH_PER_LEAGUE),
+        UPSTREAM_TIMEOUT_MS,
+        markTsdbUnavailable,
+      ),
+      withUpstreamTimeout(
+        fetchPastLeagueEvents(league.tsdbId, EVENTS_FETCH_PER_LEAGUE),
+        UPSTREAM_TIMEOUT_MS,
+        markTsdbUnavailable,
+      ),
+      withUpstreamTimeout(
+        fetchLastLeagueEvents(league.tsdbId, 20),
+        UPSTREAM_TIMEOUT_MS,
+        markTsdbUnavailable,
+      ),
+    ]);
+    return { league, events: [...next, ...past, ...last] };
+  } catch (error) {
+    if (error instanceof UpstreamBudgetError) return null;
+    return null;
   }
-  return out;
 }
 
 function mergeLeagueBucketsIntoRows(
@@ -460,8 +457,11 @@ async function applyLineupEnrichToRow(
   }
 }
 
-/** Fast path: schedules/scores only — no per-match roster calls. */
-export async function syncFixturesFast(force = false) {
+/** Fast path: schedules/scores only — no per-match roster calls. Writes each league as it finishes. */
+export async function syncFixturesFast(
+  force = false,
+  sports?: ("nba" | "soccer")[],
+) {
   const admin = createServiceClient();
   if (!admin) {
     return { ok: false as const, error: "Missing SUPABASE_SERVICE_ROLE_KEY" };
@@ -486,30 +486,36 @@ export async function syncFixturesFast(force = false) {
     return { ok: true as const, count: 0, skipped: true as const };
   }
 
-  let leagueBuckets: Awaited<ReturnType<typeof fetchLeagueEventBuckets>>;
-  try {
-    leagueBuckets = await fetchLeagueEventBuckets();
-  } catch {
-    markTsdbUnavailable();
-    return { ok: false as const, error: "TheSportsDB unavailable — serving cache." };
+  const leagues = SIDELINE_LEAGUES.filter(
+    (league) =>
+      (league.sport === "nba" || league.sport === "soccer") &&
+      (!sports || sports.includes(league.sport)),
+  );
+  let count = 0;
+  let lastError: string | undefined;
+  for (const league of leagues) {
+    const bucket = await fetchLeagueBucket(league);
+    if (!bucket || bucket.events.length === 0) continue;
+    const rows = mergeLeagueBucketsIntoRows([bucket]);
+    if (rows.length === 0) continue;
+    const rowsToWrite = await mergeSyncRowsWithExistingLineups(admin, rows);
+    const { error } = await admin.from("sportsdb_fixtures").upsert(rowsToWrite, {
+      onConflict: "id_event",
+    });
+    if (error) {
+      lastError = error.message;
+      continue;
+    }
+    count += rows.length;
   }
-
-  const rows = mergeLeagueBucketsIntoRows(leagueBuckets);
-  if (rows.length === 0) {
-    return { ok: true as const, count: 0 };
+  if (count === 0 && lastError) {
+    return { ok: false as const, error: lastError };
   }
-
-  const rowsToWrite = await mergeSyncRowsWithExistingLineups(admin, rows);
-
-  const { error } = await admin.from("sportsdb_fixtures").upsert(rowsToWrite, {
-    onConflict: "id_event",
-  });
-  if (error) return { ok: false as const, error: error.message };
 
   const pruned = await pruneExpiredFixturesFromDb(admin);
 
   revalidateTag("fixtures", "max");
-  return { ok: true as const, count: rows.length, pruned };
+  return { ok: true as const, count, pruned };
 }
 
 /** Drop ended fixtures older than the retention window. */
@@ -788,7 +794,11 @@ export async function listFixtures(
   let rows = await loadFixturesForSports(sports, limit, leagueSlug);
   const missing = sports.filter((sport) => !rows.some((row) => row.sport === sport));
   if (missing.length > 0 && !getDegradedMode().cacheOnly) {
-    await withTimeout(syncFixturesFast(true), 7_000, { ok: true as const, count: 0 });
+    await withTimeout(
+      syncFixturesFast(true, missing.filter((sport): sport is "nba" | "soccer" => sport === "nba" || sport === "soccer")),
+      18_000,
+      { ok: true as const, count: 0, pruned: 0 },
+    );
     rows = await loadFixturesForSports(sports, limit, leagueSlug);
   }
   return rows;
@@ -872,14 +882,18 @@ export async function getLiveMatchBySlug(slug: string) {
   if (
     !rowHasLineup(row) &&
     isVisibleFixtureRow(row) &&
-    !getDegradedMode().cacheOnly &&
-    upstreamAllows("thesportsdb", thesportsdbBudgets())
+    !getDegradedMode().cacheOnly
   ) {
     const ev = row.raw as unknown as TsdbEvent;
     const sport = row.sport as "nba" | "soccer";
     try {
       const lineup = await resolvePlayersForEvent(
-        { ...ev, idEvent: row.id_event },
+        {
+          ...ev,
+          idEvent: row.id_event,
+          idHomeTeam: row.id_home_team ?? ev.idHomeTeam,
+          idAwayTeam: row.id_away_team ?? ev.idAwayTeam,
+        },
         sport,
       );
       if (lineup.length > 0) {
@@ -912,8 +926,14 @@ export async function getLiveMatchBySlug(slug: string) {
 
   const event = fixtureRowToMatchEvent(row);
   if (!event) return null;
-  if (event.homeTeamLogoUrl && event.awayTeamLogoUrl) return event;
-  return withTeamLogos(event);
+  const withLineup =
+    event.performances.length > 0
+      ? { ...event, lineupState: "ready" as const }
+      : event.status === "upcoming"
+        ? event
+        : { ...event, lineupState: "missing" as const };
+  if (withLineup.homeTeamLogoUrl && withLineup.awayTeamLogoUrl) return withLineup;
+  return withTeamLogos(withLineup);
 }
 
 export type SearchPlayerHit = {

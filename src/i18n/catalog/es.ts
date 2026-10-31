@@ -403,6 +403,10 @@ const es: Dict = {
       squadRatingsLeadCompact: "Toca un jugador para ver notas y comentarios. Cambia de equipo abajo.",
       squadPlayers: "jugadores",
       squadEmpty: "Sin alineación para este bando.",
+      lineupLoading: "Cargando alineación",
+      lineupMissingShort: "Sin alineación",
+      lineupMissing:
+        "No hay jugadores para puntuar. Los partidos finalizados piden la alineación oficial y, si falta, las plantillas. Configura THESPORTSDB_API_KEY con una clave premium de TheSportsDB (no la clave gratis 123) y vuelve a abrir el partido.",
       viewPlayer: "Ver ficha",
       matchupsTab: "Duelos por posición",
       matchupsLead: "Todos los pares local vs visitante por rol — abre el radar superpuesto.",

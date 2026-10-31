@@ -78,6 +78,52 @@ export function useLiveEvents(
     { deferFirstMs: hasSeed ? POLL.seedGraceMs : 0 },
   );
 
+  useEffect(() => {
+    const pending = events.filter(
+      (event) =>
+        (event.status === "ended" || event.status === "live") &&
+        event.performances.length === 0 &&
+        event.lineupState !== "missing",
+    );
+    if (pending.length === 0) return;
+    let cancel = false;
+    (async () => {
+      for (const event of pending.slice(0, 6)) {
+        if (cancel) return;
+        try {
+          const res = await fetch(
+            `/api/events/${encodeURIComponent(event.slug)}?lineups=1`,
+            { signal: AbortSignal.timeout(20_000) },
+          );
+          if (!res.ok) {
+            setEvents((prev) =>
+              prev.map((row) =>
+                row.id === event.id ? { ...row, lineupState: "missing" } : row,
+              ),
+            );
+            continue;
+          }
+          const data = (await res.json()) as { event?: MatchEvent };
+          if (cancel || !data.event) continue;
+          setEvents((prev) =>
+            prev.map((row) => (row.id === data.event!.id ? data.event! : row)),
+          );
+        } catch {
+          if (!cancel) {
+            setEvents((prev) =>
+              prev.map((row) =>
+                row.id === event.id ? { ...row, lineupState: "missing" } : row,
+              ),
+            );
+          }
+        }
+      }
+    })();
+    return () => {
+      cancel = true;
+    };
+  }, [events]);
+
   return { events: aligned, loading, syncedAt, refresh: () => load(true) };
 }
 
@@ -93,14 +139,20 @@ export function useLiveEvent(slug: string, seed?: MatchEvent | null) {
   const load = useCallback(
     async (sync: boolean) => {
       const current = currentRef.current;
+      const needsLineup =
+        !!current &&
+        (current.status === "ended" || current.status === "live") &&
+        current.performances.length === 0 &&
+        current.lineupState !== "missing";
       const due =
         sync ||
+        needsLineup ||
         current?.status === "live" ||
         (current ? kickoffIsSoon(current.startAt) : false);
-      const liveQ = due ? (sync ? "?sync=1" : "?live=1") : "";
+      const liveQ = needsLineup || sync ? "?lineups=1" : due ? "?live=1" : "";
       try {
         const res = await fetch(`/api/events/${encodeURIComponent(slug)}${liveQ}`, {
-          signal: AbortSignal.timeout(12_000),
+          signal: AbortSignal.timeout(20_000),
         });
         if (res.status === 404) {
           setEvent(null);
@@ -135,8 +187,13 @@ export function useLiveEvent(slug: string, seed?: MatchEvent | null) {
   );
 
   useEffect(() => {
-    const s = seed ?? null;
-    if (s?.status === "live" && s.performances.length === 0) {
+    const s = seed ?? currentRef.current;
+    const needsLineup =
+      !!s &&
+      (s.status === "ended" || s.status === "live") &&
+      s.performances.length === 0 &&
+      s.lineupState !== "missing";
+    if (needsLineup || (s?.status === "live" && s.performances.length === 0)) {
       void load(true);
     }
   }, [load, seed, slug]);
