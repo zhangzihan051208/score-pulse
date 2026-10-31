@@ -292,8 +292,16 @@ export function mapTsdbStatus(strStatus?: string): "live" | "upcoming" | "ended"
     s.includes("live") ||
     s.includes("1h") ||
     s.includes("2h") ||
+    /\bq[1-4]\b/.test(s) ||
+    /^q[1-4]$/.test(s) ||
+    s === "ot" ||
+    s.includes("overtime") ||
+    s.includes("quarter") ||
+    s.includes("halftime") ||
     s.includes("ht") ||
-    s.includes("in play")
+    s.includes("in play") ||
+    s.includes("in progress") ||
+    s.includes("playing")
   ) {
     return "live";
   }
@@ -302,12 +310,13 @@ export function mapTsdbStatus(strStatus?: string): "live" | "upcoming" | "ended"
     s === "ns" ||
     s.includes("scheduled") ||
     s.includes("postponed") ||
+    s.includes("delayed") ||
     s === ""
   ) {
     return "upcoming";
   }
   if (
-    s.includes("ft") ||
+    s === "ft" ||
     s.includes("full time") ||
     s.includes("finished") ||
     s.includes("aet") ||
@@ -315,9 +324,14 @@ export function mapTsdbStatus(strStatus?: string): "live" | "upcoming" | "ended"
     s.includes("pen ") ||
     s === "p" ||
     s.includes("match finished") ||
-    s.includes("final")
+    s.includes("final") ||
+    s.includes("cancel") ||
+    s.includes("abn") ||
+    s.includes("awarded") ||
+    s.includes("walkover")
   ) {
     return "ended";
   }
-  return "ended";
+  // Unknown codes must not lock as final — kickoff clock decides.
+  return "upcoming";
 }

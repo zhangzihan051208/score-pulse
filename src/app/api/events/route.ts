@@ -10,16 +10,11 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const sport = searchParams.get("sport");
   const league = searchParams.get("league") ?? undefined;
-  const liveTick =
-    searchParams.get("live") === "1" || searchParams.get("sync") === "1";
+  const forceSync = searchParams.get("sync") === "1";
   const degraded = getDegradedMode();
 
-  let liveRefreshed = false;
-  if (!degraded.cacheOnly && liveTick) {
-    liveRefreshed = await maybeRefreshLiveFixturesFromTsdb(
-      refreshLiveFixturesFromTsdb,
-      4,
-    );
+  if (!degraded.cacheOnly && forceSync) {
+    await maybeRefreshLiveFixturesFromTsdb(refreshLiveFixturesFromTsdb, 4);
   }
 
   const sports =
@@ -31,15 +26,15 @@ export async function GET(request: Request) {
 
   const limit = Number(searchParams.get("limit") ?? "12");
   const capped = Math.min(limit, 48);
+  const wantLineups = searchParams.get("lineups") === "1";
   const readLive = () =>
     listLiveMatchEvents([...sports], capped, league, {
-      enrichLineups: !degraded.cacheOnly,
+      enrichLineups: wantLineups && !degraded.cacheOnly,
       enrichMax: thesportsdbListEnrichMax(capped),
     });
-  const loaded =
-    liveTick || liveRefreshed
-      ? await readLive()
-      : await cachedLiveMatchEvents([...sports], capped, league);
+  const loaded = forceSync
+    ? await readLive()
+    : await cachedLiveMatchEvents([...sports], capped, league);
   const events =
     !sport || sport === "soccer" ? pinBayernArsenal(loaded, league) : loaded;
 
@@ -51,7 +46,7 @@ export async function GET(request: Request) {
     },
     {
       headers: {
-        "Cache-Control": liveTick
+        "Cache-Control": forceSync
           ? "private, no-store"
           : "public, s-maxage=8, stale-while-revalidate=20",
       },

@@ -47,6 +47,7 @@ import {
   balanceFixturesByStatus,
   effectiveFixtureStatus,
   ENDED_VISIBLE_DAYS,
+  UPCOMING_VISIBLE_DAYS,
   isVisibleFixtureRow,
   isVisibleMatchStatus,
   shouldPruneFixtureRow,
@@ -698,56 +699,35 @@ export async function listFixtures(
 
   const leagueFilter = leagueSlug ? getLeagueBySlug(leagueSlug) : undefined;
 
+  const since = new Date(Date.now() - ENDED_VISIBLE_DAYS * 86_400_000)
+    .toISOString()
+    .slice(0, 10);
+  const until = new Date(Date.now() + UPCOMING_VISIBLE_DAYS * 86_400_000)
+    .toISOString()
+    .slice(0, 10);
   const data = await fetchFixtureRows((select) =>
     admin
       .from("sportsdb_fixtures")
       .select(select)
       .in("sport", sports)
+      .gte("date_event", since)
+      .lte("date_event", until)
       .order("date_event", { ascending: false })
-      .order("synced_at", { ascending: false })
-      .limit(Math.max(limit * 16, 160))
+      .limit(Math.min(240, Math.max(limit * 2, 80)))
       .then((r) => ({ data: r.data, error: r.error })),
   );
   if (!data.length) return [];
-  const hydrateVisible = (rawRows: Record<string, unknown>[]) =>
-    rawRows
-      .map((row) => hydrateFixtureRow(row))
-      .filter((row) => isLiveLeagueRow(row))
-      .filter((row) => isVisibleFixtureRow(row))
-      .filter((row) => {
-        if (!leagueFilter) return true;
-        return (
-          row.league_id === leagueFilter.tsdbId ||
-          leagueMatchesRow(row)?.tsdbId === leagueFilter.tsdbId
-        );
-      });
-
-  let filtered = hydrateVisible(data);
-  const endedCount = filtered.filter(
-    (row) => effectiveFixtureStatus(row) === "ended",
-  ).length;
-  if (endedCount < 10) {
-    const since = new Date(Date.now() - ENDED_VISIBLE_DAYS * 86_400_000)
-      .toISOString()
-      .slice(0, 10);
-    const extra = await fetchFixtureRows((select) =>
-      admin
-        .from("sportsdb_fixtures")
-        .select(select)
-        .in("sport", sports)
-        .gte("date_event", since)
-        .order("date_event", { ascending: false })
-        .limit(400)
-        .then((r) => ({ data: r.data, error: r.error })),
-    );
-    if (extra.length) {
-      const byId = new Map(filtered.map((row) => [row.id_event, row]));
-      for (const row of hydrateVisible(extra)) {
-        byId.set(row.id_event, row);
-      }
-      filtered = [...byId.values()];
-    }
-  }
+  const filtered = data
+    .map((row) => hydrateFixtureRow(row))
+    .filter((row) => isLiveLeagueRow(row))
+    .filter((row) => isVisibleFixtureRow(row))
+    .filter((row) => {
+      if (!leagueFilter) return true;
+      return (
+        row.league_id === leagueFilter.tsdbId ||
+        leagueMatchesRow(row)?.tsdbId === leagueFilter.tsdbId
+      );
+    });
   filtered.sort((a, b) => {
     const sr =
       statusRank(effectiveFixtureStatus(a)) - statusRank(effectiveFixtureStatus(b));
@@ -766,7 +746,7 @@ export async function listLiveMatchEvents(
   leagueSlug?: string,
   opts?: { enrichLineups?: boolean; enrichMax?: number },
 ): Promise<MatchEvent[]> {
-  let rows = await listFixtures(sports, Math.max(limit * 4, 48), leagueSlug);
+  let rows = await listFixtures(sports, Math.max(limit, 24), leagueSlug);
   if (opts?.enrichLineups) {
     rows = await enrichRowsLineups(rows, opts.enrichMax ?? Math.min(limit, 12));
   }

@@ -43,12 +43,7 @@ export function useLiveEvents(
       const hasLive = eventsRef.current.some(
         (e) => e.status === "live" || kickoffIsSoon(e.startAt),
       );
-      const needsLineup = eventsRef.current.some(
-        (e) =>
-          e.performances.length === 0 &&
-          (e.status === "live" || e.status === "ended"),
-      );
-      if (refresh || needsLineup) params.set("sync", "1");
+      if (refresh) params.set("sync", "1");
       else if (hasLive) params.set("live", "1");
       try {
         const res = await fetch(`/api/events?${params}`, {
@@ -78,16 +73,6 @@ export function useLiveEvents(
     pollMs,
     { deferFirstMs: hasSeed ? POLL.seedGraceMs : 0 },
   );
-
-  useEffect(() => {
-    if (!enabled || !hasSeed) return;
-    const needsLineup = eventsRef.current.some(
-      (e) =>
-        e.performances.length === 0 &&
-        (e.status === "live" || e.status === "ended"),
-    );
-    if (needsLineup) void load(true);
-  }, [enabled, hasSeed, load]);
 
   return { events: aligned, loading, syncedAt, refresh: () => load(true) };
 }
