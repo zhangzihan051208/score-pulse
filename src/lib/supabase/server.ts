@@ -6,6 +6,7 @@ import {
   supabaseAnonKey,
   supabaseUrl,
 } from "./config";
+import { supabaseFetch } from "./timeout-fetch";
 
 export async function createClient() {
   if (!isSupabaseConfigured()) {
@@ -13,6 +14,7 @@ export async function createClient() {
   }
   const cookieStore = await cookies();
   return createServerClient(supabaseUrl(), supabaseAnonKey(), {
+    global: { fetch: supabaseFetch },
     cookies: {
       getAll() {
         return cookieStore.getAll();
@@ -45,6 +47,7 @@ export function createServiceClient() {
   try {
     return createSupabaseClient(creds.url, creds.key, {
       auth: { persistSession: false, autoRefreshToken: false },
+      global: { fetch: supabaseFetch },
     });
   } catch {
     return null;

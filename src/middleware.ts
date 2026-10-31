@@ -1,5 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
+import { supabaseFetch } from "@/lib/supabase/timeout-fetch";
 
 function withCors(request: NextRequest, response: NextResponse) {
   if (!request.nextUrl.pathname.startsWith("/api/")) return response;
@@ -20,9 +21,15 @@ export async function middleware(request: NextRequest) {
   const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
   if (!url || !anon) return withCors(request, NextResponse.next());
 
+  const hasSession = request.cookies
+    .getAll()
+    .some((cookie) => cookie.name.startsWith("sb-") && cookie.value.length > 0);
+  if (!hasSession) return withCors(request, NextResponse.next());
+
   let response = NextResponse.next({ request: { headers: request.headers } });
 
   const supabase = createServerClient(url, anon, {
+    global: { fetch: supabaseFetch },
     cookies: {
       getAll() {
         return request.cookies.getAll();
@@ -39,7 +46,10 @@ export async function middleware(request: NextRequest) {
     },
   });
 
-  await supabase.auth.getUser();
+  await Promise.race([
+    supabase.auth.getUser().catch(() => null),
+    new Promise((resolve) => setTimeout(resolve, 1_800)),
+  ]);
   return withCors(request, response);
 }
 
