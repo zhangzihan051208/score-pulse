@@ -1,7 +1,23 @@
--- Run in Supabase Dashboard → SQL Editor.
--- The match cache was storing the full provider payload and matches outside
--- the 5-day window. This deletes those rows and shrinks what remains.
--- Ratings and comments are not touched.
+-- Emergency copy of the retention the sync job already runs.
+-- Keeps matches from 5 days ago through 5 days ahead.
+-- Ratings and comments for matches outside that window go with them.
+-- Accounts, zones, and player profiles stay.
+
+delete from public.comments
+where event_id in (
+  select id_event from public.sportsdb_fixtures
+  where date_event is null
+     or date_event < (current_date - 5)
+     or date_event > (current_date + 5)
+);
+
+delete from public.ratings
+where event_id in (
+  select id_event from public.sportsdb_fixtures
+  where date_event is null
+     or date_event < (current_date - 5)
+     or date_event > (current_date + 5)
+);
 
 delete from public.sportsdb_fixtures
 where date_event is null

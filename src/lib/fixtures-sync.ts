@@ -46,11 +46,11 @@ import {
   fixtureRowStatus,
   balanceFixturesByStatus,
   effectiveFixtureStatus,
+  ENDED_DB_RETAIN_DAYS,
   ENDED_VISIBLE_DAYS,
   UPCOMING_VISIBLE_DAYS,
   isVisibleFixtureRow,
   isVisibleMatchStatus,
-  shouldPruneFixtureRow,
   shouldRetainFixtureRow,
 } from "@/lib/fixture-retention";
 import { alignEventToNow } from "@/lib/match-clock";
@@ -250,18 +250,62 @@ function hydrateFixtureRow(row: Record<string, unknown>): LiveFixtureRow {
   };
 }
 
+const STORED_LINEUP_KEYS = [
+  "idPlayer",
+  "idEvent",
+  "strPlayer",
+  "strTeam",
+  "idTeam",
+  "strPosition",
+  "strHome",
+  "strSubstitute",
+  "intSquadNumber",
+  "strNumber",
+  "strThumb",
+  "strCutout",
+] as const;
+
+/** Roster payloads include biographies and social links the boards never read. */
+function slimStoredPlayer(player: TsdbLineupPlayer): StoredLineupPlayer {
+  const slim: StoredLineupPlayer = {
+    idPlayer: player.idPlayer,
+    strPlayer: player.strPlayer,
+  };
+  if (player.idEvent) slim.idEvent = player.idEvent;
+  if (player.strTeam) slim.strTeam = player.strTeam;
+  if (player.idTeam) slim.idTeam = player.idTeam;
+  if (player.strPosition) slim.strPosition = player.strPosition;
+  if (player.strHome) slim.strHome = player.strHome;
+  if (player.strSubstitute) slim.strSubstitute = player.strSubstitute;
+  if (player.intSquadNumber) slim.intSquadNumber = player.intSquadNumber;
+  if (player.strNumber) slim.strNumber = player.strNumber;
+  if (player.strThumb) slim.strThumb = player.strThumb;
+  if (player.strCutout) slim.strCutout = player.strCutout;
+  return slim;
+}
+
+function lineupNeedsSlim(lineup: unknown): boolean {
+  if (!Array.isArray(lineup)) return false;
+  return lineup.some((player) => {
+    if (!player || typeof player !== "object") return false;
+    return Object.keys(player).some(
+      (key) => !STORED_LINEUP_KEYS.includes(key as (typeof STORED_LINEUP_KEYS)[number]),
+    );
+  });
+}
+
 function enrichPlayer(
   base: StoredLineupPlayer,
   extra: TsdbLineupPlayer,
 ): StoredLineupPlayer {
-  return {
+  return slimStoredPlayer({
     ...base,
     strPosition: base.strPosition?.trim() ? base.strPosition : extra.strPosition,
     intSquadNumber: base.intSquadNumber ?? extra.intSquadNumber,
     strNumber: base.strNumber ?? extra.strNumber,
     strThumb: base.strThumb ?? extra.strThumb,
     strCutout: base.strCutout ?? extra.strCutout,
-  };
+  });
 }
 
 function mergePlayers(
@@ -270,7 +314,7 @@ function mergePlayers(
 ): StoredLineupPlayer[] {
   const byId = new Map<string, StoredLineupPlayer>();
   for (const p of lineup) {
-    if (p.idPlayer && p.strPlayer) byId.set(p.idPlayer, p);
+    if (p.idPlayer && p.strPlayer) byId.set(p.idPlayer, slimStoredPlayer(p));
   }
   for (const list of rosters) {
     for (const p of list) {
@@ -279,10 +323,13 @@ function mergePlayers(
       if (existing) {
         byId.set(p.idPlayer, enrichPlayer(existing, p));
       } else {
-        byId.set(p.idPlayer, {
-          ...p,
-          strSubstitute: p.strSubstitute ?? "Yes",
-        });
+        byId.set(
+          p.idPlayer,
+          slimStoredPlayer({
+            ...p,
+            strSubstitute: p.strSubstitute ?? "Yes",
+          }),
+        );
       }
     }
   }
@@ -389,7 +436,7 @@ async function resolvePlayersForEvent(
 ): Promise<StoredLineupPlayer[]> {
   const lineupOpts = { lineupBudget: true as const };
   let lineup = await fetchLineup(ev.idEvent, lineupOpts);
-  if (lineup.length >= 11) return lineup;
+  if (lineup.length >= 11) return lineup.map(slimStoredPlayer);
 
   let homeId = ev.idHomeTeam;
   let awayId = ev.idAwayTeam;
@@ -406,7 +453,7 @@ async function resolvePlayersForEvent(
     ]);
     lineup = mergePlayers(lineup, [homeRoster, awayRoster]);
   }
-  return lineup;
+  return lineup.map(slimStoredPlayer);
 }
 
 let lastEnrichFinished = 0;
@@ -493,7 +540,8 @@ export async function syncFixturesFast(
       latest?.synced_at &&
       Date.now() - new Date(latest.synced_at).getTime() < LIVE_SYNC_MS
     ) {
-      return { ok: true as const, count: 0, skipped: true as const };
+      const pruned = await pruneExpiredFixturesFromDb(admin);
+      return { ok: true as const, count: 0, skipped: true as const, pruned };
     }
   }
 
@@ -533,34 +581,141 @@ export async function syncFixturesFast(
   return { ok: true as const, count, pruned };
 }
 
-/** Drop ended fixtures older than the retention window. */
+function retentionDateBounds(now = Date.now()) {
+  const day = 86_400_000;
+  return {
+    since: new Date(now - ENDED_DB_RETAIN_DAYS * day).toISOString().slice(0, 10),
+    until: new Date(now + UPCOMING_VISIBLE_DAYS * day).toISOString().slice(0, 10),
+  };
+}
+
+function isProviderMatchId(eventId: string) {
+  return /^\d+$/.test(eventId);
+}
+
+async function deleteByEventIds(
+  admin: NonNullable<ReturnType<typeof createServiceClient>>,
+  table: "comments" | "ratings" | "sportsdb_fixtures",
+  ids: string[],
+) {
+  const column = table === "sportsdb_fixtures" ? "id_event" : "event_id";
+  let deleted = 0;
+  for (let i = 0; i < ids.length; i += 100) {
+    const chunk = ids.slice(i, i + 100);
+    const { error, count } = await admin
+      .from(table)
+      .delete({ count: "exact" })
+      .in(column, chunk);
+    if (error) break;
+    deleted += count ?? chunk.length;
+  }
+  return deleted;
+}
+
+/** Drop matches outside the 5-day window, their ratings and comments, and unused player fields. */
 export async function pruneExpiredFixturesFromDb(
   admin: NonNullable<ReturnType<typeof createServiceClient>>,
 ) {
-  const data = await fetchFixtureRows((select) =>
-    admin
+  const { since, until } = retentionDateBounds();
+  const expired: string[] = [];
+  for (let from = 0; from < 20_000; from += 500) {
+    const { data, error } = await admin
       .from("sportsdb_fixtures")
-      .select(select)
-      .in("sport", ["nba", "soccer"])
-      .order("date_event", { ascending: false })
-      .limit(2000)
-      .then((r) => ({ data: r.data, error: r.error })),
-  );
-  const expiredIds = data
-    .map((row) => hydrateFixtureRow(row))
-    .filter((row) => shouldPruneFixtureRow(row))
-    .map((row) => row.id_event);
-  if (expiredIds.length === 0) return 0;
-
-  const chunkSize = 200;
-  let deleted = 0;
-  for (let i = 0; i < expiredIds.length; i += chunkSize) {
-    const chunk = expiredIds.slice(i, i + chunkSize);
-    const { error } = await admin.from("sportsdb_fixtures").delete().in("id_event", chunk);
-    if (error) break;
-    deleted += chunk.length;
+      .select("id_event")
+      .or(`date_event.is.null,date_event.lt.${since},date_event.gt.${until}`)
+      .order("id_event")
+      .range(from, from + 499);
+    if (error || !data?.length) break;
+    for (const row of data) expired.push(row.id_event as string);
+    if (data.length < 500) break;
   }
-  return deleted;
+
+  if (expired.length > 0) {
+    await deleteByEventIds(admin, "comments", expired);
+    await deleteByEventIds(admin, "ratings", expired);
+    await deleteByEventIds(admin, "sportsdb_fixtures", expired);
+  }
+
+  const kept = new Set<string>();
+  for (let from = 0; from < 20_000; from += 500) {
+    const { data, error } = await admin
+      .from("sportsdb_fixtures")
+      .select("id_event")
+      .order("id_event")
+      .range(from, from + 499);
+    if (error || !data?.length) break;
+    for (const row of data) kept.add(row.id_event as string);
+    if (data.length < 500) break;
+  }
+
+  if (kept.size > 0) {
+    const numericMatch = "0123456789"
+      .split("")
+      .map((digit) => `event_id.like.${digit}*`)
+      .join(",");
+    const keepList = `(${[...kept].join(",")})`;
+    for (const table of ["ratings", "comments"] as const) {
+      const orphans: string[] = [];
+      const seen = new Set<string>();
+      for (let page = 0; page < 20; page += 1) {
+        const { data, error } = await admin
+          .from(table)
+          .select("event_id")
+          .or(numericMatch)
+          .not("event_id", "in", keepList)
+          .limit(200);
+        if (error || !data?.length) break;
+        for (const row of data) {
+          const eventId = row.event_id as string;
+          if (!isProviderMatchId(eventId) || kept.has(eventId) || seen.has(eventId)) continue;
+          seen.add(eventId);
+          orphans.push(eventId);
+        }
+        if (orphans.length > 0) {
+          await deleteByEventIds(admin, table, orphans);
+          orphans.length = 0;
+        }
+        if (data.length < 200) break;
+      }
+    }
+  }
+
+  for (let from = 0; from < 2_000; from += 100) {
+    const { data, error } = await admin
+      .from("sportsdb_fixtures")
+      .select("id_event, slug, lineup, raw, id_home_team, id_away_team, str_home_team, str_away_team, date_event")
+      .order("id_event")
+      .range(from, from + 99);
+    if (error || !data?.length) break;
+    for (const row of data) {
+      const raw = (row.raw as Record<string, unknown> | null) ?? {};
+      const lineup = (row.lineup as StoredLineupPlayer[] | null) ?? (raw.lineup as StoredLineupPlayer[] | undefined) ?? [];
+      if (!lineupNeedsSlim(lineup) && !lineupNeedsSlim(raw.lineup)) continue;
+      const slimLineup = lineup.map((player) => slimStoredPlayer(player));
+      const slug =
+        (row.slug as string | null) ??
+        (raw.sideline_slug as string | undefined) ??
+        fixtureSlug(row.str_home_team ?? "Home", row.str_away_team ?? "Away", row.date_event);
+      await admin
+        .from("sportsdb_fixtures")
+        .update({
+          lineup: slimLineup,
+          raw: slimFixtureRaw(
+            {
+              idHomeTeam: (raw.idHomeTeam as string | undefined) ?? row.id_home_team ?? undefined,
+              idAwayTeam: (raw.idAwayTeam as string | undefined) ?? row.id_away_team ?? undefined,
+              strHomeTeamBadge: raw.strHomeTeamBadge as string | undefined,
+              strAwayTeamBadge: raw.strAwayTeamBadge as string | undefined,
+            },
+            { slug, lineup: slimLineup },
+          ),
+        })
+        .eq("id_event", row.id_event);
+    }
+    if (data.length < 100) break;
+  }
+
+  return expired.length;
 }
 
 /** Fast sync must not wipe rosters enriched by the background job. */
@@ -584,10 +739,11 @@ async function mergeSyncRowsWithExistingLineups(
     const prev = prevById.get(row.id_event);
     if (!prev) return row;
     const prevRaw = (prev.raw as Record<string, unknown> | null) ?? {};
-    const prevLineup =
+    const prevLineup = (
       (prev.lineup as StoredLineupPlayer[] | null | undefined) ??
       (prevRaw.lineup as StoredLineupPlayer[] | undefined) ??
-      [];
+      []
+    ).map((player) => slimStoredPlayer(player));
     if (prevLineup.length === 0) return row;
 
     const nextRaw = {
@@ -694,6 +850,21 @@ type FixtureQueryResult = {
   error: { message: string } | null;
 };
 
+function isHardSupabaseFailure(message: string) {
+  const m = message.toLowerCase();
+  return (
+    m.includes("timeout") ||
+    m.includes("abort") ||
+    m.includes("fetch failed") ||
+    m.includes("network") ||
+    m.includes("econnreset") ||
+    m.includes("502") ||
+    m.includes("503") ||
+    m.includes("504") ||
+    m.includes("upstream")
+  );
+}
+
 async function fetchFixtureRows(
   run: (select: string) => PromiseLike<FixtureQueryResult>,
 ): Promise<Record<string, unknown>[]> {
@@ -703,17 +874,22 @@ async function fetchFixtureRows(
     FIXTURE_SELECT_WITH_LEAGUE,
     FIXTURE_SELECT_CORE,
   ]) {
-    const res = await run(select);
-    if (!res.error && res.data) {
-      noteSupabaseHealthy();
-      return res.data as Record<string, unknown>[];
+    try {
+      const res = await withTimeout(Promise.resolve(run(select)), 2_000, {
+        data: null,
+        error: { message: "upstream_timeout" },
+      });
+      if (!res.error && res.data) {
+        noteSupabaseHealthy();
+        return res.data as Record<string, unknown>[];
+      }
+      if (res.error?.message) lastError = res.error.message;
+    } catch (error) {
+      lastError = error instanceof Error ? error.message : "upstream_timeout";
     }
-    if (res.error?.message) lastError = res.error.message;
+    if (lastError && isHardSupabaseFailure(lastError)) break;
   }
-  if (
-    lastError &&
-    !isBenignSupabaseSchemaError(lastError)
-  ) {
+  if (lastError && !isBenignSupabaseSchemaError(lastError)) {
     markSupabaseUnavailable();
   }
   return [];
@@ -727,7 +903,6 @@ async function loadFixturesForSports(
   const admin = createServiceClient();
   if (!admin) return [] as FixtureRow[];
 
-  const leagueFilter = leagueSlug ? getLeagueBySlug(leagueSlug) : undefined;
   const since = new Date(Date.now() - ENDED_VISIBLE_DAYS * 86_400_000)
     .toISOString()
     .slice(0, 10);
@@ -752,9 +927,23 @@ async function loadFixturesForSports(
     ),
   );
 
-  const filtered = chunks
-    .flat()
-    .map((row) => hydrateFixtureRow(row))
+  return selectVisibleFixtures(
+    chunks.flat().map((row) => hydrateFixtureRow(row)),
+    sports,
+    limit,
+    leagueSlug,
+  );
+}
+
+function selectVisibleFixtures(
+  rows: FixtureRow[],
+  sports: string[],
+  limit: number,
+  leagueSlug?: string,
+): FixtureRow[] {
+  const leagueFilter = leagueSlug ? getLeagueBySlug(leagueSlug) : undefined;
+  const filtered = rows
+    .filter((row) => sports.includes(row.sport))
     .filter((row) => isLiveLeagueRow(row))
     .filter((row) => isVisibleFixtureRow(row))
     .filter((row) => {
@@ -785,10 +974,46 @@ async function loadFixturesForSports(
   return picked.slice(0, limit);
 }
 
-function withTimeout<T>(work: Promise<T>, ms: number, fallback: T): Promise<T> {
+let providerFixtureCache: { at: number; rows: FixtureRow[] } | null = null;
+let providerFixtureInflight: Promise<FixtureRow[]> | null = null;
+const PROVIDER_FIXTURE_TTL_MS = 30_000;
+
+/** Read the 5-day window from TheSportsDB when the database cannot answer. */
+async function loadProviderFixtureRows(): Promise<FixtureRow[]> {
+  if (providerFixtureCache && Date.now() - providerFixtureCache.at < PROVIDER_FIXTURE_TTL_MS) {
+    return providerFixtureCache.rows;
+  }
+  if (providerFixtureInflight) return providerFixtureInflight;
+  providerFixtureInflight = (async () => {
+    try {
+      const leagues = SIDELINE_LEAGUES.filter(
+        (league) => league.sport === "nba" || league.sport === "soccer",
+      );
+      const buckets = await mapWithConcurrency(leagues, 4, (league) => fetchLeagueBucket(league));
+      const merged = mergeLeagueBucketsIntoRows(
+        buckets.filter((bucket): bucket is NonNullable<typeof bucket> => Boolean(bucket)),
+      );
+      const rows = merged.map((row) =>
+        hydrateFixtureRow(row as unknown as Record<string, unknown>),
+      );
+      providerFixtureCache = { at: Date.now(), rows };
+      return rows;
+    } finally {
+      providerFixtureInflight = null;
+    }
+  })();
+  return providerFixtureInflight;
+}
+
+async function fixturesFromProvider(sports: string[], limit: number, leagueSlug?: string) {
+  const rows = await loadProviderFixtureRows();
+  return selectVisibleFixtures(rows, sports, limit, leagueSlug);
+}
+
+function withTimeout<T>(work: PromiseLike<T>, ms: number, fallback: T): Promise<T> {
   return new Promise((resolve) => {
     const timer = setTimeout(() => resolve(fallback), ms);
-    work.then(
+    Promise.resolve(work).then(
       (value) => {
         clearTimeout(timer);
         resolve(value);
@@ -806,17 +1031,22 @@ export async function listFixtures(
   limit = 12,
   leagueSlug?: string,
 ) {
-  let rows = await loadFixturesForSports(sports, limit, leagueSlug);
-  const missing = sports.filter((sport) => !rows.some((row) => row.sport === sport));
-  if (missing.length > 0 && !getDegradedMode().cacheOnly) {
-    await withTimeout(
-      syncFixturesFast(true, missing.filter((sport): sport is "nba" | "soccer" => sport === "nba" || sport === "soccer")),
-      18_000,
-      { ok: true as const, count: 0, pruned: 0 },
+  const rows = getDegradedMode().cacheOnly
+    ? []
+    : await loadFixturesForSports(sports, limit, leagueSlug);
+  const covered =
+    rows.length > 0 && sports.every((sport) => rows.some((row) => row.sport === sport));
+  if (covered) return rows;
+
+  if (!getDegradedMode().cacheOnly) {
+    const wanted = sports.filter(
+      (sport): sport is "nba" | "soccer" => sport === "nba" || sport === "soccer",
     );
-    rows = await loadFixturesForSports(sports, limit, leagueSlug);
+    void syncFixturesFast(true, wanted).catch(() => {});
   }
-  return rows;
+
+  const live = await fixturesFromProvider(sports, limit, leagueSlug);
+  return live.length > 0 ? live : rows;
 }
 
 export async function listLiveMatchEvents(
@@ -850,66 +1080,57 @@ export async function listLiveMatchEvents(
 
 export async function getLiveMatchBySlug(slug: string) {
   const admin = createServiceClient();
-  if (!admin) return null;
 
   let rowData: Record<string, unknown> | null = null;
-  for (const select of [
-    FIXTURE_SELECT_WITH_TEAM_COLS,
-    FIXTURE_SELECT_WITH_LEAGUE,
-    FIXTURE_SELECT_CORE,
-  ]) {
-    const res = await admin
-      .from("sportsdb_fixtures")
-      .select(select)
-      .eq("slug", slug)
-      .maybeSingle();
-    if (!res.error && res.data) {
-      noteSupabaseHealthy();
-      rowData = res.data as unknown as Record<string, unknown>;
-      break;
+  if (admin && !getDegradedMode().cacheOnly) {
+    for (const select of [
+      FIXTURE_SELECT_WITH_TEAM_COLS,
+      FIXTURE_SELECT_WITH_LEAGUE,
+      FIXTURE_SELECT_CORE,
+    ]) {
+      const res = await withTimeout<{
+        data: Record<string, unknown> | null;
+        error: { message: string } | null;
+      }>(
+        admin.from("sportsdb_fixtures").select(select).eq("slug", slug).maybeSingle(),
+        2_000,
+        { data: null, error: { message: "upstream_timeout" } },
+      );
+      if (!res.error && res.data) {
+        noteSupabaseHealthy();
+        rowData = res.data as unknown as Record<string, unknown>;
+        break;
+      }
+      if (res.error?.message && isHardSupabaseFailure(res.error.message)) {
+        markSupabaseUnavailable();
+        break;
+      }
     }
   }
   if (!rowData) {
-    const wide = await fetchFixtureRows((select) =>
-      admin
-        .from("sportsdb_fixtures")
-        .select(select)
-        .in("sport", ["nba", "soccer"])
-        .order("date_event", { ascending: false })
-        .limit(200)
-        .then((r) => ({ data: r.data, error: r.error })),
-    );
-    rowData =
-      wide.find((row) => {
-        const raw = row.raw as Record<string, unknown> | null;
-        return raw?.sideline_slug === slug;
-      }) ?? null;
-  }
-  if (!rowData) {
-    const batch = await listFixtures(["nba", "soccer"], 120);
-    const row = batch.find((r) => r.slug === slug);
-    if (!row) return null;
-    return withTeamLogos(fixtureRowToMatchEvent(row));
+    const provided = (await loadProviderFixtureRows()).find((row) => row.slug === slug);
+    if (!provided) return null;
+    rowData = provided as unknown as Record<string, unknown>;
   }
   let row = hydrateFixtureRow(rowData as Record<string, unknown>);
   if (!isLiveLeagueRow(row) || !shouldRetainFixtureRow(row)) return null;
 
-  if (
-    !rowHasLineup(row) &&
-    isVisibleFixtureRow(row) &&
-    !getDegradedMode().cacheOnly
-  ) {
+  if (!rowHasLineup(row) && isVisibleFixtureRow(row)) {
     const ev = row.raw as unknown as TsdbEvent;
     const sport = row.sport as "nba" | "soccer";
     try {
-      const lineup = await resolvePlayersForEvent(
-        {
-          ...ev,
-          idEvent: row.id_event,
-          idHomeTeam: row.id_home_team ?? ev.idHomeTeam,
-          idAwayTeam: row.id_away_team ?? ev.idAwayTeam,
-        },
-        sport,
+      const lineup = await withTimeout(
+        resolvePlayersForEvent(
+          {
+            ...ev,
+            idEvent: row.id_event,
+            idHomeTeam: row.id_home_team ?? ev.idHomeTeam,
+            idAwayTeam: row.id_away_team ?? ev.idAwayTeam,
+          },
+          sport,
+        ),
+        6_000,
+        [] as StoredLineupPlayer[],
       );
       if (lineup.length > 0) {
         row = {
@@ -920,16 +1141,23 @@ export async function getLiveMatchBySlug(slug: string) {
             lineup,
           },
         };
-        if (admin) {
+        if (admin && !getDegradedMode().cacheOnly) {
           void applyLineupEnrichToRow(admin, row);
         }
-      } else if (admin) {
+      } else if (admin && !getDegradedMode().cacheOnly) {
         await applyLineupEnrichToRow(admin, row);
-        const refreshed = await admin
-          .from("sportsdb_fixtures")
-          .select(FIXTURE_SELECT_WITH_TEAM_COLS)
-          .eq("slug", slug)
-          .maybeSingle();
+        const refreshed = await withTimeout<{
+          data: Record<string, unknown> | null;
+          error: { message: string } | null;
+        }>(
+          admin
+            .from("sportsdb_fixtures")
+            .select(FIXTURE_SELECT_WITH_TEAM_COLS)
+            .eq("slug", slug)
+            .maybeSingle(),
+          2_000,
+          { data: null, error: { message: "upstream_timeout" } },
+        );
         if (refreshed.data) {
           row = hydrateFixtureRow(refreshed.data as unknown as Record<string, unknown>);
         }

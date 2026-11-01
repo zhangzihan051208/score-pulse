@@ -16,14 +16,27 @@ export function useAuth() {
       return;
     }
     const supabase = createClient();
-    supabase.auth.getUser().then(({ data }) => {
-      setUser(data.user);
-      setLoading(false);
-    });
+    const stop = window.setTimeout(() => setLoading(false), 2_500);
+    supabase.auth
+      .getUser()
+      .then(({ data }) => {
+        setUser(data.user);
+      })
+      .catch(() => {
+        setUser(null);
+      })
+      .finally(() => {
+        window.clearTimeout(stop);
+        setLoading(false);
+      });
     const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null);
+      setLoading(false);
     });
-    return () => sub.subscription.unsubscribe();
+    return () => {
+      window.clearTimeout(stop);
+      sub.subscription.unsubscribe();
+    };
   }, [enabled]);
 
   return { user, loading, enabled };
