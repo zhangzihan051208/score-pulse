@@ -1,4 +1,5 @@
 import { L, S } from "./copy";
+import { playerHeat } from "./player-heat";
 import { emptyScoresForPosition } from "./position-ratings";
 import { inferPositionKey } from "./position-infer";
 import { fixtureSlug } from "./slugify";
@@ -99,6 +100,7 @@ export function playersToPerformances(
       stats: [],
       communityAvg: { ...emptyScoresForPosition(positionKey) },
       ratingCount: 0,
+      heat: playerHeat(sport, p.strPlayer, p.strTeam),
     });
   }
 

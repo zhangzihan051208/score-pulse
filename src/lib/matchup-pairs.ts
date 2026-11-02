@@ -55,11 +55,11 @@ export function buildEventMatchups(
   }
 
   return pairs.sort((a, b) => {
-    const sideA = a.home.athlete.name.localeCompare(b.home.athlete.name);
-    if (a.positionKey !== b.positionKey) {
-      return a.positionKey.localeCompare(b.positionKey);
-    }
-    return a.slot - b.slot || sideA;
+    const heatA = Math.max(a.home.performance.heat ?? 0, a.away.performance.heat ?? 0);
+    const heatB = Math.max(b.home.performance.heat ?? 0, b.away.performance.heat ?? 0);
+    if (heatA !== heatB) return heatB - heatA;
+    if (a.positionKey !== b.positionKey) return a.positionKey.localeCompare(b.positionKey);
+    return a.slot - b.slot;
   });
 }
 

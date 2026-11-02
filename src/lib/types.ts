@@ -81,6 +81,8 @@ export type Performance = {
   stats: { label: Localized; value: string; detail?: string }[];
   communityAvg: ScoreMap;
   ratingCount: number;
+  /** From the current honor ranking. 100 is rank 1. 0 is unranked. Not stored. */
+  heat?: number;
 };
 
 export type MatchEvent = {

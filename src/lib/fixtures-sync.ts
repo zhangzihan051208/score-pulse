@@ -942,16 +942,22 @@ async function queryLineupRecord(): Promise<Record<string, StoredLineupPlayer[]>
   return out;
 }
 
-const cachedLineupRecord = unstable_cache(queryLineupRecord, ["fixture-lineups-v2"], {
-  revalidate: 2 * 60 * 60,
-  tags: ["fixture-lineups"],
-});
+/** In-process. The full map is over Next's 2MB data-cache limit, and a failed write was dropping every roster. */
+let lineupMemory: { at: number; record: Record<string, StoredLineupPlayer[]> } | null = null;
+const LINEUP_MEMORY_MS = 2 * 60 * 60 * 1000;
+
+async function loadLineupRecord(): Promise<Record<string, StoredLineupPlayer[]>> {
+  if (lineupMemory && Date.now() - lineupMemory.at < LINEUP_MEMORY_MS) return lineupMemory.record;
+  const record = await queryLineupRecord();
+  if (Object.keys(record).length > 0) lineupMemory = { at: Date.now(), record };
+  return record;
+}
 
 async function attachCachedLineups(rows: LiveFixtureRow[]) {
   if (rows.length === 0 || rows.every((row) => (row.lineup?.length ?? 0) > 0)) return rows;
   let record: Record<string, StoredLineupPlayer[]> = {};
   try {
-    record = await cachedLineupRecord();
+    record = await loadLineupRecord();
   } catch {
     return rows;
   }

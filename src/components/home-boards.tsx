@@ -150,6 +150,12 @@ export function HomeBoards({ initialEvents = [] }: { initialEvents?: MatchEvent[
                   pick,
                 })),
               )
+              .sort(
+                (a, b) =>
+                  (b.pick.performance.heat ?? 0) - (a.pick.performance.heat ?? 0) ||
+                  b.pick.merged.count - a.pick.merged.count ||
+                  a.pick.athlete.name.localeCompare(b.pick.athlete.name),
+              )
               .slice(0, 8)
               .map(({ event, pick }) => (
                 <li key={`${event.id}-${pick.athlete.id}`} className="border-b last:border-0">
