@@ -20,7 +20,7 @@ import {
 import { SCHEDULE_SYNC_MS } from "@/lib/fixtures-cadence";
 import { thesportsdbBudgets, upstreamAllows } from "@/lib/upstream-budget";
 import { revalidateTag, unstable_cache } from "next/cache";
-import { statusRank } from "@/lib/favorite-teams";
+import { compareMatchesByRank, statusRank } from "@/lib/favorite-teams";
 import {
   getLeagueBySlug,
   getLeagueByTsdbId,
@@ -1110,12 +1110,7 @@ export async function listLiveMatchEvents(
     .map((r) => fixtureRowToMatchEvent(r))
     .filter((e): e is MatchEvent => Boolean(e))
     .filter((e) => isVisibleMatchStatus(e.status, e.startAt));
-  events.sort((a, b) => {
-    const sr = statusRank(a.status) - statusRank(b.status);
-    if (sr !== 0) return sr;
-    if (a.status === "ended") return b.startAt.localeCompare(a.startAt);
-    return a.startAt.localeCompare(b.startAt);
-  });
+  events.sort(compareMatchesByRank);
   events = applyKnownCrests(events.slice(0, limit));
   events = await withTimeout(fillMissingTeamLogos(events), 4_000, events);
   return events;

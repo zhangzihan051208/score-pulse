@@ -114,6 +114,16 @@ export function statusRank(status: MatchEvent["status"]): number {
   return 2;
 }
 
+/** Live, then upcoming, then final. Inside a status, the better-ranked club comes first. */
+export function compareMatchesByRank(a: MatchEvent, b: MatchEvent): number {
+  const sr = statusRank(a.status) - statusRank(b.status);
+  if (sr !== 0) return sr;
+  const heat = (b.teamHeat ?? 0) - (a.teamHeat ?? 0);
+  if (heat !== 0) return heat;
+  if (a.status === "ended") return b.startAt.localeCompare(a.startAt);
+  return a.startAt.localeCompare(b.startAt);
+}
+
 export function sortEventsForHome(
   events: MatchEvent[],
   favorites: FavoriteTeamsMap,
@@ -136,9 +146,7 @@ export function sortEventsForHome(
     const aPrimary = primaryHits.has(a.id) ? 0 : 1;
     const bPrimary = primaryHits.has(b.id) ? 0 : 1;
     if (aPrimary !== bPrimary) return aPrimary - bPrimary;
-    const sr = statusRank(a.status) - statusRank(b.status);
-    if (sr !== 0) return sr;
-    return b.startAt.localeCompare(a.startAt);
+    return compareMatchesByRank(a, b);
   });
 }
 

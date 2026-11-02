@@ -1,5 +1,6 @@
 import { L, S } from "./copy";
 import { playerHeat } from "./player-heat";
+import { matchTeamHeat } from "./team-heat";
 import { emptyScoresForPosition } from "./position-ratings";
 import { inferPositionKey } from "./position-infer";
 import { fixtureSlug } from "./slugify";
@@ -200,6 +201,7 @@ export function fixtureToMatchEvent(
               `${performances.length} Spieler zum Bewerten.`,
             ),
     cover: SPORT_ACCENT[sport],
+    teamHeat: matchTeamHeat(sport, row.str_home_team, row.str_away_team),
     performances: scoreOnly && performances.length === 0 ? [] : performances,
     roster: scoreOnly && performances.length === 0 ? {} : roster,
   });

@@ -18,7 +18,7 @@ export async function cachedLiveMatchEvents(
     unstable_cache(
       read,
       [
-        "live-match-events-v3",
+        "live-match-events-v4",
         sports.join(","),
         String(limit),
         leagueSlug ?? "all",

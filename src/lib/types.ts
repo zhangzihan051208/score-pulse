@@ -112,6 +112,8 @@ export type MatchEvent = {
   /** Live TheSportsDB roster keyed by player id */
   roster?: Record<string, Athlete>;
   live?: boolean;
+  /** Higher means a better-ranked club is playing. Max of the two sides. Not stored. */
+  teamHeat?: number;
   /** ready = players loaded; loading = still fetching; missing = provider returned none */
   lineupState?: "ready" | "loading" | "missing";
   /** Roster size when the list has not attached every player row. */
