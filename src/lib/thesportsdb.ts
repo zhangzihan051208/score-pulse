@@ -175,6 +175,29 @@ export async function fetchLineup(idEvent: string, opts?: { lineupBudget?: boole
   return data?.lineup ?? [];
 }
 
+/** English timeline rows: strTimeline is "Goal" or "Card", detail is "Normal Goal", "Yellow Card", "Red Card". */
+export type TsdbTimelineEvent = {
+  idPlayer?: string | null;
+  strPlayer?: string | null;
+  idAssist?: string | null;
+  strAssist?: string | null;
+  strTimeline?: string | null;
+  strTimelineDetail?: string | null;
+  intTime?: string | null;
+};
+
+type TimelineResponse = { timeline: TsdbTimelineEvent[] | null };
+
+/** null when the request failed. [] when the match has no timeline yet. */
+export async function fetchTimeline(idEvent: string): Promise<TsdbTimelineEvent[] | null> {
+  const data = await tsdb<TimelineResponse>(
+    `lookuptimeline.php?id=${encodeURIComponent(idEvent)}`,
+    { optional: true, lineupBudget: true },
+  );
+  if (!data) return null;
+  return data.timeline ?? [];
+}
+
 export type TsdbTeamBadgeFields = {
   strBadge?: string | null;
   strTeamBadge?: string | null;

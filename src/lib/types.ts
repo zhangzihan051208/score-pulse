@@ -77,7 +77,8 @@ export type Performance = {
   role: Localized;
   result?: Localized;
   highlight: Localized;
-  stats: { label: Localized; value: string }[];
+  /** Match facts. Live soccer uses English labels: Goals, Assists, Yellow cards, Red cards. */
+  stats: { label: Localized; value: string; detail?: string }[];
   communityAvg: ScoreMap;
   ratingCount: number;
 };

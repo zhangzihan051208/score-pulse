@@ -54,6 +54,7 @@ import {
   shouldRetainFixtureRow,
 } from "@/lib/fixture-retention";
 import { alignEventToNow } from "@/lib/match-clock";
+import { withSoccerTimelineStats } from "@/lib/soccer-timeline";
 import type { MatchEvent } from "./types";
 
 const LIVE_SYNC_MS = SCHEDULE_SYNC_MS;
@@ -1175,8 +1176,13 @@ export async function getLiveMatchBySlug(slug: string) {
       : event.status === "upcoming"
         ? event
         : { ...event, lineupState: "missing" as const };
-  if (withLineup.homeTeamLogoUrl && withLineup.awayTeamLogoUrl) return withLineup;
-  return withTeamLogos(withLineup);
+  const stamped = await withTimeout(
+    withSoccerTimelineStats(withLineup),
+    4_500,
+    withLineup,
+  );
+  if (stamped.homeTeamLogoUrl && stamped.awayTeamLogoUrl) return stamped;
+  return withTeamLogos(stamped);
 }
 
 export type SearchPlayerHit = {
@@ -1604,11 +1610,12 @@ export async function getLiveMatchById(idEvent: string) {
       .eq("id_event", idEvent)
       .maybeSingle();
     if (!res.error && res.data) {
-      return withTeamLogos(
-        fixtureRowToMatchEvent(
-          hydrateFixtureRow(res.data as unknown as Record<string, unknown>),
-        ),
+      const event = fixtureRowToMatchEvent(
+        hydrateFixtureRow(res.data as unknown as Record<string, unknown>),
       );
+      if (!event) return null;
+      const stamped = await withTimeout(withSoccerTimelineStats(event), 4_500, event);
+      return withTeamLogos(stamped);
     }
   }
   return null;

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { CommunityRatingsPanel } from "@/components/community-ratings-panel";
 import { PlayerAvatar } from "@/components/player-avatar";
+import { PlayerMatchStats } from "@/components/player-match-stats";
 import { PlayerCardTabs } from "@/components/player-card-tabs";
 import {
   DimensionChips,
@@ -85,6 +86,8 @@ export function PlayerDetailCard({
           </div>
         </div>
       </div>
+
+      <PlayerMatchStats stats={performance.stats} locale={locale} />
 
       <p className="mt-3 text-sm leading-6 text-muted-foreground">
         {tx(performance.highlight, locale)}

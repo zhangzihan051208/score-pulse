@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { GradeSlider } from "@/components/grade-slider";
 import { PlayerAvatar } from "@/components/player-avatar";
+import { PlayerMatchStats } from "@/components/player-match-stats";
 import { RatingGuidePanel } from "@/components/rating-guide-panel";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -103,6 +104,8 @@ export function PlayerPostCard({
           </p>
         </div>
       </div>
+
+      <PlayerMatchStats stats={performance.stats} locale={locale} />
 
       <div className="mt-4">
         <RatingGuidePanel positionKey={positionKey} />
