@@ -436,6 +436,7 @@ export function RateCard({
           <label className="text-sm font-medium">{t.rate.comment}</label>
           <Textarea
             value={body}
+            maxLength={500}
             placeholder={t.rate.commentHint}
             onChange={(e) => {
               setBody(e.target.value);

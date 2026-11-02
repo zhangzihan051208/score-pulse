@@ -28,7 +28,6 @@ import { VipScreen } from "./src/screens/VipScreen";
 import { ZoneCreateScreen } from "./src/screens/ZoneCreateScreen";
 import { ZoneItemScreen } from "./src/screens/ZoneItemScreen";
 import { ZoneScreen } from "./src/screens/ZoneScreen";
-import { ZonesScreen } from "./src/screens/ZonesScreen";
 import { KickoffNotificationSync } from "./src/KickoffNotificationSync";
 import { SessionProvider } from "./src/store";
 import { colors } from "./src/ui";
@@ -103,7 +102,6 @@ function Tabs() {
     >
       <Tab.Screen name="Home" component={HomeScreen} options={{ title: t.brand, tabBarLabel: t.navHome }} />
       <Tab.Screen name="Boards" component={BoardsScreen} options={{ title: t.rankings, tabBarLabel: t.rankings }} />
-      <Tab.Screen name="Zones" component={ZonesScreen} options={{ title: t.zones, tabBarLabel: t.zones }} />
       <Tab.Screen name="Profile" component={ProfileScreen} options={{ title: t.profile, tabBarLabel: t.profile }} />
     </Tab.Navigator>
   );

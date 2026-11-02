@@ -116,7 +116,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Missing event" }, { status: 400 });
   }
   const score = clampScore(Number(body.score));
-  const comment = body.comment?.trim() ?? "";
+  const comment = (body.comment?.trim() ?? "").slice(0, 500);
   if (comment) {
     const verdict = await moderateComment(comment);
     if (!verdict.pass) {

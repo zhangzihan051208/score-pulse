@@ -47,7 +47,7 @@ export async function POST(
     scores?: ScoreMap;
     displayName?: string;
   };
-  const trimmed = body.comment?.trim() ?? "";
+  const trimmed = (body.comment?.trim() ?? "").slice(0, 500);
   if (trimmed.length > 0 && trimmed.length < 8) {
     return NextResponse.json(
       { error: "Comment must be at least 8 characters." },

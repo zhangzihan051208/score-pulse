@@ -7,6 +7,8 @@ export const deOverrides = {
     loadingSearch: "Suche…",
     loadingTeamSearch: "Teams werden gesucht…",
     degradedBanner: "Ergebnisse zeigen die letzte Aktualisierung.",
+    pausedTitle: "Vorübergehend zu",
+    pausedBody: "Dieser Bereich ist gerade geschlossen. Fußball- und Basketball-Noten bleiben offen.",
   },
   nav: {
     home: "Start",

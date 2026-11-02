@@ -8,6 +8,8 @@ const es: Dict = {
       loadingSearch: "Buscando…",
       loadingTeamSearch: "Buscando equipos…",
       degradedBanner: "Los marcadores muestran la última actualización.",
+      pausedTitle: "En pausa",
+      pausedBody: "Esta sección está cerrada por ahora. Las notas de fútbol y baloncesto siguen abiertas.",
     },
     nav: {
       home: "Inicio",

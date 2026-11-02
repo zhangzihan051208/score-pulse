@@ -8,6 +8,8 @@ const en: Dict = {
       loadingSearch: "Searching…",
       loadingTeamSearch: "Finding teams…",
       degradedBanner: "Scores are showing the latest update.",
+      pausedTitle: "Paused for now",
+      pausedBody: "This section is closed for the moment. Soccer and basketball ratings stay open.",
     },
     nav: {
       home: "Home",

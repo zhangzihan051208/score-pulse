@@ -8,6 +8,8 @@ const zh: Dict = {
       loadingSearch: "正在搜索…",
       loadingTeamSearch: "正在查找球队…",
       degradedBanner: "比分暂时显示最近一次更新。",
+      pausedTitle: "暂时关闭",
+      pausedBody: "这个板块先收起来了。足球和篮球的比赛评分照常开放。",
     },
     nav: {
       home: "首页",

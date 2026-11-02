@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import dynamic from "next/dynamic";
 import { useMemo } from "react";
 import { HomeMyTeams } from "@/components/home-my-teams";
 import { LoadingView } from "@/components/loading-view";
@@ -21,17 +20,13 @@ import { SPORT_CHIP } from "@/lib/sports";
 import { LeagueTabs } from "@/components/league-tabs";
 import { MatchStatusTabs, useMatchStatus } from "@/components/match-status-tabs";
 import { leagueLabel } from "@/i18n/league-labels";
+import { listedRosterCount } from "@/lib/roster-count";
 import {
   HOME_LIVE_CHIP_PER_SPORT,
   HOME_MATCH_ROWS_PER_SPORT,
 } from "@/lib/display-limits";
 import { pinBayernArsenal } from "@/lib/featured/bayern-arsenal";
-import { SPORTS, type MatchEvent, type Sport } from "@/lib/types";
-
-const LegacyBoardBlock = dynamic(
-  () => import("@/components/legacy-board-block").then((m) => m.LegacyBoardBlock),
-  { loading: () => null },
-);
+import { type MatchEvent, type Sport } from "@/lib/types";
 
 const LIVE_SPORTS: Sport[] = ["nba", "soccer"];
 
@@ -98,17 +93,6 @@ export function HomeBoards({ initialEvents = [] }: { initialEvents?: MatchEvent[
         )}
       </section>
 
-      <Link
-        href="/zones"
-        className="mt-4 flex items-center justify-between rounded-2xl border border-primary/25 bg-gradient-to-r from-primary/10 to-orange-500/10 px-4 py-3 transition-colors hover:border-primary/40"
-      >
-        <div>
-          <p className="text-sm font-semibold">{t.zones.homeStrip}</p>
-          <p className="text-xs text-muted-foreground">{t.zones.lead}</p>
-        </div>
-        <span className="shrink-0 text-xs font-medium text-primary">{t.zones.homeStripCta}</span>
-      </Link>
-
       <HomeMyTeams events={sortedAll} />
 
       {liveChips.length > 0 && (
@@ -153,9 +137,6 @@ export function HomeBoards({ initialEvents = [] }: { initialEvents?: MatchEvent[
               />
             ))
           )}
-          {SPORTS.filter((s) => !LIVE_SPORTS.includes(s)).map((sport) => (
-            <LegacyBoardBlock key={sport} sport={sport} />
-          ))}
         </div>
         <aside className="h-fit rounded-xl border bg-card lg:sticky lg:top-16">
           <div className="border-b px-3 py-2 text-xs font-semibold tracking-widest text-muted-foreground uppercase">
@@ -281,7 +262,7 @@ function FeaturedEventRow({
           event={event}
           size="sm"
           matchHref={matchHref}
-          playerCount={event.performances.length}
+          playerCount={listedRosterCount(event)}
         />
       </div>
       <Link
@@ -292,14 +273,14 @@ function FeaturedEventRow({
           ? leagueLabel(locale as "en", event.leagueSlug)
           : tx(event.subtitle, locale as "en")}
         {" · "}
-        {event.lineupState === "loading" ||
-        ((event.status === "ended" || event.status === "live") &&
-          event.performances.length === 0 &&
-          event.lineupState !== "missing")
+        {listedRosterCount(event) === 0 &&
+        (event.lineupState === "loading" ||
+          ((event.status === "ended" || event.status === "live") &&
+            event.lineupState !== "missing"))
           ? t.event.lineupLoading
-          : event.lineupState === "missing"
+          : event.lineupState === "missing" && listedRosterCount(event) === 0
             ? t.event.lineupMissingShort
-            : `${event.performances.length} ${t.home.players}`}
+            : `${listedRosterCount(event)} ${t.home.players}`}
       </Link>
     </div>
   );

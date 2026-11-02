@@ -17,6 +17,7 @@ import { MatchStatusTabs, useMatchStatus } from "@/components/match-status-tabs"
 import { MatchScoreboard } from "@/components/match-scoreboard";
 import { useCommunity } from "@/hooks/use-community";
 import { leagueLabel } from "@/i18n/league-labels";
+import { listedRosterCount } from "@/lib/roster-count";
 import { ESPORTS_GAMES, getEsportsGame, isEsportsGameSlug } from "@/lib/esports-games";
 import { getLeagueBySlug } from "@/lib/leagues";
 import type { MatchEvent, Sport } from "@/lib/types";
@@ -245,19 +246,19 @@ function BoardEventCard({
           event={event}
           size="sm"
           matchHref={`/events/${event.slug}`}
-          playerCount={event.performances.length}
+          playerCount={listedRosterCount(event)}
         />
         <p className="mt-2 text-sm text-muted-foreground">
           {tx(event.subtitle, locale)}
           {" · "}
-          {event.lineupState === "loading" ||
-          ((event.status === "ended" || event.status === "live") &&
-            event.performances.length === 0 &&
-            event.lineupState !== "missing")
+          {listedRosterCount(event) === 0 &&
+          (event.lineupState === "loading" ||
+            ((event.status === "ended" || event.status === "live") &&
+              event.lineupState !== "missing"))
             ? t.event.lineupLoading
-            : event.lineupState === "missing"
+            : event.lineupState === "missing" && listedRosterCount(event) === 0
               ? t.event.lineupMissingShort
-              : `${event.performances.length} ${t.home.players}`}
+              : `${listedRosterCount(event)} ${t.home.players}`}
         </p>
       </div>
       <div className="border-t px-3 py-3">

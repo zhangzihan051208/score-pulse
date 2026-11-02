@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { GradeSlider } from "@/components/grade-slider";
 import { PlayerAvatar } from "@/components/player-avatar";
+import { PlayerMatchStats } from "@/components/player-match-stats";
 import { RatingGuidePanel } from "@/components/rating-guide-panel";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -104,6 +105,8 @@ export function PlayerPostCard({
         </div>
       </div>
 
+      <PlayerMatchStats stats={performance.stats} locale={locale} />
+
       <div className="mt-4">
         <RatingGuidePanel positionKey={positionKey} />
       </div>
@@ -181,6 +184,7 @@ export function PlayerPostCard({
           <label className="text-sm font-medium">{t.rate.comment}</label>
           <Textarea
             value={body}
+            maxLength={500}
             placeholder={t.rate.commentHint}
             onChange={(e) => {
               setBody(e.target.value);
