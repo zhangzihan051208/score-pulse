@@ -10,6 +10,7 @@ import { useProfile } from "@/hooks/use-profile";
 import { leagueLabel } from "@/i18n/league-labels";
 import { useI18n } from "@/i18n/use-i18n";
 import { favoritePartitions } from "@/lib/favorite-teams";
+import { ZONES_ENABLED } from "@/lib/features";
 import {
   readOnboardingDoneLocal,
   writeOnboardingDoneLocal,
@@ -18,7 +19,9 @@ import type { FavoritePartition } from "@/lib/types";
 
 type Step = "welcome" | "teams" | "ratings" | "zones";
 
-const STEPS: Step[] = ["welcome", "teams", "ratings", "zones"];
+const STEPS: Step[] = ZONES_ENABLED
+  ? ["welcome", "teams", "ratings", "zones"]
+  : ["welcome", "teams", "ratings"];
 
 export function WelcomeOnboardingGate() {
   const { locale, t } = useI18n();
@@ -224,7 +227,7 @@ export function WelcomeOnboardingGate() {
                 {t.onboarding.back}
               </Button>
             ) : null}
-            {step !== "zones" ? (
+            {step !== STEPS[STEPS.length - 1] ? (
               <Button
                 type="button"
                 size="sm"

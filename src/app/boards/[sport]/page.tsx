@@ -1,6 +1,8 @@
 import { notFound } from "next/navigation";
 import { connection } from "next/server";
 import { BoardPage } from "@/components/board-page";
+import { PausedSection } from "@/components/paused-section";
+import { isSportOpen } from "@/lib/features";
 import { cachedLiveMatchEvents } from "@/lib/live-data-cache";
 import { SPORTS, type Sport } from "@/lib/types";
 
@@ -26,6 +28,7 @@ export default async function SportBoard({
 }) {
   const { sport } = await params;
   if (!SPORTS.includes(sport as Sport)) notFound();
+  if (!isSportOpen(sport)) return <PausedSection />;
   const s = sport as Sport;
   let initialEvents: Awaited<ReturnType<typeof cachedLiveMatchEvents>> = [];
   if (s === "nba" || s === "soccer") {

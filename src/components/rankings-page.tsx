@@ -11,7 +11,8 @@ import { useI18n } from "@/i18n/use-i18n";
 import { dimensionIds, POSITION_PROFILES, type PositionKey } from "@/lib/position-ratings";
 import { playerHubHref } from "@/lib/player-routes";
 import type { LeaderboardEntry } from "@/lib/rankings-server";
-import { SPORTS, type Sport } from "@/lib/types";
+import { OPEN_SPORTS } from "@/lib/features";
+import type { Sport } from "@/lib/types";
 import { cn } from "cn";
 
 type Payload = {
@@ -36,7 +37,7 @@ export function RankingsPageInner() {
   const sport = (
     sportParam === "all"
       ? "all"
-      : sportParam && (SPORTS as readonly string[]).includes(sportParam)
+      : sportParam && (OPEN_SPORTS as readonly string[]).includes(sportParam)
         ? sportParam
         : hall === "community"
           ? "nba"
@@ -206,7 +207,7 @@ export function RankingsPageInner() {
             {t.rankings.hallAll}
           </button>
         ) : null}
-        {SPORTS.map((s) => (
+        {OPEN_SPORTS.map((s) => (
           <button
             key={s}
             type="button"

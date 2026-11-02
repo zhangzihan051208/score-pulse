@@ -3,14 +3,14 @@ import { Image, Pressable, ScrollView, StyleSheet, Text, View } from "react-nati
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { sportLabel } from "../catalog";
-import { esportsGames, eventsForTeam, hotPlayers, leagues, matchEvents, pairText } from "../events";
+import { eventsForTeam, hotPlayers, leagues, matchEvents, pairText } from "../events";
 import { favoriteNames } from "../favorites";
 import { useLocale } from "../i18n";
 import type { RootStackParamList } from "../navigation";
 import { useSession } from "../store";
 import { colors, ui } from "../ui";
 
-const SPORT_ORDER = ["nba", "soccer", "esports", "nfl", "f1", "tennis", "ufc"];
+const SPORT_ORDER = ["nba", "soccer"];
 
 export function HomeScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
@@ -35,14 +35,6 @@ export function HomeScreen() {
         <Text style={styles.heroLead}>{t.homeLead}</Text>
         <Text style={styles.tagline}>{t.tagline}</Text>
       </View>
-
-      <Pressable style={styles.zoneStrip} onPress={() => navigation.navigate("Tabs", { screen: "Zones" })}>
-        <View style={{ flex: 1 }}>
-          <Text style={ui.title}>{t.zones}</Text>
-          <Text style={ui.muted}>{t.zoneLead}</Text>
-        </View>
-        <Text style={styles.enter}>{t.enter}</Text>
-      </Pressable>
 
       {clubs.length === 0 ? (
         <Pressable style={styles.teamsPrompt} onPress={() => navigation.navigate("Tabs", { screen: "Profile" })}>
@@ -108,15 +100,6 @@ export function HomeScreen() {
                       </Text>
                     </Pressable>
                   ))}
-              </View>
-            ) : null}
-            {sport === "esports" ? (
-              <View style={styles.chips}>
-                {esportsGames.map((game) => (
-                  <Pressable key={game.slug} onPress={() => navigation.navigate("Rankings", { sport: "esports" })}>
-                    <Text style={styles.league}>{locale === "zh" ? game.zh : game.en}</Text>
-                  </Pressable>
-                ))}
               </View>
             ) : null}
             {rows.length === 0 ? <Text style={ui.muted}>{t.noMatches}</Text> : null}
@@ -187,16 +170,6 @@ const styles = StyleSheet.create({
   heroTitle: { color: "#fff", fontSize: 26, fontWeight: "800", marginTop: 8 },
   heroLead: { color: "rgba(255,255,255,0.78)", lineHeight: 22 },
   tagline: { color: "rgba(255,255,255,0.45)", fontSize: 12 },
-  zoneStrip: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-    backgroundColor: "#FDE8DF",
-    borderRadius: 16,
-    padding: 14,
-    borderWidth: 1,
-    borderColor: "#F0C2B0",
-  },
   teamsPrompt: {
     flexDirection: "row",
     alignItems: "center",

@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import dynamic from "next/dynamic";
 import { useMemo } from "react";
 import { HomeMyTeams } from "@/components/home-my-teams";
 import { LoadingView } from "@/components/loading-view";
@@ -26,12 +25,7 @@ import {
   HOME_MATCH_ROWS_PER_SPORT,
 } from "@/lib/display-limits";
 import { pinBayernArsenal } from "@/lib/featured/bayern-arsenal";
-import { SPORTS, type MatchEvent, type Sport } from "@/lib/types";
-
-const LegacyBoardBlock = dynamic(
-  () => import("@/components/legacy-board-block").then((m) => m.LegacyBoardBlock),
-  { loading: () => null },
-);
+import { type MatchEvent, type Sport } from "@/lib/types";
 
 const LIVE_SPORTS: Sport[] = ["nba", "soccer"];
 
@@ -98,17 +92,6 @@ export function HomeBoards({ initialEvents = [] }: { initialEvents?: MatchEvent[
         )}
       </section>
 
-      <Link
-        href="/zones"
-        className="mt-4 flex items-center justify-between rounded-2xl border border-primary/25 bg-gradient-to-r from-primary/10 to-orange-500/10 px-4 py-3 transition-colors hover:border-primary/40"
-      >
-        <div>
-          <p className="text-sm font-semibold">{t.zones.homeStrip}</p>
-          <p className="text-xs text-muted-foreground">{t.zones.lead}</p>
-        </div>
-        <span className="shrink-0 text-xs font-medium text-primary">{t.zones.homeStripCta}</span>
-      </Link>
-
       <HomeMyTeams events={sortedAll} />
 
       {liveChips.length > 0 && (
@@ -153,9 +136,6 @@ export function HomeBoards({ initialEvents = [] }: { initialEvents?: MatchEvent[
               />
             ))
           )}
-          {SPORTS.filter((s) => !LIVE_SPORTS.includes(s)).map((sport) => (
-            <LegacyBoardBlock key={sport} sport={sport} />
-          ))}
         </div>
         <aside className="h-fit rounded-xl border bg-card lg:sticky lg:top-16">
           <div className="border-b px-3 py-2 text-xs font-semibold tracking-widest text-muted-foreground uppercase">

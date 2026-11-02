@@ -6,8 +6,10 @@ import { useEffect, useRef, useState } from "react";
 import { AuthMenu } from "@/components/auth-menu";
 import { LocaleSwitcher } from "@/components/locale-switcher";
 import { Input } from "@/components/ui/input";
+import { leagueLabel } from "@/i18n/league-labels";
 import { useI18n } from "@/i18n/use-i18n";
-import { SPORTS } from "@/lib/types";
+import { ZONES_ENABLED } from "@/lib/features";
+import { SIDELINE_LEAGUES } from "@/lib/leagues";
 import { VIP_BILLING_ENABLED } from "@/lib/vip";
 import { cn } from "cn";
 
@@ -100,11 +102,13 @@ export function SiteHeader() {
               label={t.nav.rankings}
               active={pathname.startsWith("/rankings")}
             />
-            <NavLink
-              href="/zones"
-              label={t.nav.zones}
-              active={pathname.startsWith("/zones")}
-            />
+            {ZONES_ENABLED ? (
+              <NavLink
+                href="/zones"
+                label={t.nav.zones}
+                active={pathname.startsWith("/zones")}
+              />
+            ) : null}
           </nav>
           <form
             className="w-full min-w-[7.5rem] max-w-[14rem] shrink-0 sm:max-w-xs"
@@ -138,8 +142,13 @@ export function SiteHeader() {
   );
 }
 
+function leagueHref(sport: string, slug: string) {
+  if (sport === "nba") return "/boards/nba";
+  return `/boards/${sport}/${slug}`;
+}
+
 function SportStrip({ pathname }: { pathname: string }) {
-  const { t } = useI18n();
+  const { locale, t } = useI18n();
   const scroller = useRef<HTMLElement>(null);
 
   useEffect(() => {
@@ -169,14 +178,17 @@ function SportStrip({ pathname }: { pathname: string }) {
         aria-label={t.nav.boards}
         className="flex min-w-0 flex-1 gap-0.5 overflow-x-auto pb-1 [scrollbar-color:rgba(255,255,255,0.45)_transparent] [scrollbar-width:thin] [&::-webkit-scrollbar]:h-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-white/40 [&::-webkit-scrollbar-track]:bg-white/10"
       >
-        {SPORTS.map((sport) => {
-          const href = `/boards/${sport}`;
-          const active = pathname.startsWith(href);
+        {SIDELINE_LEAGUES.map((league) => {
+          const href = leagueHref(league.sport, league.slug);
+          const active =
+            league.sport === "nba"
+              ? pathname === "/boards/nba" || pathname.startsWith("/boards/nba/")
+              : pathname.startsWith(href);
           return (
             <NavLink
-              key={sport}
+              key={league.slug}
               href={href}
-              label={t.sports[sport]}
+              label={leagueLabel(locale, league.slug)}
               active={active}
               prefetch={false}
               data-active={active ? "true" : undefined}

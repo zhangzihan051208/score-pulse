@@ -8,6 +8,8 @@ export type Dict = {
     loadingSearch: string;
     loadingTeamSearch: string;
     degradedBanner: string;
+    pausedTitle: string;
+    pausedBody: string;
   };
   nav: {
     home: string;

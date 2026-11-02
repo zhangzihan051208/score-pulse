@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { ZONES_ENABLED } from "@/lib/features";
 import { VIP_BILLING_ENABLED } from "@/lib/vip";
 import { useEffect, useState } from "react";
 import { PlayerAvatar } from "@/components/player-avatar";
@@ -172,7 +173,7 @@ export function ProfilePageInner() {
         </div>
       </section>
 
-      <ProfileMyZones />
+      {ZONES_ENABLED ? <ProfileMyZones /> : null}
 
       <ProfileRatingHistory />
 

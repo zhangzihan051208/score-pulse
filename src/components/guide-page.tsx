@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useI18n } from "@/i18n/use-i18n";
+import { ZONES_ENABLED } from "@/lib/features";
 
 export function GuidePage() {
   const { t } = useI18n();
@@ -16,9 +17,11 @@ export function GuidePage() {
         <Link href="/my-teams" className="text-primary hover:underline">
           {t.teams.title}
         </Link>
-        <Link href="/zones" className="text-primary hover:underline">
-          {t.zones.title}
-        </Link>
+        {ZONES_ENABLED ? (
+          <Link href="/zones" className="text-primary hover:underline">
+            {t.zones.title}
+          </Link>
+        ) : null}
       </div>
       <div className="mt-6 space-y-4">
         {t.guide.sections.map((section) => (

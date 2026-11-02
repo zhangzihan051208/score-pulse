@@ -8,6 +8,8 @@ const ja: Dict = {
       loadingSearch: "検索中…",
       loadingTeamSearch: "チームを検索中…",
       degradedBanner: "スコアは最新の更新を表示しています。",
+      pausedTitle: "一時休止",
+      pausedBody: "この欄はいま閉じています。サッカーとバスケットの採点はそのまま使えます。",
     },
     nav: {
       home: "ホーム",

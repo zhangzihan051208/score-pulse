@@ -1,6 +1,8 @@
 import { notFound } from "next/navigation";
 import { connection } from "next/server";
 import { BoardPage } from "@/components/board-page";
+import { PausedSection } from "@/components/paused-section";
+import { isSportOpen } from "@/lib/features";
 import { getEsportsGame, isEsportsGameSlug } from "@/lib/esports-games";
 import { cachedEsportsMatchEvents } from "@/lib/esports-data-cache";
 import { cachedLiveMatchEvents } from "@/lib/live-data-cache";
@@ -41,6 +43,7 @@ export default async function LeagueBoard({
 }) {
   const { sport, league } = await params;
   if (!SPORTS.includes(sport as Sport)) notFound();
+  if (!isSportOpen(sport)) return <PausedSection />;
   const s = sport as Sport;
   if (s === "esports") {
     if (!isEsportsGameSlug(league)) notFound();
