@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { buttonVariants } from "@/components/ui/button";
 import { useI18n } from "@/i18n/use-i18n";
 import { elapsedMatchMinutes } from "@/lib/match-clock";
@@ -26,9 +26,12 @@ function LiveClock({ startAt, detail }: { startAt?: string; detail?: string }) {
 
 function teamHref(event: MatchEvent, side: "home" | "away") {
   const id = side === "home" ? event.homeTeamId : event.awayTeamId;
-  if (!id || event.status !== "live") return null;
+  const name = side === "home" ? event.homeTeamName : event.awayTeamName;
+  if (!id) return null;
   const sport = event.sport === "nba" || event.sport === "soccer" ? event.sport : "soccer";
-  return `/teams/${id}?sport=${sport}`;
+  const params = new URLSearchParams({ sport });
+  if (name) params.set("name", name);
+  return `/teams/${encodeURIComponent(id)}?${params}`;
 }
 
 export function MatchScoreboard({
@@ -85,7 +88,7 @@ export function MatchScoreboard({
   const crestSize = size === "lg" ? "lg" : size === "sm" ? "sm" : "md";
 
   function TeamName({ side, name, win }: { side: "home" | "away"; name: string; win: boolean }) {
-    const href = matchHref ? null : teamHref(event as MatchEvent, side);
+    const href = teamHref(event as MatchEvent, side);
     const inner = (
       <span
         className={cn(
@@ -136,7 +139,7 @@ export function MatchScoreboard({
           <span className={awayWin ? "opacity-100" : "opacity-90"}>{event.awayScore}</span>
         </div>
       ) : (
-        <span className={cn("font-semibold text-muted-foreground", nameClass)}>vs</span>
+        <span className="text-2xl font-bold tracking-wide text-foreground sm:text-3xl">vs</span>
       )}
       {live ? (
         <span className="mt-1 flex items-center gap-1.5 text-[10px] font-semibold uppercase text-primary">
@@ -166,64 +169,66 @@ export function MatchScoreboard({
     </>
   );
 
-  const board = (
+  function MatchLink({
+    children,
+    className: linkClass,
+    label,
+  }: {
+    children: ReactNode;
+    className?: string;
+    label?: string;
+  }) {
+    if (!matchHref) return <div className={linkClass}>{children}</div>;
+    return (
+      <Link href={matchHref} aria-label={label} className={cn("rounded-md outline-none", linkClass)}>
+        {children}
+      </Link>
+    );
+  }
+
+  return (
     <div
       className={cn(
         inverted && "text-white [&_.text-muted-foreground]:text-white/65",
-        !matchHref && className,
+        className,
       )}
     >
       <div className="mb-2 grid grid-cols-[1fr_auto_1fr] items-end gap-3">
-        <div className="flex justify-end">
+        <MatchLink className="flex justify-end">
           <TeamCrest name={home} badgeUrl={event.homeTeamLogoUrl} size={crestSize} />
-        </div>
+        </MatchLink>
         <div aria-hidden className="min-w-[5.5rem]" />
-        <div className="flex justify-start">
+        <MatchLink className="flex justify-start">
           <TeamCrest name={away} badgeUrl={event.awayTeamLogoUrl} size={crestSize} />
+        </MatchLink>
+      </div>
+      <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3">
+        <div className="text-right">
+          <TeamName side="home" name={home} win={homeWin} />
         </div>
-      </div>
-      <div
-        className={cn(
-          "grid grid-cols-[1fr_auto_1fr] items-center gap-3",
-        )}
-      >
-      <div className="text-right">
-        <TeamName side="home" name={home} win={homeWin} />
-      </div>
-      <div className="flex min-w-[5.5rem] flex-col items-center">
-        {scoreBlock}
-      </div>
-      <div className="text-left">
-        <TeamName side="away" name={away} win={awayWin} />
-      </div>
-      {matchHref && size === "lg" ? (
-        <div className="col-span-3 flex justify-center pt-2">
-          <span
-            className={cn(
-              buttonVariants({
-                variant: inverted ? "secondary" : "default",
-                size: "sm",
-              }),
-              inverted && "border-white/20 bg-white/15 text-white hover:bg-white/25",
-            )}
-          >
-            {rateLabel}
-          </span>
+        <MatchLink className="flex min-w-[5.5rem] flex-col items-center" label={rateLabel}>
+          {scoreBlock}
+        </MatchLink>
+        <div className="text-left">
+          <TeamName side="away" name={away} win={awayWin} />
         </div>
-      ) : null}
+        {matchHref && size === "lg" ? (
+          <div className="col-span-3 flex justify-center pt-2">
+            <Link
+              href={matchHref}
+              className={cn(
+                buttonVariants({
+                  variant: inverted ? "secondary" : "default",
+                  size: "sm",
+                }),
+                inverted && "border-white/20 bg-white/15 text-white hover:bg-white/25",
+              )}
+            >
+              {rateLabel}
+            </Link>
+          </div>
+        ) : null}
       </div>
     </div>
-  );
-
-  if (!matchHref) return board;
-
-  return (
-    <Link
-      href={matchHref}
-      aria-label={rateLabel}
-      className={cn("block rounded-md outline-none hover:opacity-95", className)}
-    >
-      {board}
-    </Link>
   );
 }

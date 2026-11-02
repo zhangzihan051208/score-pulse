@@ -20,7 +20,7 @@ import {
 import { SCHEDULE_SYNC_MS } from "@/lib/fixtures-cadence";
 import { thesportsdbBudgets, upstreamAllows } from "@/lib/upstream-budget";
 import { revalidateTag, unstable_cache } from "next/cache";
-import { statusRank } from "@/lib/favorite-teams";
+import { compareMatchesByRank, statusRank } from "@/lib/favorite-teams";
 import {
   getLeagueBySlug,
   getLeagueByTsdbId,
@@ -942,16 +942,22 @@ async function queryLineupRecord(): Promise<Record<string, StoredLineupPlayer[]>
   return out;
 }
 
-const cachedLineupRecord = unstable_cache(queryLineupRecord, ["fixture-lineups-v2"], {
-  revalidate: 2 * 60 * 60,
-  tags: ["fixture-lineups"],
-});
+/** In-process. The full map is over Next's 2MB data-cache limit, and a failed write was dropping every roster. */
+let lineupMemory: { at: number; record: Record<string, StoredLineupPlayer[]> } | null = null;
+const LINEUP_MEMORY_MS = 2 * 60 * 60 * 1000;
+
+async function loadLineupRecord(): Promise<Record<string, StoredLineupPlayer[]>> {
+  if (lineupMemory && Date.now() - lineupMemory.at < LINEUP_MEMORY_MS) return lineupMemory.record;
+  const record = await queryLineupRecord();
+  if (Object.keys(record).length > 0) lineupMemory = { at: Date.now(), record };
+  return record;
+}
 
 async function attachCachedLineups(rows: LiveFixtureRow[]) {
   if (rows.length === 0 || rows.every((row) => (row.lineup?.length ?? 0) > 0)) return rows;
   let record: Record<string, StoredLineupPlayer[]> = {};
   try {
-    record = await cachedLineupRecord();
+    record = await loadLineupRecord();
   } catch {
     return rows;
   }
@@ -1104,12 +1110,7 @@ export async function listLiveMatchEvents(
     .map((r) => fixtureRowToMatchEvent(r))
     .filter((e): e is MatchEvent => Boolean(e))
     .filter((e) => isVisibleMatchStatus(e.status, e.startAt));
-  events.sort((a, b) => {
-    const sr = statusRank(a.status) - statusRank(b.status);
-    if (sr !== 0) return sr;
-    if (a.status === "ended") return b.startAt.localeCompare(a.startAt);
-    return a.startAt.localeCompare(b.startAt);
-  });
+  events.sort(compareMatchesByRank);
   events = applyKnownCrests(events.slice(0, limit));
   events = await withTimeout(fillMissingTeamLogos(events), 4_000, events);
   return events;

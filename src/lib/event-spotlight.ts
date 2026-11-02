@@ -60,19 +60,37 @@ export type RosterEntry = {
   merged: NonNullable<ReturnType<typeof mergedAverages>>;
 };
 
+function shirtNumber(athlete: Athlete): number {
+  const n = Number.parseInt(athlete.jerseyNumber ?? "", 10);
+  return Number.isFinite(n) ? n : 999;
+}
+
+/** Ranked players first, then players the crowd has actually graded. */
+export function compareRosterEntries(
+  event: MatchEvent,
+  a: RosterEntry,
+  b: RosterEntry,
+  locale: Locale,
+): number {
+  const heat = (b.performance.heat ?? 0) - (a.performance.heat ?? 0);
+  if (heat !== 0) return heat;
+  const starterA = isStarter(a.performance, locale);
+  const starterB = isStarter(b.performance, locale);
+  const score =
+    pickScore(event, b.performance, b.merged, starterB) -
+    pickScore(event, a.performance, a.merged, starterA);
+  if (score !== 0) return score;
+  const shirt = shirtNumber(a.athlete) - shirtNumber(b.athlete);
+  if (shirt !== 0) return shirt;
+  return a.athlete.name.localeCompare(b.athlete.name);
+}
+
 function sortRosterEntries(
   event: MatchEvent,
   list: RosterEntry[],
   locale: Locale,
 ): RosterEntry[] {
-  return [...list].sort((a, b) => {
-    const starterA = isStarter(a.performance, locale);
-    const starterB = isStarter(b.performance, locale);
-    if (starterA !== starterB) return starterA ? -1 : 1;
-    const scoreA = pickScore(event, a.performance, a.merged, starterA);
-    const scoreB = pickScore(event, b.performance, b.merged, starterB);
-    return scoreB - scoreA;
-  });
+  return [...list].sort((a, b) => compareRosterEntries(event, a, b, locale));
 }
 
 export function performancesBySide(
@@ -134,33 +152,41 @@ export function pickEventSpotlights(
     buckets[side].push({ side, performance: p, athlete, merged });
   }
 
+  const best = (list: SpotlightPick[]) =>
+    [...list].sort((a, b) =>
+      compareRosterEntries(
+        event,
+        { performance: a.performance, athlete: a.athlete, merged: a.merged },
+        { performance: b.performance, athlete: b.athlete, merged: b.merged },
+        locale,
+      ),
+    )[0];
+
   if (buckets.home.length === 0 && buckets.away.length === 0) {
-    const fallback: SpotlightPick[] = [];
-    const teams = new Set<string>();
+    const byTeam = new Map<string, SpotlightPick[]>();
     for (const p of event.performances) {
       const athlete = resolveAthlete(event, p.athleteId);
       const merged = mergedAverages(event, p.athleteId, state);
       if (!athlete || !merged) continue;
       const tag = athlete.team ?? athlete.id;
-      if (teams.has(tag)) continue;
-      teams.add(tag);
-      fallback.push({
-        side: fallback.length === 0 ? "home" : "away",
+      const list = byTeam.get(tag) ?? [];
+      list.push({
+        side: byTeam.size === 0 ? "home" : "away",
         performance: p,
         athlete,
         merged,
       });
+      byTeam.set(tag, list);
+    }
+    const fallback: SpotlightPick[] = [];
+    for (const list of byTeam.values()) {
+      const pick = best(list);
+      if (!pick) continue;
+      fallback.push({ ...pick, side: fallback.length === 0 ? "home" : "away" });
       if (fallback.length >= 2) break;
     }
     return fallback;
   }
-
-  const best = (list: SpotlightPick[]) =>
-    [...list].sort(
-      (a, b) =>
-        pickScore(event, b.performance, b.merged, isStarter(b.performance, locale)) -
-        pickScore(event, a.performance, a.merged, isStarter(a.performance, locale)),
-    )[0];
 
   const out: SpotlightPick[] = [];
   const home = best(buckets.home);
