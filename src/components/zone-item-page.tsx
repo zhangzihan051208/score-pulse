@@ -172,6 +172,7 @@ export function ZoneItemPageInner({
           ))}
           <Textarea
             value={comment}
+            maxLength={500}
             onChange={(e) => setComment(e.target.value)}
             placeholder={t.rate.commentHint}
             rows={3}

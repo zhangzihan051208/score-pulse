@@ -8,6 +8,7 @@ import { useI18n } from "@/i18n/use-i18n";
 import { leagueLabel } from "@/i18n/league-labels";
 import { tx } from "@/lib/copy";
 import { formatWhen } from "@/lib/score-display";
+import { listedRosterCount } from "@/lib/roster-count";
 import {
   allPrimaryTeams,
   eventHasTeam,
@@ -115,7 +116,7 @@ export function HomeMyTeams({
                       event={featured}
                       size="sm"
                       matchHref={`/events/${featured.slug}`}
-                      playerCount={featured.performances.length}
+                      playerCount={listedRosterCount(featured)}
                     />
                   </div>
                 ) : (

@@ -89,7 +89,7 @@ export async function POST(request: Request) {
     );
   }
 
-  const trimmedComment = comment?.trim() ?? "";
+  const trimmedComment = (comment?.trim() ?? "").slice(0, 500);
   if (trimmedComment.length > 0 && trimmedComment.length < 8) {
     return NextResponse.json(
       { error: "Comment must be at least 8 characters, or leave it blank." },

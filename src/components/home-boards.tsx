@@ -20,6 +20,7 @@ import { SPORT_CHIP } from "@/lib/sports";
 import { LeagueTabs } from "@/components/league-tabs";
 import { MatchStatusTabs, useMatchStatus } from "@/components/match-status-tabs";
 import { leagueLabel } from "@/i18n/league-labels";
+import { listedRosterCount } from "@/lib/roster-count";
 import {
   HOME_LIVE_CHIP_PER_SPORT,
   HOME_MATCH_ROWS_PER_SPORT,
@@ -261,7 +262,7 @@ function FeaturedEventRow({
           event={event}
           size="sm"
           matchHref={matchHref}
-          playerCount={event.performances.length}
+          playerCount={listedRosterCount(event)}
         />
       </div>
       <Link
@@ -272,14 +273,14 @@ function FeaturedEventRow({
           ? leagueLabel(locale as "en", event.leagueSlug)
           : tx(event.subtitle, locale as "en")}
         {" · "}
-        {event.lineupState === "loading" ||
-        ((event.status === "ended" || event.status === "live") &&
-          event.performances.length === 0 &&
-          event.lineupState !== "missing")
+        {listedRosterCount(event) === 0 &&
+        (event.lineupState === "loading" ||
+          ((event.status === "ended" || event.status === "live") &&
+            event.lineupState !== "missing"))
           ? t.event.lineupLoading
-          : event.lineupState === "missing"
+          : event.lineupState === "missing" && listedRosterCount(event) === 0
             ? t.event.lineupMissingShort
-            : `${event.performances.length} ${t.home.players}`}
+            : `${listedRosterCount(event)} ${t.home.players}`}
       </Link>
     </div>
   );

@@ -182,6 +182,7 @@ export function MatchTakePanel({ event }: { event: MatchEvent }) {
           <Textarea
             id="match-comment"
             value={body}
+            maxLength={500}
             placeholder={t.event.matchCommentHint}
             onChange={(e) => {
               setBody(e.target.value);

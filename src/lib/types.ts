@@ -112,6 +112,8 @@ export type MatchEvent = {
   live?: boolean;
   /** ready = players loaded; loading = still fetching; missing = provider returned none */
   lineupState?: "ready" | "loading" | "missing";
+  /** Roster size when the list has not attached every player row. */
+  playerCount?: number;
 };
 
 export type SeedComment = {
