@@ -5,7 +5,10 @@ import { useEffect, useState, type ReactNode } from "react";
 import { buttonVariants } from "@/components/ui/button";
 import { useI18n } from "@/i18n/use-i18n";
 import { elapsedMatchMinutes } from "@/lib/match-clock";
+import { FormPips } from "@/components/form-pips";
 import { TeamCrest } from "@/components/team-crest";
+import { useLeagueTable } from "@/hooks/use-league-table";
+import { findStanding } from "@/lib/league-table";
 import { cn } from "cn";
 import type { MatchEvent } from "@/lib/types";
 
@@ -58,6 +61,7 @@ export function MatchScoreboard({
     | "sport"
     | "live"
     | "status"
+    | "leagueSlug"
   >;
   size?: "sm" | "md" | "lg";
   className?: string;
@@ -68,6 +72,9 @@ export function MatchScoreboard({
   playerCount?: number;
 }) {
   const { t } = useI18n();
+  const table = useLeagueTable(event.leagueSlug);
+  const homeStanding = findStanding(table, event.homeTeamId, event.homeTeamName);
+  const awayStanding = findStanding(table, event.awayTeamId, event.awayTeamName);
   const home = event.homeTeamName ?? "Home";
   const away = event.awayTeamName ?? "Away";
   const hasScore = event.homeScore != null && event.awayScore != null;
@@ -87,7 +94,19 @@ export function MatchScoreboard({
 
   const crestSize = size === "lg" ? "lg" : size === "sm" ? "sm" : "md";
 
-  function TeamName({ side, name, win }: { side: "home" | "away"; name: string; win: boolean }) {
+  function TeamName({
+    side,
+    name,
+    win,
+    rank,
+    form,
+  }: {
+    side: "home" | "away";
+    name: string;
+    win: boolean;
+    rank?: number;
+    form?: string;
+  }) {
     const href = teamHref(event as MatchEvent, side);
     const inner = (
       <span
@@ -106,15 +125,28 @@ export function MatchScoreboard({
     ) : (
       inner
     );
+    const rankNode = rank ? (
+      <span className="shrink-0 tabular-nums text-[10px] font-semibold text-muted-foreground">
+        #{rank}
+      </span>
+    ) : null;
     return (
-      <div
-        className={cn(
-          "flex items-center",
-          nameClass,
-          side === "home" ? "justify-end text-right" : "justify-start text-left",
-        )}
-      >
-        {nameNode}
+      <div className={cn(nameClass, side === "home" ? "text-right" : "text-left")}>
+        <div
+          className={cn(
+            "flex items-center gap-1",
+            side === "home" ? "justify-end" : "justify-start",
+          )}
+        >
+          {side === "away" ? rankNode : null}
+          {nameNode}
+          {side === "home" ? rankNode : null}
+        </div>
+        {form && size !== "sm" ? (
+          <div className={cn("mt-1 flex", side === "home" ? "justify-end" : "justify-start")}>
+            <FormPips form={form} inverted={inverted} />
+          </div>
+        ) : null}
       </div>
     );
   }
@@ -204,13 +236,13 @@ export function MatchScoreboard({
       </div>
       <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3">
         <div className="text-right">
-          <TeamName side="home" name={home} win={homeWin} />
+          <TeamName side="home" name={home} win={homeWin} rank={homeStanding?.rank} form={homeStanding?.form} />
         </div>
         <MatchLink className="flex min-w-[5.5rem] flex-col items-center" label={rateLabel}>
           {scoreBlock}
         </MatchLink>
         <div className="text-left">
-          <TeamName side="away" name={away} win={awayWin} />
+          <TeamName side="away" name={away} win={awayWin} rank={awayStanding?.rank} form={awayStanding?.form} />
         </div>
         {matchHref && size === "lg" ? (
           <div className="col-span-3 flex justify-center pt-2">

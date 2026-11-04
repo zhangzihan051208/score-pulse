@@ -36,6 +36,7 @@ type TsdbCallOpts = {
   optional?: boolean;
   /** Use a separate minute budget so roster fetches are not blocked by score/logo traffic. */
   lineupBudget?: boolean;
+  timeoutMs?: number;
 };
 
 function tsdbBudgetFor(opts?: TsdbCallOpts): { name: string; budgets: BudgetWindow[] } {
@@ -58,7 +59,7 @@ async function tsdb<T>(path: string, opts?: TsdbCallOpts): Promise<T | null> {
     // the page or API response open with it.
     res = await fetch(url, {
       cache: "no-store",
-      signal: AbortSignal.timeout(8_000),
+      signal: AbortSignal.timeout(opts?.timeoutMs ?? 8_000),
     });
   } catch {
     if (opts?.optional) return null;
@@ -73,7 +74,14 @@ async function tsdb<T>(path: string, opts?: TsdbCallOpts): Promise<T | null> {
     if (opts?.optional) return null;
     throw new Error(`TheSportsDB ${res.status}: ${path}`);
   }
-  return res.json() as Promise<T>;
+  const text = await res.text();
+  if (!text.trim()) return null;
+  try {
+    return JSON.parse(text) as T;
+  } catch {
+    if (opts?.optional) return null;
+    throw new Error(`TheSportsDB invalid JSON: ${path}`);
+  }
 }
 
 export type TsdbEvent = {
@@ -95,6 +103,7 @@ export type TsdbEvent = {
   idLeague?: string;
   strHomeTeamBadge?: string;
   strAwayTeamBadge?: string;
+  intRound?: string | number | null;
 };
 
 export type TsdbLineupPlayer = {
@@ -130,6 +139,42 @@ export async function fetchPastLeagueEvents(leagueId: string, limit = 15) {
     `eventspastleague.php?id=${encodeURIComponent(leagueId)}`,
   );
   return (data?.events ?? []).slice(0, limit);
+}
+
+export type TsdbTableRow = {
+  idTeam?: string;
+  strTeam?: string;
+  strBadge?: string;
+  intRank?: string;
+  intPlayed?: string;
+  intWin?: string;
+  intDraw?: string;
+  intLoss?: string;
+  intGoalsFor?: string;
+  intGoalsAgainst?: string;
+  intGoalDifference?: string;
+  intPoints?: string;
+  strForm?: string;
+  strDescription?: string;
+  strSeason?: string;
+};
+
+/** League table. Empty body means this competition has no published table. */
+export async function fetchLookupTable(leagueId: string, season: string) {
+  const data = await tsdb<{ table: TsdbTableRow[] | null }>(
+    `lookuptable.php?l=${encodeURIComponent(leagueId)}&s=${encodeURIComponent(season)}`,
+    { optional: true, timeoutMs: 12_000 },
+  );
+  return data?.table ?? [];
+}
+
+/** Full season fixtures. Used to build tables the lookup endpoint does not publish. */
+export async function fetchSeasonEvents(leagueId: string, season: string) {
+  const data = await tsdb<EventsResponse>(
+    `eventsseason.php?id=${encodeURIComponent(leagueId)}&s=${encodeURIComponent(season)}`,
+    { optional: true, timeoutMs: 20_000 },
+  );
+  return data?.events ?? [];
 }
 
 /** Premium endpoint — free tier may 404; sync treats empty as OK. */

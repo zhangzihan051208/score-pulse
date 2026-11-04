@@ -11,6 +11,7 @@ import { tx } from "@/lib/copy";
 import { eventsBySport, formatWhen } from "@/lib/data";
 import { pinBayernArsenal } from "@/lib/featured/bayern-arsenal";
 import { SPORT_ACCENT } from "@/lib/sports";
+import { ChampionsRound } from "@/components/champions-round";
 import { EventSpotlightGrid } from "@/components/event-spotlight-card";
 import { LeagueTabs } from "@/components/league-tabs";
 import { MatchStatusTabs, useMatchStatus } from "@/components/match-status-tabs";
@@ -19,7 +20,8 @@ import { useCommunity } from "@/hooks/use-community";
 import { leagueLabel } from "@/i18n/league-labels";
 import { listedRosterCount } from "@/lib/roster-count";
 import { ESPORTS_GAMES, getEsportsGame, isEsportsGameSlug } from "@/lib/esports-games";
-import { getLeagueBySlug } from "@/lib/leagues";
+import { getLeagueBySlug, leaguesForSport } from "@/lib/leagues";
+import { standingsPath } from "@/lib/league-table";
 import type { MatchEvent, Sport } from "@/lib/types";
 
 export function BoardPage({
@@ -94,19 +96,50 @@ export function BoardPage({
           <Link href="/" className="text-xs text-white/80 hover:underline">
             ← {t.board.backHome}
           </Link>
-          <h1 className="mt-2 text-3xl font-bold">
-            {esportsGame
-              ? esportsGame.label
-              : league
-                ? leagueLabel(locale, league.slug)
-                : t.sports[sport]}
-          </h1>
+          <div className="mt-2 flex flex-wrap items-end justify-between gap-3">
+            <h1 className="text-3xl font-bold">
+              {esportsGame
+                ? esportsGame.label
+                : league
+                  ? leagueLabel(locale, league.slug)
+                  : t.sports[sport]}
+            </h1>
+            {league && (sport === "soccer" || sport === "nba") ? (
+              <Link
+                href={standingsPath(sport, league.slug)}
+                className="rounded-full border border-white/35 px-3 py-1 text-xs font-medium text-white hover:bg-white/10"
+              >
+                {t.table.standings}
+              </Link>
+            ) : null}
+          </div>
           <p className="mt-2 max-w-2xl text-sm text-white/85">
             {showLiveBoard ? t.home.liveBoardLead : t.sportBlurb[sport]}
           </p>
           {showLiveBoard && (
-            <div className="mt-4">
+            <div className="mt-4 space-y-3">
               <LeagueTabs sport={sport} activeSlug={leagueSlug} />
+              {sport === "soccer" && !league ? (
+                <div className="flex flex-wrap gap-2">
+                  {leaguesForSport("soccer").map((item) => (
+                    <Link
+                      key={item.slug}
+                      href={standingsPath("soccer", item.slug)}
+                      className="text-xs text-white/80 underline-offset-2 hover:underline"
+                    >
+                      {leagueLabel(locale, item.slug)} {t.table.standings}
+                    </Link>
+                  ))}
+                </div>
+              ) : null}
+              {sport === "nba" && !league ? (
+                <Link
+                  href={standingsPath("nba", "nba")}
+                  className="inline-block rounded-full border border-white/35 px-3 py-1 text-xs font-medium text-white hover:bg-white/10"
+                >
+                  {t.table.standings}
+                </Link>
+              ) : null}
             </div>
           )}
           {isTsdbLive && syncedAt && (
@@ -123,6 +156,7 @@ export function BoardPage({
       </section>
 
       <div className="mx-auto max-w-6xl space-y-3 px-3 py-6">
+          {leagueSlug === "champions-league" ? <ChampionsRound events={list} /> : null}
           <h2 className="text-xs font-semibold tracking-widest text-muted-foreground uppercase">
             {t.board.matches}
           </h2>
