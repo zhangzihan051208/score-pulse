@@ -7,6 +7,7 @@ import { MatchTakePanel } from "@/components/match-take-panel";
 import { StatusPill } from "@/components/status-pill";
 import { useI18n } from "@/i18n/use-i18n";
 import { tx } from "@/lib/copy";
+import { hasStandings, standingsPath } from "@/lib/league-table";
 import { formatWhen } from "@/lib/score-display";
 import type { ReactNode } from "react";
 import type { MatchEvent } from "@/lib/types";
@@ -35,6 +36,14 @@ export function EventThreadShell({
           <div className="mt-3 flex flex-wrap items-center gap-2">
             <StatusPill status={event.status} />
             <span className="text-sm text-white/80">{tx(event.subtitle, locale)}</span>
+            {hasStandings(event.leagueSlug) ? (
+              <Link
+                href={standingsPath(event.sport, event.leagueSlug)}
+                className="text-xs font-medium text-white/80 underline-offset-2 hover:underline"
+              >
+                {t.table.standings}
+              </Link>
+            ) : null}
           </div>
           <div className="mt-4 rounded-xl bg-black/25 px-4 py-4 backdrop-blur-sm">
             <MatchScoreboard event={event} size="lg" inverted />

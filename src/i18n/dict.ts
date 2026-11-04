@@ -342,6 +342,25 @@ export type Dict = {
     statusUpcoming: string;
     statusEmpty: string;
   };
+  table: {
+    standings: string;
+    roundTitle: string;
+    backToMatches: string;
+    rank: string;
+    team: string;
+    played: string;
+    won: string;
+    drawn: string;
+    lost: string;
+    gd: string;
+    points: string;
+    form: string;
+    formHint: string;
+    empty: string;
+    east: string;
+    west: string;
+    pct: string;
+  };
   esports: {
     empty: string;
     emptyGame: string;
