@@ -1,5 +1,6 @@
 import { cache } from "react";
 import { getEvent, events } from "./data";
+import { isSportOpen } from "./features";
 import { isSeedOnlyBoardSport } from "./fixture-retention";
 import { getEsportsMatchBySlug } from "./esports-catalog";
 import { getLiveMatchBySlug } from "./fixtures-sync";
@@ -16,6 +17,6 @@ export const resolveEventBySlug = cache(async (slug: string): Promise<MatchEvent
 });
 
 export function legacyEventsForSport(sport: string) {
-  if (isSeedOnlyBoardSport(sport)) return [];
+  if (isSeedOnlyBoardSport(sport) || isSportOpen(sport)) return [];
   return events.filter((e) => e.sport === sport && !e.live);
 }

@@ -141,6 +141,9 @@
     font-family: var(--font-sans), "PingFang SC", "Hiragino Sans GB",
       "Noto Sans SC", sans-serif;
   }
+  ::selection {
+    background: oklch(0.72 0.16 55 / 0.35);
+  }
   h1,
   h2,
   .font-display {

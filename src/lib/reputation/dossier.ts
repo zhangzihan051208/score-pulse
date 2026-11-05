@@ -1,4 +1,5 @@
 import { events } from "@/lib/data";
+import { isSportOpen } from "@/lib/features";
 import { overallScore } from "@/lib/score-display";
 import type { Sport } from "@/lib/types";
 import { playerOverall } from "./blend";
@@ -165,6 +166,7 @@ function realRows(person: HonorPlayer): { fixture: DossierFixture; rating?: Doss
   const team = norm(person.team);
   const rows: { fixture: DossierFixture; rating?: DossierRating }[] = [];
   for (const event of events) {
+    if (isSportOpen(event.sport)) continue;
     if (event.sport !== person.sport) continue;
     const perf = event.performances.find((row) => row.athleteId === person.id);
     const home = norm(event.homeTeamName ?? "");

@@ -28,7 +28,7 @@ export function StandingsScreen({
           </Link>
           <h1 className="mt-2 text-3xl font-bold">
             {leagueLabel(locale, league.slug)}
-            <span className="ml-2 text-xl font-semibold text-white/80">{t.table.standings}</span>
+            <span className="ml-2 text-xl font-semibold text-white/80">· {t.table.standings}</span>
           </h1>
           <p className="mt-2 text-xs text-white/70">{table.season}</p>
         </div>

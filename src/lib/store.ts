@@ -1,7 +1,6 @@
 "use client";
 
 import { performanceKey } from "./score-display";
-import { seedComments } from "./seed-comments";
 import {
   dimensionIds,
   emptyScoresForPosition,
@@ -137,7 +136,7 @@ export function commentsFor(
   athleteId: string,
   state: CommunityState,
 ): Array<SeedComment | UserComment> {
-  return [...seedComments, ...state.comments]
+  return [...state.comments]
     .filter((c) => c.eventId === eventId && c.athleteId === athleteId)
     .sort((a, b) => +new Date(b.createdAt) - +new Date(a.createdAt));
 }
@@ -155,7 +154,7 @@ export function allFeedItems(state: CommunityState) {
 
   const byKey = new Map<string, FeedItem>();
 
-  for (const c of [...seedComments, ...state.comments]) {
+  for (const c of state.comments) {
     const key = `${c.eventId}:${c.athleteId}:${c.author}`;
     const existing = byKey.get(key);
     const at = c.createdAt;

@@ -2,6 +2,7 @@ import { createServiceClient } from "@/lib/supabase/server";
 import { fixtureSlug } from "@/lib/slugify";
 import {
   fixtureToMatchEvent,
+  presentListEvent,
   type LiveFixtureRow,
   type StoredLineupPlayer,
 } from "@/lib/live-match";
@@ -922,48 +923,66 @@ const cachedFixtureWindow = unstable_cache(queryFixtureWindow, ["fixture-window-
   tags: ["fixtures"],
 });
 
-async function queryLineupRecord(): Promise<Record<string, StoredLineupPlayer[]>> {
+/** Per-match lineups. The full table is over Next's 2MB cache limit, so only the rows on screen are read. */
+const lineupHits = new Map<string, { until: number; players: StoredLineupPlayer[] }>();
+const LINEUP_MEMORY_MS = 2 * 60 * 60 * 1000;
+const EMPTY_LINEUP_MEMORY_MS = 10 * 60 * 1000;
+
+function rememberLineup(id: string, players: StoredLineupPlayer[], now: number) {
+  const ttl = players.length > 0 ? LINEUP_MEMORY_MS : EMPTY_LINEUP_MEMORY_MS;
+  lineupHits.set(id, { until: now + ttl, players });
+}
+
+async function lineupsForIds(ids: string[]): Promise<Map<string, StoredLineupPlayer[]>> {
+  const now = Date.now();
+  const out = new Map<string, StoredLineupPlayer[]>();
+  const missing: string[] = [];
+  for (const id of ids) {
+    const hit = lineupHits.get(id);
+    if (hit && hit.until > now) out.set(id, hit.players);
+    else missing.push(id);
+  }
+  if (missing.length === 0) return out;
   const admin = createServiceClient();
-  const out: Record<string, StoredLineupPlayer[]> = {};
   if (!admin) return out;
-  for (let from = 0; from < 2_000; from += 200) {
+  for (let i = 0; i < missing.length; i += 40) {
+    const chunk = missing.slice(i, i + 40);
     const { data, error } = await admin
       .from("sportsdb_fixtures")
       .select("id_event,lineup")
-      .order("id_event")
-      .range(from, from + 199);
-    if (error || !data?.length) break;
+      .in("id_event", chunk);
+    if (error || !data) continue;
+    const seen = new Set<string>();
     for (const row of data) {
-      const lineup = row.lineup as StoredLineupPlayer[] | null;
-      if (Array.isArray(lineup) && lineup.length > 0) out[row.id_event as string] = lineup;
+      const id = String(row.id_event);
+      const lineup = Array.isArray(row.lineup) ? (row.lineup as StoredLineupPlayer[]) : [];
+      rememberLineup(id, lineup, now);
+      out.set(id, lineup);
+      seen.add(id);
     }
-    if (data.length < 200) break;
+    for (const id of chunk) {
+      if (seen.has(id)) continue;
+      rememberLineup(id, [], now);
+      out.set(id, []);
+    }
   }
   return out;
 }
 
-/** In-process. The full map is over Next's 2MB data-cache limit, and a failed write was dropping every roster. */
-let lineupMemory: { at: number; record: Record<string, StoredLineupPlayer[]> } | null = null;
-const LINEUP_MEMORY_MS = 2 * 60 * 60 * 1000;
-
-async function loadLineupRecord(): Promise<Record<string, StoredLineupPlayer[]>> {
-  if (lineupMemory && Date.now() - lineupMemory.at < LINEUP_MEMORY_MS) return lineupMemory.record;
-  const record = await queryLineupRecord();
-  if (Object.keys(record).length > 0) lineupMemory = { at: Date.now(), record };
-  return record;
-}
-
 async function attachCachedLineups(rows: LiveFixtureRow[]) {
   if (rows.length === 0 || rows.every((row) => (row.lineup?.length ?? 0) > 0)) return rows;
-  let record: Record<string, StoredLineupPlayer[]> = {};
+  const need = rows
+    .filter((row) => (row.lineup?.length ?? 0) === 0)
+    .map((row) => row.id_event);
+  let record = new Map<string, StoredLineupPlayer[]>();
   try {
-    record = await loadLineupRecord();
+    record = await lineupsForIds(need);
   } catch {
     return rows;
   }
   return rows.map((row) => {
     if ((row.lineup?.length ?? 0) > 0) return row;
-    const lineup = record[row.id_event];
+    const lineup = record.get(row.id_event);
     return lineup?.length ? { ...row, lineup } : row;
   });
 }
@@ -1099,7 +1118,7 @@ export async function listLiveMatchEvents(
   opts?: { enrichLineups?: boolean; enrichMax?: number },
 ): Promise<MatchEvent[]> {
   let rows = await listFixtures(sports, Math.max(limit, 24), leagueSlug);
-  if (opts?.enrichLineups !== false) {
+  if (opts?.enrichLineups) {
     rows = await withTimeout(
       enrichRowsLineups(rows, opts?.enrichMax ?? Math.min(limit, 8)),
       5_000,
@@ -1113,7 +1132,7 @@ export async function listLiveMatchEvents(
   events.sort(compareMatchesByRank);
   events = applyKnownCrests(events.slice(0, limit));
   events = await withTimeout(fillMissingTeamLogos(events), 4_000, events);
-  return events;
+  return events.map(presentListEvent);
 }
 
 export async function getLiveMatchBySlug(slug: string) {
@@ -1320,7 +1339,7 @@ export async function searchFixtures(query: string, limit = 20) {
       row.str_league?.toLowerCase().includes(qLower);
 
     if (titleHit && matches.length < limit) {
-      matches.push(event);
+      matches.push(presentListEvent(event));
     }
 
     const lineup =
@@ -1351,7 +1370,7 @@ export async function searchFixtures(query: string, limit = 20) {
     for (const row of rows) {
       if (matches.some((m) => m.id === row.id_event)) continue;
       const event = fixtureRowToMatchEvent(row);
-      if (event && matches.length < limit) matches.push(event);
+      if (event && matches.length < limit) matches.push(presentListEvent(event));
     }
   }
 

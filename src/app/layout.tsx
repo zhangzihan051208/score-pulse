@@ -31,7 +31,8 @@ export const metadata: Metadata = {
     template: "%s · Grandstand",
   },
   description:
-    "Fan tribune for overseas leagues. Five-axis player ratings, community boards, six languages.",
+    "Rate soccer and basketball players on five axes. Standings, lineups, and a board for every match. Five languages.",
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "https://getgrandstand.app"),
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {

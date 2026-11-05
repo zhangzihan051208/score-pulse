@@ -260,7 +260,7 @@ function BoardEventCard({
   showGameTag: boolean;
 }) {
   return (
-    <article className="rounded-xl border bg-card">
+    <article className="rounded-xl border bg-card shadow-sm transition hover:border-primary/30">
       <div className="border-b px-4 py-3">
         <Link
           href={`/events/${event.slug}`}
