@@ -13,12 +13,13 @@ export async function cachedLiveMatchEvents(
   limit: number,
   leagueSlug?: string,
 ): Promise<MatchEvent[]> {
-  const read = () => listLiveMatchEvents(sports, limit, leagueSlug);
+  const read = () =>
+    listLiveMatchEvents(sports, limit, leagueSlug, { enrichLineups: false });
   const load = () =>
     unstable_cache(
       read,
       [
-        "live-match-events-v4",
+        "live-match-events-v6",
         sports.join(","),
         String(limit),
         leagueSlug ?? "all",

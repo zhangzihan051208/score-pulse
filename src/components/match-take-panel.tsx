@@ -12,8 +12,6 @@ import { useLivePoll } from "@/hooks/use-live-poll";
 import { useI18n } from "@/i18n/use-i18n";
 import { scanCommentBody } from "@/lib/comment-moderation";
 import { moderationI18nKey } from "@/lib/content-moderation";
-import { tx } from "@/lib/copy";
-import { seedMatchTakes } from "@/lib/match-takes";
 import { moderationMessage } from "@/lib/moderation-message";
 import { clampScore } from "@/lib/store";
 import type { MatchEvent } from "@/lib/types";
@@ -61,11 +59,6 @@ export function MatchTakePanel({ event }: { event: MatchEvent }) {
     if (saved) loadRemote();
   }, [loadRemote, saved]);
 
-  const seeds = useMemo(
-    () => seedMatchTakes.filter((take) => take.eventId === event.id),
-    [event.id],
-  );
-
   const rows = useMemo(() => {
     const cloudRows = (remote ?? []).map((take) => ({
       id: take.userId,
@@ -95,21 +88,10 @@ export function MatchTakePanel({ event }: { event: MatchEvent }) {
             },
           ]
         : [];
-    const others = seeds.map((take) => ({
-      id: take.id,
-      author: take.author,
-      score: take.score,
-      body: tx(take.body, locale),
-      bodyOriginal: undefined as string | undefined,
-      createdAt: take.createdAt,
-      isYou: false,
-      userId: undefined as string | undefined,
-      commentId: undefined as string | undefined,
-    }));
-    return [...cloudRows, ...yours, ...others].sort(
+    return [...cloudRows, ...yours].sort(
       (a, b) => +new Date(b.createdAt) - +new Date(a.createdAt),
     );
-  }, [locale, mine, remote, seeds]);
+  }, [mine, remote]);
 
   const average = rows.length
     ? rows.reduce((sum, row) => sum + row.score, 0) / rows.length

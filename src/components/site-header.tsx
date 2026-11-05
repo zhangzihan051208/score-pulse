@@ -66,7 +66,7 @@ export function SiteHeader() {
             {t.brand}
           </span>
         </Link>
-        <div className="flex items-center gap-2">
+        <div className="flex min-w-0 items-center gap-1.5 sm:gap-2">
           <Link
             href="/guide"
             className={cn(
@@ -83,7 +83,7 @@ export function SiteHeader() {
 
       <div className="border-t border-white/8">
         <div className="mx-auto flex max-w-6xl items-center gap-2 px-3 py-1.5 sm:px-4">
-          <nav className="flex min-w-0 flex-1 gap-0.5 overflow-x-auto" aria-label={t.nav.home}>
+          <nav className="flex shrink-0 gap-0.5" aria-label={t.nav.home}>
             <NavLink href="/" label={t.nav.home} active={pathname === "/"} />
             <NavLink
               href="/profile"
@@ -111,7 +111,7 @@ export function SiteHeader() {
             ) : null}
           </nav>
           <form
-            className="w-full min-w-[7.5rem] max-w-[14rem] shrink-0 sm:max-w-xs"
+            className="min-w-0 flex-1 sm:max-w-xs"
             role="search"
             onSubmit={(e) => {
               e.preventDefault();

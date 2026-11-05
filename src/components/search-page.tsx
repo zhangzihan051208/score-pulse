@@ -12,6 +12,7 @@ import { playerHubHref } from "@/lib/player-routes";
 import { leagueLabel } from "@/i18n/league-labels";
 import { groupTeamsByLeague } from "@/lib/team-league";
 import { tx } from "@/lib/copy";
+import { listedRosterCount } from "@/lib/roster-count";
 import type { MatchEvent } from "@/lib/types";
 
 type TeamHit = {
@@ -172,7 +173,7 @@ export function SearchPageInner() {
                       event={event}
                       size="sm"
                       matchHref={`/events/${event.slug}`}
-                      playerCount={event.performances.length}
+                      playerCount={listedRosterCount(event)}
                     />
                   ) : (
                     <Link href={`/events/${event.slug}`} className="font-semibold hover:underline">

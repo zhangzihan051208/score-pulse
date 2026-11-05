@@ -211,3 +211,53 @@ export function fixtureToMatchEvent(
 
   return { ...aligned, lineupState, live: aligned.status === "live" };
 }
+
+function listSide(event: MatchEvent, athlete: Athlete | undefined): "home" | "away" {
+  if (athlete?.idTeam && event.awayTeamId && athlete.idTeam === event.awayTeamId) return "away";
+  if (athlete?.idTeam && event.homeTeamId && athlete.idTeam === event.homeTeamId) return "home";
+  const homeAbbrev = event.homeTeamName?.slice(0, 3).toUpperCase();
+  const awayAbbrev = event.awayTeamName?.slice(0, 3).toUpperCase();
+  if (athlete?.team && awayAbbrev && athlete.team === awayAbbrev) return "away";
+  if (athlete?.team && homeAbbrev && athlete.team === homeAbbrev) return "home";
+  return "home";
+}
+
+/** Boards only spotlight a few players. Keep the roster count, drop the rest. */
+export function presentListEvent(event: MatchEvent): MatchEvent {
+  const playerCount = Math.max(event.playerCount ?? 0, event.performances.length);
+  const groups = new Map<string, Performance[]>();
+  for (const performance of event.performances) {
+    const side = listSide(event, event.roster?.[performance.athleteId]);
+    const list = groups.get(side) ?? [];
+    list.push(performance);
+    groups.set(side, list);
+  }
+  const blank = L("", "", "", "");
+  const kept: Performance[] = [];
+  for (const list of groups.values()) {
+    list.sort(
+      (a, b) => (b.heat ?? 0) - (a.heat ?? 0) || a.athleteId.localeCompare(b.athleteId),
+    );
+    kept.push(
+      ...list.slice(0, 4).map((performance) => ({
+        ...performance,
+        highlight: blank,
+        stats: [],
+      })),
+    );
+  }
+  const ids = new Set(kept.map((performance) => performance.athleteId));
+  const roster: MatchEvent["roster"] = {};
+  for (const id of ids) {
+    const athlete = event.roster?.[id];
+    if (athlete) roster[id] = athlete;
+  }
+  return {
+    ...event,
+    summary: blank,
+    venue: blank,
+    playerCount,
+    performances: kept,
+    roster,
+  };
+}

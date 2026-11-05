@@ -119,7 +119,7 @@ export function MatchScoreboard({
       </span>
     );
     const nameNode = href ? (
-      <Link href={href} className="relative z-10 max-w-full hover:underline">
+      <Link href={href} className="relative z-10 min-w-0 max-w-full hover:underline">
         {inner}
       </Link>
     ) : (
@@ -225,7 +225,7 @@ export function MatchScoreboard({
         className,
       )}
     >
-      <div className="mb-2 grid grid-cols-[1fr_auto_1fr] items-end gap-3">
+      <div className="mb-2 grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-end gap-3">
         <MatchLink className="flex justify-end">
           <TeamCrest name={home} badgeUrl={event.homeTeamLogoUrl} size={crestSize} />
         </MatchLink>
@@ -234,14 +234,14 @@ export function MatchScoreboard({
           <TeamCrest name={away} badgeUrl={event.awayTeamLogoUrl} size={crestSize} />
         </MatchLink>
       </div>
-      <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3">
-        <div className="text-right">
+      <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-3">
+        <div className="min-w-0 text-right">
           <TeamName side="home" name={home} win={homeWin} rank={homeStanding?.rank} form={homeStanding?.form} />
         </div>
         <MatchLink className="flex min-w-[5.5rem] flex-col items-center" label={rateLabel}>
           {scoreBlock}
         </MatchLink>
-        <div className="text-left">
+        <div className="min-w-0 text-left">
           <TeamName side="away" name={away} win={awayWin} rank={awayStanding?.rank} form={awayStanding?.form} />
         </div>
         {matchHref && size === "lg" ? (

@@ -58,7 +58,7 @@ export function HomeBoards({ initialEvents = [] }: { initialEvents?: MatchEvent[
   }, [live]);
 
   return (
-    <div className="mx-auto max-w-6xl px-3 py-6">
+    <div className="mx-auto min-w-0 max-w-6xl px-3 py-6">
       <section className="relative overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-[#0c0c10] via-[#16120e] to-[#101014] px-5 py-10 text-white shadow-xl shadow-black/15 sm:px-10 sm:py-12">
         <div
           className="pointer-events-none absolute -right-16 -top-16 size-56 rounded-full bg-primary/25 blur-3xl"
@@ -105,7 +105,7 @@ export function HomeBoards({ initialEvents = [] }: { initialEvents?: MatchEvent[
               <Link
                 key={event.id}
                 href={`/events/${event.slug}`}
-                className="flex shrink-0 items-center gap-2 rounded-lg border bg-card px-3 py-2 text-sm"
+                className="flex shrink-0 items-center gap-2 rounded-lg border bg-card px-3 py-2 text-sm shadow-sm transition hover:border-primary/40 hover:shadow-md"
               >
                 <StatusPill status={event.status} />
                 <span className="font-medium">{tx(event.title, locale)}</span>
@@ -116,8 +116,8 @@ export function HomeBoards({ initialEvents = [] }: { initialEvents?: MatchEvent[
         </section>
       )}
 
-      <div className="mt-6 grid gap-4 lg:grid-cols-[1fr_280px]">
-        <div className="space-y-4">
+      <div className="mt-6 grid min-w-0 gap-4 lg:grid-cols-[minmax(0,1fr)_280px]">
+        <div className="min-w-0 space-y-4">
           <h2 className="text-xs font-semibold tracking-widest text-muted-foreground uppercase">
             {t.home.boardsTitle}
           </h2>
@@ -138,7 +138,7 @@ export function HomeBoards({ initialEvents = [] }: { initialEvents?: MatchEvent[
             ))
           )}
         </div>
-        <aside className="h-fit rounded-xl border bg-card lg:sticky lg:top-16">
+        <aside className="h-fit min-w-0 rounded-xl border bg-card shadow-sm lg:sticky lg:top-16">
           <div className="border-b px-3 py-2 text-xs font-semibold tracking-widest text-muted-foreground uppercase">
             {t.home.hot}
           </div>
@@ -206,7 +206,7 @@ function LiveSportBlock({
   }
 
   return (
-    <section className="overflow-hidden rounded-xl border bg-card">
+    <section className="overflow-hidden rounded-xl border bg-card shadow-sm">
       <div className="flex items-center justify-between gap-3 border-b px-3 py-2">
         <div className="flex items-center gap-2">
           <span className={`h-5 w-1 rounded-full ${SPORT_CHIP[sport]}`} />
