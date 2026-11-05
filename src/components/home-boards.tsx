@@ -27,6 +27,7 @@ import {
 } from "@/lib/display-limits";
 import { pinBayernArsenal } from "@/lib/featured/bayern-arsenal";
 import { type MatchEvent, type Sport } from "@/lib/types";
+import type { CommunityState } from "@/lib/store";
 
 const LIVE_SPORTS: Sport[] = ["nba", "soccer"];
 
@@ -195,7 +196,6 @@ function LiveSportBlock({
   const { locale, t } = useI18n();
   const { state } = useCommunity();
   const { status, setStatus, visible } = useMatchStatus(list);
-  const featured = visible[0];
 
   if (list.length === 0 && loading) {
     return (
@@ -234,13 +234,14 @@ function LiveSportBlock({
         <p className="px-3 py-6 text-sm text-muted-foreground">{t.board.statusEmpty}</p>
       ) : null}
       {visible.slice(0, HOME_MATCH_ROWS_PER_SPORT).map((event) => (
-        <FeaturedEventRow key={event.id} event={event} locale={locale} t={t} />
+        <FeaturedEventRow
+          key={event.id}
+          event={event}
+          locale={locale}
+          t={t}
+          state={state}
+        />
       ))}
-      {featured ? (
-        <div className="border-t px-3 py-3">
-          <EventSpotlightGrid event={featured} state={state} compact />
-        </div>
-      ) : null}
     </section>
   );
 }
@@ -249,18 +250,21 @@ function FeaturedEventRow({
   event,
   locale,
   t,
+  state,
 }: {
   event: MatchEvent;
-  locale: string;
+  locale: ReturnType<typeof useI18n>["locale"];
   t: ReturnType<typeof useI18n>["t"];
+  state: CommunityState;
 }) {
   const matchHref = `/events/${event.slug}`;
+  const picks = pickEventSpotlights(event, state, locale);
   return (
-    <div className="border-b px-3 py-3">
+    <div className="border-b px-3 py-3 last:border-b-0">
       <Link href={matchHref} className="flex items-center gap-2 hover:underline">
         <StatusPill status={event.status} />
         <span className="text-xs text-muted-foreground">
-          {formatWhen(event.startAt, locale as "en")}
+          {formatWhen(event.startAt, locale)}
         </span>
       </Link>
       <div className="mt-2">
@@ -276,8 +280,8 @@ function FeaturedEventRow({
         className="mt-1 line-clamp-2 block text-sm text-muted-foreground hover:text-foreground"
       >
         {event.leagueSlug
-          ? leagueLabel(locale as "en", event.leagueSlug)
-          : tx(event.subtitle, locale as "en")}
+          ? leagueLabel(locale, event.leagueSlug)
+          : tx(event.subtitle, locale)}
         {" · "}
         {listedRosterCount(event) === 0 &&
         (event.lineupState === "loading" ||
@@ -288,6 +292,11 @@ function FeaturedEventRow({
             ? t.event.lineupMissingShort
             : `${listedRosterCount(event)} ${t.home.players}`}
       </Link>
+      {picks.length > 0 ? (
+        <div className="mt-3 border-t pt-3">
+          <EventSpotlightGrid event={event} state={state} compact />
+        </div>
+      ) : null}
     </div>
   );
 }
