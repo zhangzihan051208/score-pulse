@@ -54,6 +54,44 @@ function pickScore(
   return merged.count * 100 + overall * 10 + (starter ? 50 : 0);
 }
 
+function commentedPicks(list: SpotlightPick[]) {
+  return list.filter((pick) => pick.merged.count > 0);
+}
+
+function overallOf(pick: SpotlightPick) {
+  return overallScore(pick.merged.avg, pick.performance.positionKey);
+}
+
+/** Highest first. Count, then name, breaks a tie. */
+function byRating(a: SpotlightPick, b: SpotlightPick) {
+  const score = overallOf(b) - overallOf(a);
+  if (score !== 0) return score;
+  const count = b.merged.count - a.merged.count;
+  if (count !== 0) return count;
+  return a.athlete.name.localeCompare(b.athlete.name);
+}
+
+/**
+ * Finished matches only. A side that is behind is represented by its
+ * lowest-rated commented player. A side that won or drew is represented
+ * by its highest-rated commented player. Players with no comments are out.
+ */
+function pickFinishedRepresentative(
+  event: MatchEvent,
+  list: SpotlightPick[],
+  side: "home" | "away",
+) {
+  const rated = commentedPicks(list);
+  if (rated.length === 0) return undefined;
+  const ranked = [...rated].sort(byRating);
+  const home = event.homeScore;
+  const away = event.awayScore;
+  const decided = home != null && away != null && home !== away;
+  const behind =
+    decided && (side === "home" ? home < away : away < home);
+  return behind ? ranked[ranked.length - 1] : ranked[0];
+}
+
 export type RosterEntry = {
   performance: Performance;
   athlete: Athlete;
@@ -152,15 +190,17 @@ export function pickEventSpotlights(
     buckets[side].push({ side, performance: p, athlete, merged });
   }
 
-  const best = (list: SpotlightPick[]) =>
-    [...list].sort((a, b) =>
-      compareRosterEntries(
-        event,
-        { performance: a.performance, athlete: a.athlete, merged: a.merged },
-        { performance: b.performance, athlete: b.athlete, merged: b.merged },
-        locale,
-      ),
-    )[0];
+  const best = (list: SpotlightPick[], side: "home" | "away") =>
+    event.status === "ended"
+      ? pickFinishedRepresentative(event, list, side)
+      : [...list].sort((a, b) =>
+          compareRosterEntries(
+            event,
+            { performance: a.performance, athlete: a.athlete, merged: a.merged },
+            { performance: b.performance, athlete: b.athlete, merged: b.merged },
+            locale,
+          ),
+        )[0];
 
   if (buckets.home.length === 0 && buckets.away.length === 0) {
     const byTeam = new Map<string, SpotlightPick[]>();
@@ -180,17 +220,18 @@ export function pickEventSpotlights(
     }
     const fallback: SpotlightPick[] = [];
     for (const list of byTeam.values()) {
-      const pick = best(list);
+      const side = fallback.length === 0 ? "home" : "away";
+      const pick = best(list, side);
       if (!pick) continue;
-      fallback.push({ ...pick, side: fallback.length === 0 ? "home" : "away" });
+      fallback.push({ ...pick, side });
       if (fallback.length >= 2) break;
     }
     return fallback;
   }
 
   const out: SpotlightPick[] = [];
-  const home = best(buckets.home);
-  const away = best(buckets.away);
+  const home = best(buckets.home, "home");
+  const away = best(buckets.away, "away");
   if (home) out.push(home);
   if (away) out.push(away);
   return out;

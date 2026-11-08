@@ -217,12 +217,7 @@ export function MatchTakePanel({ event }: { event: MatchEvent }) {
       </form>
 
       <div className="mt-5">
-        <div className="flex flex-wrap items-baseline justify-between gap-2">
-          <h3 className="text-sm font-medium">{t.event.matchComment}</h3>
-          {rows.some((row) => row.editorial) ? (
-            <p className="text-[11px] text-muted-foreground">{t.event.sheetNote}</p>
-          ) : null}
-        </div>
+        <h3 className="text-sm font-medium">{t.event.matchComment}</h3>
         {rows.length === 0 ? (
           <p className="mt-2 text-sm text-muted-foreground">{t.event.matchEmpty}</p>
         ) : (
