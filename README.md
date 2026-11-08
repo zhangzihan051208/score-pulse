@@ -71,7 +71,7 @@ Run `supabase/migrate-safety.sql` in that project. If the project was created be
 
 Comments are decided before they are stored. Local rules block ads, contact redirects, abuse, sexual or violent text, and spam. Set `OPENAI_API_KEY` and the same text is also sent to OpenAI Moderations (`omni-moderation-latest`). A flagged comment is rejected and never published. A report runs that check again and hides the comment when it fails, or dismisses the report when the text is allowed. Scores are numbers and are not sent. If the key is missing or the moderation service does not answer, the local rules still apply and an uncertain report stays open on `/safety`.
 
-When `OPENAI_API_KEY` is set, comment bodies are translated for other viewers based on UI locale (`?locale=` on community APIs). Translations are cached in `comments.body_translations` (run `supabase/migrate-comment-translations.sql` on existing databases).
+When `OPENAI_API_KEY` is set, comment bodies are translated for other viewers based on the UI language (`?locale=` on community APIs, and again for any comment still on screen). That includes imported editorial comments, not only account comments. Account translations are cached in `comments.body_translations` (run `supabase/migrate-comment-translations.sql` on existing databases). Editorial translations are cached in the server process. Without the key, the original text stays as written.
 
 ## Phone apps
 

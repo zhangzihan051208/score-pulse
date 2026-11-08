@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useCallback, useMemo, useState } from "react";
 import type { CommunityTake } from "@/components/community-ratings-panel";
+import { TranslatedText } from "@/components/comment-body";
 import { DimensionRadar } from "@/components/dimension-radar";
 import { PlayerAvatar } from "@/components/player-avatar";
 import { Overall } from "@/components/score-rows";
@@ -143,7 +144,10 @@ export function EventSpotlightCard({
           </p>
           {topTake?.body ? (
             <>
-              <p className="mt-1.5 line-clamp-4 text-sm leading-relaxed">{topTake.body}</p>
+              <TranslatedText
+                text={topTake.body}
+                className="mt-1.5 line-clamp-4 text-sm leading-relaxed"
+              />
               <p className="mt-2 text-xs text-muted-foreground">— {topTake.author}</p>
             </>
           ) : (

@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { TranslatedText } from "@/components/comment-body";
 import { PlayerAvatar } from "@/components/player-avatar";
 import { Overall } from "@/components/score-rows";
 import { useEventTakesSummary } from "@/hooks/use-event-takes-summary";
@@ -78,7 +79,10 @@ function RosterPlayerCard({
                 {t.event.hotTake}
               </p>
               {topTake?.body ? (
-                <p className="mt-1 line-clamp-2 text-xs leading-relaxed">{topTake.body}</p>
+                <TranslatedText
+                  text={topTake.body}
+                  className="mt-1 line-clamp-2 text-xs leading-relaxed"
+                />
               ) : (
                 <p className="mt-1 text-xs text-muted-foreground">{t.event.noHotTake}</p>
               )}

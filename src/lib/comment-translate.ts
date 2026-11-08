@@ -1,12 +1,17 @@
 import type { CommunityTake } from "@/lib/community-take-types";
+import { guessCommentLocale, shouldTranslate } from "@/lib/comment-locale";
 import { createServiceClient } from "@/lib/supabase/server";
 import { isBenignSupabaseSchemaError } from "@/lib/service-degraded";
 import { LOCALES, type Locale } from "@/lib/types";
 
+export { guessCommentLocale, shouldTranslate };
+
 const MODEL = "gpt-4o-mini";
 const ENDPOINT = "https://api.openai.com/v1/chat/completions";
 const TIMEOUT_MS = 12_000;
-const MAX_TRANSLATE_PER_REQUEST = 10;
+const MAX_TRANSLATE_PER_REQUEST = 24;
+const TRANSLATE_CONCURRENCY = 6;
+const FAIL_CACHE_MS = 60_000;
 
 const LOCALE_LABEL: Record<Locale, string> = {
   en: "English",
@@ -39,32 +44,55 @@ function parseTranslations(raw: unknown): Partial<Record<Locale, string>> {
   return out;
 }
 
-/** Rough source locale so we skip translating when the viewer already matches. */
-export function guessCommentLocale(text: string): Locale | null {
-  const t = text.trim();
-  if (!t) return null;
-  if (/[\u3040-\u309f\u30a0-\u30ff]/.test(t)) return "ja";
-  if (/[\u4e00-\u9fff]/.test(t)) return "zh";
-  if (/[äöüß]/i.test(t)) return "de";
-  if (/[¿¡ñáéíóú]/i.test(t)) return "es";
-  if (/[a-zA-Z]/.test(t)) return "en";
-  return null;
+const memoryTranslations = new Map<string, { value: string | null; expires: number }>();
+const inflightTranslations = new Map<string, Promise<string | null>>();
+
+function memoryKey(locale: Locale, body: string) {
+  return `${locale}\n${body}`;
 }
 
-function shouldTranslate(body: string, viewerLocale: Locale): boolean {
-  const trimmed = body.trim();
-  if (trimmed.length < 2 || trimmed === "—") return false;
-  const guessed = guessCommentLocale(trimmed);
-  if (guessed && guessed === viewerLocale) return false;
-  return true;
+function readMemory(locale: Locale, body: string): string | null | undefined {
+  const hit = memoryTranslations.get(memoryKey(locale, body));
+  if (!hit) return undefined;
+  if (hit.expires && hit.expires < Date.now()) {
+    memoryTranslations.delete(memoryKey(locale, body));
+    return undefined;
+  }
+  return hit.value;
+}
+
+function writeMemory(locale: Locale, body: string, value: string | null) {
+  memoryTranslations.set(memoryKey(locale, body), {
+    value,
+    expires: value ? 0 : Date.now() + FAIL_CACHE_MS,
+  });
 }
 
 async function translateWithOpenAi(
   body: string,
   targetLocale: Locale,
 ): Promise<string | null> {
+  const trimmed = body.trim().slice(0, 2000);
+  if (!trimmed) return null;
+  const cached = readMemory(targetLocale, trimmed);
+  if (cached !== undefined) return cached;
+  const pending = inflightTranslations.get(memoryKey(targetLocale, trimmed));
+  if (pending) return pending;
+
   const key = process.env.OPENAI_API_KEY?.trim();
   if (!key) return null;
+  const job = requestOpenAiTranslation(trimmed, targetLocale, key);
+  inflightTranslations.set(memoryKey(targetLocale, trimmed), job);
+  return job.finally(() => {
+    inflightTranslations.delete(memoryKey(targetLocale, trimmed));
+  });
+}
+
+async function requestOpenAiTranslation(
+  trimmed: string,
+  targetLocale: Locale,
+  key: string,
+): Promise<string | null> {
 
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
@@ -87,23 +115,67 @@ async function translateWithOpenAi(
           },
           {
             role: "user",
-            content: `Translate to ${LOCALE_LABEL[targetLocale]}:\n\n${body.slice(0, 2000)}`,
+            content: `Translate to ${LOCALE_LABEL[targetLocale]}:\n\n${trimmed}`,
           },
         ],
       }),
       cache: "no-store",
     });
-    if (!res.ok) return null;
+    if (!res.ok) {
+      writeMemory(targetLocale, trimmed, null);
+      return null;
+    }
     const data = (await res.json()) as {
       choices?: Array<{ message?: { content?: string } }>;
     };
-    const out = data.choices?.[0]?.message?.content?.trim();
-    return out || null;
+    const out = data.choices?.[0]?.message?.content?.trim() || null;
+    writeMemory(targetLocale, trimmed, out);
+    return out;
   } catch {
+    writeMemory(targetLocale, trimmed, null);
     return null;
   } finally {
     clearTimeout(timer);
   }
+}
+
+/** Translate the texts that are not already in the viewer language. Null means unchanged. */
+export async function translateBodies(
+  bodies: string[],
+  viewerLocale: Locale,
+): Promise<(string | null)[]> {
+  const out: (string | null)[] = bodies.map(() => null);
+  const pending = bodies
+    .map((body, index) => ({ body, index }))
+    .filter((row) => shouldTranslate(row.body, viewerLocale))
+    .slice(0, MAX_TRANSLATE_PER_REQUEST);
+
+  for (let i = 0; i < pending.length; i += TRANSLATE_CONCURRENCY) {
+    const slice = pending.slice(i, i + TRANSLATE_CONCURRENCY);
+    await Promise.all(
+      slice.map(async (row) => {
+        out[row.index] = await translateWithOpenAi(row.body, viewerLocale);
+      }),
+    );
+  }
+  return out;
+}
+
+/** Translate editorial or other comments that are not stored as account rows. */
+export async function localizePlainBodies<T extends { body?: string }>(
+  rows: T[],
+  viewerLocale: Locale,
+): Promise<(T & { bodyOriginal?: string })[]> {
+  const translated = await translateBodies(
+    rows.map((row) => row.body ?? ""),
+    viewerLocale,
+  );
+  return rows.map((row, index) => {
+    const next = translated[index];
+    const original = row.body ?? "";
+    if (!next || next === original) return row;
+    return { ...row, body: next, bodyOriginal: original };
+  });
 }
 
 async function persistTranslation(
@@ -134,7 +206,7 @@ export async function localizeCommentBodies(
   viewerUserId?: string,
 ): Promise<Map<string, LocalizedCommentText>> {
   const out = new Map<string, LocalizedCommentText>();
-  let translatedCount = 0;
+  const pending: CommentTranslateRow[] = [];
 
   for (const row of rows) {
     const original = row.body ?? "";
@@ -157,21 +229,28 @@ export async function localizeCommentBodies(
       continue;
     }
 
-    if (translatedCount >= MAX_TRANSLATE_PER_REQUEST) {
-      out.set(row.id, { body: original });
-      continue;
-    }
-
-    const translated = await translateWithOpenAi(original, viewerLocale);
-    translatedCount += 1;
-    if (!translated || translated === original) {
-      out.set(row.id, { body: original });
-      continue;
-    }
-
-    out.set(row.id, { body: translated, bodyOriginal: original });
-    void persistTranslation(row.id, cache, viewerLocale, translated);
+    pending.push(row);
   }
+
+  const translated = await translateBodies(
+    pending.map((row) => row.body ?? ""),
+    viewerLocale,
+  );
+  pending.forEach((row, index) => {
+    const original = row.body ?? "";
+    const next = translated[index];
+    if (!next || next === original) {
+      out.set(row.id, { body: original });
+      return;
+    }
+    out.set(row.id, { body: next, bodyOriginal: original });
+    void persistTranslation(
+      row.id,
+      parseTranslations(row.body_translations),
+      viewerLocale,
+      next,
+    );
+  });
 
   return out;
 }
