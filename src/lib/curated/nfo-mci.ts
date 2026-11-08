@@ -70,24 +70,34 @@ export function curatedExtraPlayers(eventId: string): PlayerRow[] {
   return data.players.filter((player) => player.extra);
 }
 
+function toCommunityTake(take: PlayerTake): CommunityTake {
+  const badge = crest(take.club);
+  return {
+    userId: take.id,
+    author: take.author,
+    scores: take.scores,
+    updatedAt: take.at,
+    body: take.body,
+    isYou: false,
+    primaryCrestUrl: badge?.url ?? null,
+    primaryCrestName: badge?.name ?? null,
+    editorial: true,
+  };
+}
+
+export function curatedTakesByAthlete(eventId: string): Record<string, CommunityTake[]> {
+  if (eventId !== data.eventId) return {};
+  const grouped: Record<string, CommunityTake[]> = {};
+  for (const take of data.playerTakes) {
+    const list = grouped[take.athleteId] ?? [];
+    list.push(toCommunityTake(take));
+    grouped[take.athleteId] = list;
+  }
+  return grouped;
+}
+
 export function curatedPlayerTakes(eventId: string, athleteId: string): CommunityTake[] {
-  if (eventId !== data.eventId) return [];
-  return data.playerTakes
-    .filter((take) => take.athleteId === athleteId)
-    .map((take) => {
-      const badge = crest(take.club);
-      return {
-        userId: take.id,
-        author: take.author,
-        scores: take.scores,
-        updatedAt: take.at,
-        body: take.body,
-        isYou: false,
-        primaryCrestUrl: badge?.url ?? null,
-        primaryCrestName: badge?.name ?? null,
-        editorial: true,
-      };
-    });
+  return curatedTakesByAthlete(eventId)[athleteId] ?? [];
 }
 
 export type CuratedMatchTake = {

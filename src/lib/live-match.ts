@@ -1,8 +1,9 @@
 import { L, S } from "./copy";
-import { curatedExtraPlayers, curatedPositionKey } from "./curated/nfo-mci";
+import { curatedExtraPlayers, curatedPositionKey, curatedTakesByAthlete } from "./curated/nfo-mci";
 import { playerHeat } from "./player-heat";
 import { matchTeamHeat } from "./team-heat";
-import { emptyScoresForPosition } from "./position-ratings";
+import { dimensionIds, emptyScoresForPosition } from "./position-ratings";
+import { averageScores } from "./score-aggregate";
 import { inferPositionKey } from "./position-infer";
 import { fixtureSlug } from "./slugify";
 import { alignEventToNow } from "./match-clock";
@@ -150,6 +151,18 @@ function applyCuratedSquad(
       ratingCount: 0,
       heat: playerHeat(sport, extra.name, extra.team),
     });
+  }
+  const takesByAthlete = curatedTakesByAthlete(eventId);
+  for (const performance of performances) {
+    const takes = takesByAthlete[performance.athleteId];
+    if (!takes?.length) continue;
+    const avg = averageScores(
+      takes.map((take) => take.scores),
+      [...dimensionIds(performance.positionKey)],
+    );
+    if (!avg) continue;
+    performance.communityAvg = avg;
+    performance.ratingCount = takes.length;
   }
 }
 

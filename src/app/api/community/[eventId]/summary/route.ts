@@ -1,3 +1,4 @@
+import { curatedTakesByAthlete } from "@/lib/curated/nfo-mci";
 import { mergeTakes } from "@/lib/community-takes";
 import { localizeCommentBodies } from "@/lib/comment-translate";
 import { requestUser } from "@/lib/supabase/request-user";
@@ -15,19 +16,33 @@ export type SummaryTake = {
   isYou: boolean;
 };
 
+function withCuratedSummary(
+  eventId: string,
+  takesByAthlete: Record<string, SummaryTake[]>,
+) {
+  for (const [athleteId, rows] of Object.entries(curatedTakesByAthlete(eventId))) {
+    const existing = takesByAthlete[athleteId] ?? [];
+    const seen = new Set(existing.map((take) => take.userId));
+    const extra = rows.filter((take) => !seen.has(take.userId));
+    if (existing.length === 0 && extra.length === 0) continue;
+    takesByAthlete[athleteId] = [...existing, ...extra];
+  }
+  return takesByAthlete;
+}
+
 export async function GET(
   request: Request,
   context: { params: Promise<{ eventId: string }> },
 ) {
+  const { eventId } = await context.params;
   if (!isSupabaseConfigured()) {
-    return NextResponse.json({ takesByAthlete: {} as Record<string, SummaryTake[]> });
+    return NextResponse.json({ takesByAthlete: withCuratedSummary(eventId, {}) });
   }
 
-  const { eventId } = await context.params;
   const viewerLocale = viewerLocaleFromRequest(request);
   const { supabase, user } = await requestUser(request);
   if (!supabase) {
-    return NextResponse.json({ takesByAthlete: {} as Record<string, SummaryTake[]> });
+    return NextResponse.json({ takesByAthlete: withCuratedSummary(eventId, {}) });
   }
 
   const [{ data: comments }, { data: ratings }] = await Promise.all([
@@ -144,7 +159,7 @@ export async function GET(
   }
 
   return NextResponse.json(
-    { takesByAthlete },
+    { takesByAthlete: withCuratedSummary(eventId, takesByAthlete) },
     { headers: { "Cache-Control": "no-store" } },
   );
 }
