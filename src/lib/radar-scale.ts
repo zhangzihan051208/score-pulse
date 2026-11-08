@@ -1,41 +1,29 @@
 import type { ScoreMap } from "@/lib/types";
 
-/** Internal 0–10 ring position where the baseline mean sits. */
-export const RADAR_CENTER = 5.5;
-/** How far each +1 raw point moves on the radar (exaggeration). */
-export const RADAR_GAIN = 3;
-export const RADAR_MIN = 0.8;
-export const RADAR_MAX = 9.8;
+/**
+ * Raw 0–10 scores map onto the radar with a fixed power curve.
+ * A flat 3 and a flat 9 used to land on the same ring, because each chart
+ * was centered on that player's own average. Radius now follows the score:
+ * 3 stays near the middle, 9 reaches the outer ring.
+ */
+export const RADAR_POWER = 1.85;
+export const RADAR_MIN = 0;
+export const RADAR_MAX = 10;
 
-/** Grid rings on the internal scale (below / at / above baseline). */
-export const RADAR_GRID_LEVELS = [2.8, 5.5, 8.2] as const;
+/** Score rings drawn under the polygon: low, typical, high. */
+export const RADAR_RING_SCORES = [3, 6, 9] as const;
 
-export function meanDimensionScore(scores: ScoreMap, dimIds: string[]): number {
-  if (dimIds.length === 0) return 7;
-  const vals = dimIds.map((id) => scores[id] ?? 0);
-  return vals.reduce((a, b) => a + b, 0) / vals.length;
+export function scoreToRadarUnit(raw: number): number {
+  if (!Number.isFinite(raw) || raw <= 0) return RADAR_MIN;
+  const clamped = Math.min(10, raw);
+  const unit = 10 * Math.pow(clamped / 10, RADAR_POWER);
+  return Math.min(RADAR_MAX, Math.max(RADAR_MIN, unit));
 }
 
-export function scoreToRadarUnit(raw: number, baselineMean: number): number {
-  const centered = RADAR_CENTER + (raw - baselineMean) * RADAR_GAIN;
-  return Math.min(RADAR_MAX, Math.max(RADAR_MIN, centered));
-}
+export const RADAR_GRID_LEVELS = RADAR_RING_SCORES.map((score) => scoreToRadarUnit(score));
+/** The middle ring is a score of 6, not a player's own average. */
+export const RADAR_REFERENCE_UNIT = scoreToRadarUnit(6);
 
-export function radarDisplayValues(
-  scores: ScoreMap,
-  dimIds: string[],
-  baselineMean: number,
-): number[] {
-  return dimIds.map((id) => scoreToRadarUnit(scores[id] ?? 0, baselineMean));
-}
-
-/** Prefer explicit baseline; else mean of the first series (community avg when listed first). */
-export function resolveRadarBaseline(
-  dimIds: string[],
-  series: { scores: ScoreMap }[],
-  explicit?: number,
-): number {
-  if (explicit != null && Number.isFinite(explicit)) return explicit;
-  if (series.length === 0) return 7;
-  return meanDimensionScore(series[0]!.scores, dimIds);
+export function radarDisplayValues(scores: ScoreMap, dimIds: string[]): number[] {
+  return dimIds.map((id) => scoreToRadarUnit(scores[id] ?? 0));
 }
