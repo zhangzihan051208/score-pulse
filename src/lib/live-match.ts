@@ -141,6 +141,23 @@ function curatedRoleLabel(positionKey: string) {
   }
 }
 
+function nameTokens(name: string) {
+  return name
+    .normalize("NFD")
+    .replace(/\p{M}/gu, "")
+    .toLowerCase()
+    .split(/[^a-z0-9]+/)
+    .filter((token) => token.length >= 3);
+}
+
+/** "Relvas" is the same player as "Filipe Relvas Vitó Oliveira". */
+function rosterNameCovers(extraName: string, rosterName: string) {
+  const extraTokens = nameTokens(extraName);
+  if (extraTokens.length === 0) return false;
+  const rosterTokens = new Set(nameTokens(rosterName));
+  return extraTokens.every((token) => rosterTokens.has(token));
+}
+
 function applyCuratedSquad(
   eventId: string,
   sport: Sport,
@@ -161,9 +178,24 @@ function applyCuratedSquad(
       performance.communityAvg = { ...emptyScoresForPosition(positionKey) };
     }
   }
+  const takesAlias = new Map<string, string>();
   for (const extra of curatedExtraPlayers(eventId)) {
     if (roster[extra.athleteId]) continue;
+    const existing = Object.values(roster).find((athlete) =>
+      rosterNameCovers(extra.name, athlete.name),
+    );
+    if (existing) {
+      takesAlias.set(existing.id, extra.athleteId);
+      const performance = performances.find((row) => row.athleteId === existing.id);
+      if (performance) {
+        performance.positionKey = extra.positionKey;
+        performance.communityAvg = { ...emptyScoresForPosition(extra.positionKey) };
+      }
+      continue;
+    }
     const home = extra.team === sides.homeName;
+    const away = extra.team === sides.awayName;
+    if (!home && !away) continue;
     roster[extra.athleteId] = {
       id: extra.athleteId,
       name: extra.name,
@@ -185,7 +217,9 @@ function applyCuratedSquad(
   }
   const takesByAthlete = curatedTakesByAthlete(eventId);
   for (const performance of performances) {
-    const takes = takesByAthlete[performance.athleteId];
+    const takes =
+      takesByAthlete[performance.athleteId] ??
+      takesByAthlete[takesAlias.get(performance.athleteId) ?? ""];
     if (!takes?.length) continue;
     const avg = averageScores(
       takes.map((take) => take.scores),

@@ -173,20 +173,43 @@ function foldTeamName(value?: string | null): string {
     .replace(/[^a-z0-9]+/g, "");
 }
 
+/**
+ * The match sheet's `strHome` is which side they played for.
+ * `idTeam` / `strTeam` are often the player's current club or country, so a
+ * starter can be missing from his side (Courtois stored as Belgium).
+ */
+export function assignPlayersToFixtureSides<
+  T extends { idTeam?: string | null; strTeam?: string | null; strHome?: string | null },
+>(players: T[], sides: LineupSides): T[] {
+  return players.map((player) => {
+    const wantHome = player.strHome === "Yes";
+    const wantAway = player.strHome === "No";
+    if (!wantHome && !wantAway) return player;
+    const idTeam = wantHome ? sides.homeId : sides.awayId;
+    const strTeam = wantHome ? sides.homeName : sides.awayName;
+    if (!idTeam) return player;
+    if (player.idTeam === idTeam && (!strTeam || player.strTeam === strTeam)) return player;
+    return {
+      ...player,
+      idTeam,
+      strTeam: strTeam || player.strTeam,
+    };
+  });
+}
+
 /** How many stored players belong to each side of the fixture. */
 export function lineupSideCounts(
   players: StoredLineupPlayer[],
   sides: LineupSides,
 ): { home: number; away: number } {
+  const placed = assignPlayersToFixtureSides(players, sides);
   const homeName = foldTeamName(sides.homeName);
   const awayName = foldTeamName(sides.awayName);
   let home = 0;
   let away = 0;
-  for (const p of players) {
+  for (const p of placed) {
     if (p.idTeam && sides.homeId && p.idTeam === sides.homeId) home += 1;
     else if (p.idTeam && sides.awayId && p.idTeam === sides.awayId) away += 1;
-    else if (p.strHome === "Yes") home += 1;
-    else if (p.strHome === "No") away += 1;
     else {
       const team = foldTeamName(p.strTeam);
       if (team && homeName && team === homeName) home += 1;
@@ -296,6 +319,22 @@ function rowLineupIsPartial(row: LiveFixtureRow): boolean {
   return raw?.lineup_partial === true;
 }
 
+/**
+ * A full club squad was stored in place of the match sheet.
+ * Those rows mark almost everyone as a substitute, so they cannot be paired.
+ */
+export function lineupIsSquadDump(
+  players: Pick<StoredLineupPlayer, "strSubstitute">[],
+  sport: "nba" | "soccer",
+): boolean {
+  if (players.length === 0) return false;
+  const starters = players.filter(
+    (player) => (player.strSubstitute ?? "").toLowerCase() !== "yes",
+  ).length;
+  if (sport === "nba") return players.length > 20 && starters < 8;
+  return players.length > 26 && starters < 16;
+}
+
 /** Whether the stored lineup is good enough to skip another roster fetch. */
 function rowHasLineup(row: LiveFixtureRow): boolean {
   if (lineupCountOf(row) === 0) return false;
@@ -333,10 +372,30 @@ function fixtureScoreFromRow(
 
 function hydrateFixtureRow(row: Record<string, unknown>): LiveFixtureRow {
   const raw = (row.raw as Record<string, unknown> | null) ?? {};
-  const lineup =
+  const storedLineup =
     (row.lineup as StoredLineupPlayer[] | null) ??
     (raw.lineup as StoredLineupPlayer[] | undefined) ??
     [];
+  const idHome =
+    (row.id_home_team as string | null | undefined) ??
+    (raw.idHomeTeam as string | undefined) ??
+    null;
+  const idAway =
+    (row.id_away_team as string | null | undefined) ??
+    (raw.idAwayTeam as string | undefined) ??
+    null;
+  const homeName =
+    (row.str_home_team as string | null | undefined) ??
+    (typeof raw.strHomeTeam === "string" ? raw.strHomeTeam : null);
+  const awayName =
+    (row.str_away_team as string | null | undefined) ??
+    (typeof raw.strAwayTeam === "string" ? raw.strAwayTeam : null);
+  const lineup = assignPlayersToFixtureSides(storedLineup, {
+    homeId: idHome,
+    awayId: idAway,
+    homeName,
+    awayName,
+  });
   const slug =
     (row.slug as string | null) ??
     (raw.sideline_slug as string | undefined) ??
@@ -349,14 +408,8 @@ function hydrateFixtureRow(row: Record<string, unknown>): LiveFixtureRow {
       (row.league_id as string | null | undefined) ??
       (raw.league_id as string | undefined) ??
       null,
-    id_home_team:
-      (row.id_home_team as string | null | undefined) ??
-      (raw.idHomeTeam as string | undefined) ??
-      null,
-    id_away_team:
-      (row.id_away_team as string | null | undefined) ??
-      (raw.idAwayTeam as string | undefined) ??
-      null,
+    id_home_team: idHome,
+    id_away_team: idAway,
     int_home_score: fixtureScoreFromRow(row, raw, "int_home_score", "intHomeScore"),
     int_away_score: fixtureScoreFromRow(row, raw, "int_away_score", "intAwayScore"),
   };
@@ -551,10 +604,6 @@ async function resolvePlayersForEvent(
   });
 
   let lineup = await fetchLineup(ev.idEvent, lineupOpts);
-  // A posted team sheet is only trusted when it names players for both clubs.
-  if (lineup.length >= 11 && lineupCoversBothSides(lineup, sides())) {
-    return lineup.map(slimStoredPlayer);
-  }
 
   if (!homeId || !awayId) {
     const detail = await fetchEventById(ev.idEvent, lineupOpts);
@@ -562,7 +611,13 @@ async function resolvePlayersForEvent(
     awayId = detail?.idAwayTeam ?? awayId;
   }
 
-  const existing = opts?.existing ?? [];
+  lineup = assignPlayersToFixtureSides(lineup, sides());
+  // A posted team sheet is only trusted when it names players for both clubs.
+  if (lineup.length >= 11 && lineupCoversBothSides(lineup, sides())) {
+    return lineup.map(slimStoredPlayer);
+  }
+
+  const existing = assignPlayersToFixtureSides(opts?.existing ?? [], sides());
   if (homeId && awayId) {
     const have = lineupSideCounts([...lineup, ...existing], sides());
     // Only ask for the squads that are still missing.
@@ -1376,7 +1431,11 @@ export async function getLiveMatchBySlug(slug: string) {
   let row = hydrateFixtureRow(rowData as Record<string, unknown>);
   if (!isLiveLeagueRow(row) || !shouldRetainFixtureRow(row)) return null;
 
-  if (!rowHasLineup(row) && isVisibleFixtureRow(row)) {
+  const sheetSport = row.sport === "nba" || row.sport === "soccer" ? row.sport : null;
+  const squadDump = sheetSport
+    ? lineupIsSquadDump(row.lineup ?? [], sheetSport)
+    : false;
+  if ((!rowHasLineup(row) || squadDump) && isVisibleFixtureRow(row)) {
     const ev = row.raw as unknown as TsdbEvent;
     const sport = row.sport as "nba" | "soccer";
     try {
