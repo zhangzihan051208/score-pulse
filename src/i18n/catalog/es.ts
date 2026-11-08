@@ -443,6 +443,8 @@ const es: Dict = {
       matchYou: "Tú",
       matchScoreOnly: "Solo la nota, sin comentario.",
       matchCount: "{n} votos",
+      matchMore: "Ver las otras {n}",
+      matchFold: "Ocultar",
       sheetNote: "Opiniones de aficionados (generadas por IA)",
     },
     matchup: {

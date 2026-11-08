@@ -407,6 +407,8 @@ export const deOverrides = {
     matchYou: "Du",
     matchScoreOnly: "Nur die Note, kein Kommentar.",
     matchCount: "{n} Bewertungen",
+    matchMore: "Die anderen {n} ansehen",
+    matchFold: "Einklappen",
     sheetNote: "Fan-Takes (KI-generiert)",
   },
   matchup: {

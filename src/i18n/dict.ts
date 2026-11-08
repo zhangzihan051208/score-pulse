@@ -401,6 +401,8 @@ export type Dict = {
     matchYou: string;
     matchScoreOnly: string;
     matchCount: string;
+    matchMore: string;
+    matchFold: string;
     sheetNote: string;
   };
   matchup: {

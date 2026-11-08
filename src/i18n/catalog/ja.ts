@@ -437,6 +437,8 @@ const ja: Dict = {
       matchYou: "自分",
       matchScoreOnly: "点数のみ。コメントなし。",
       matchCount: "{n} 人",
+      matchMore: "残り {n} 件を見る",
+      matchFold: "閉じる",
       sheetNote: "ファンの一言（AI生成）",
     },
     matchup: {

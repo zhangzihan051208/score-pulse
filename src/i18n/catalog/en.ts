@@ -443,6 +443,8 @@ const en: Dict = {
       matchYou: "You",
       matchScoreOnly: "Score only, no comment.",
       matchCount: "{n} ratings",
+      matchMore: "View the other {n}",
+      matchFold: "Show less",
       sheetNote: "Fan takes (AI-generated)",
     },
     matchup: {

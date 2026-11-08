@@ -27,7 +27,10 @@ export function CommentBody({
         <button
           type="button"
           className="mt-1 text-[11px] font-medium text-muted-foreground hover:text-foreground"
-          onClick={() => setShowOriginal((v) => !v)}
+          onClick={(e) => {
+            e.stopPropagation();
+            setShowOriginal((v) => !v);
+          }}
         >
           {showOriginal ? t.social.showTranslation : t.social.showOriginal}
         </button>

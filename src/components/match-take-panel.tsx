@@ -24,6 +24,16 @@ function isAccountId(id?: string) {
   );
 }
 
+function hotMatchTake<T extends { body: string; score: number; isYou: boolean }>(rows: T[]): T | null {
+  const withBody = rows.filter((row) => row.body.trim().length >= 8);
+  const pool = withBody.length > 0 ? withBody : rows;
+  if (pool.length === 0) return null;
+  return [...pool].sort((a, b) => {
+    const rank = (row: T) => row.body.trim().length * 3 + row.score + (row.isYou ? 0 : 1);
+    return rank(b) - rank(a);
+  })[0];
+}
+
 type RemoteTake = {
   userId: string;
   author: string;
@@ -113,6 +123,9 @@ export function MatchTakePanel({ event }: { event: MatchEvent }) {
   const average = rows.length
     ? rows.reduce((sum, row) => sum + row.score, 0) / rows.length
     : null;
+  const [open, setOpen] = useState(false);
+  const hot = useMemo(() => hotMatchTake(rows), [rows]);
+  const others = hot ? rows.length - 1 : rows.length;
 
   async function submit(e: FormEvent) {
     e.preventDefault();
@@ -156,7 +169,9 @@ export function MatchTakePanel({ event }: { event: MatchEvent }) {
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h2 className="text-base font-semibold">{t.event.matchTitle}</h2>
-          <p className="mt-1 text-sm text-muted-foreground">{t.event.matchLead}</p>
+          {open ? (
+            <p className="mt-1 text-sm text-muted-foreground">{t.event.matchLead}</p>
+          ) : null}
         </div>
         <div className="text-right">
           <p className="text-xs text-muted-foreground">{t.event.matchAverage}</p>
@@ -169,6 +184,69 @@ export function MatchTakePanel({ event }: { event: MatchEvent }) {
         </div>
       </div>
 
+      {!open ? (
+        <div className="mt-3">
+          {hot ? (
+            <div
+              onClick={() => setOpen(true)}
+              className="cursor-pointer rounded-xl border border-primary/40 bg-primary/10 px-4 py-3.5"
+            >
+              <p className="text-xs font-semibold tracking-wide text-primary uppercase">
+                {t.event.hotTake}
+              </p>
+              {hot.body.trim() ? (
+                <CommentBody
+                  body={hot.body}
+                  bodyOriginal={hot.bodyOriginal}
+                  className="mt-2 text-base leading-7"
+                />
+              ) : (
+                <p className="mt-2 text-sm text-muted-foreground">{t.event.matchScoreOnly}</p>
+              )}
+              <div className="mt-2 flex items-center gap-2">
+                {hot.primaryCrestUrl ? (
+                  <TeamCrest
+                    name={hot.primaryCrestName ?? hot.author}
+                    badgeUrl={hot.primaryCrestUrl}
+                    size="sm"
+                    className="size-7 rounded-md"
+                  />
+                ) : null}
+                <p className="min-w-0 truncate text-sm font-medium">
+                  {hot.isYou ? `${t.event.matchYou} · ${hot.author}` : hot.author}
+                </p>
+                <span className="ml-auto shrink-0 text-sm font-bold tabular-nums text-primary">
+                  {hot.score.toFixed(1)}
+                </span>
+              </div>
+            </div>
+          ) : (
+            <p className="text-sm text-muted-foreground">{t.event.matchEmpty}</p>
+          )}
+          <button
+            type="button"
+            onClick={() => setOpen(true)}
+            className="mt-2 text-sm font-medium text-primary hover:underline"
+          >
+            {others > 0
+              ? t.event.matchMore.replace("{n}", String(others))
+              : t.event.matchTitle}
+          </button>
+        </div>
+      ) : null}
+
+      {open ? (
+        <button
+          type="button"
+          onClick={() => setOpen(false)}
+          className="mt-2 text-sm font-medium text-primary hover:underline"
+        >
+          {t.event.matchFold}
+        </button>
+      ) : null}
+
+      {open ? (
+      <>
       <form className="mt-4 space-y-3" onSubmit={(e) => void submit(e)}>
         <GradeSlider label={t.event.matchScore} value={score} onChange={(next) => {
           setScore(next);
@@ -271,6 +349,8 @@ export function MatchTakePanel({ event }: { event: MatchEvent }) {
           </ul>
         )}
       </div>
+      </>
+      ) : null}
     </section>
   );
 }
