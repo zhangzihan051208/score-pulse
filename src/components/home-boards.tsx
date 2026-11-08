@@ -72,7 +72,7 @@ export function HomeBoards({ initialEvents = [] }: { initialEvents?: MatchEvent[
         <div className="relative flex items-center gap-3">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src="/brand-mark.jpg"
+            src="/brand-mark.png"
             alt=""
             width={44}
             height={44}
