@@ -296,6 +296,22 @@ function rowLineupIsPartial(row: LiveFixtureRow): boolean {
   return raw?.lineup_partial === true;
 }
 
+/**
+ * A full club squad was stored in place of the match sheet.
+ * Those rows mark almost everyone as a substitute, so they cannot be paired.
+ */
+export function lineupIsSquadDump(
+  players: Pick<StoredLineupPlayer, "strSubstitute">[],
+  sport: "nba" | "soccer",
+): boolean {
+  if (players.length === 0) return false;
+  const starters = players.filter(
+    (player) => (player.strSubstitute ?? "").toLowerCase() !== "yes",
+  ).length;
+  if (sport === "nba") return players.length > 20 && starters < 8;
+  return players.length > 26 && starters < 16;
+}
+
 /** Whether the stored lineup is good enough to skip another roster fetch. */
 function rowHasLineup(row: LiveFixtureRow): boolean {
   if (lineupCountOf(row) === 0) return false;
@@ -1376,7 +1392,11 @@ export async function getLiveMatchBySlug(slug: string) {
   let row = hydrateFixtureRow(rowData as Record<string, unknown>);
   if (!isLiveLeagueRow(row) || !shouldRetainFixtureRow(row)) return null;
 
-  if (!rowHasLineup(row) && isVisibleFixtureRow(row)) {
+  const sheetSport = row.sport === "nba" || row.sport === "soccer" ? row.sport : null;
+  const squadDump = sheetSport
+    ? lineupIsSquadDump(row.lineup ?? [], sheetSport)
+    : false;
+  if ((!rowHasLineup(row) || squadDump) && isVisibleFixtureRow(row)) {
     const ev = row.raw as unknown as TsdbEvent;
     const sport = row.sport as "nba" | "soccer";
     try {

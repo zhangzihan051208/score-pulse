@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useMemo } from "react";
 import { DimensionRadar } from "@/components/dimension-radar";
+import { PlayerAvatar } from "@/components/player-avatar";
 import { Overall } from "@/components/score-rows";
 import { useCommunity } from "@/hooks/use-community";
 import { dimLabel, positionRoleLabel } from "@/i18n/position-dims";
@@ -88,17 +89,23 @@ function MatchupOverlayCard({
       <div className="mt-2 grid grid-cols-2 gap-2">
         <Link
           href={`/events/${event.slug}/${pair.home.athlete.id}`}
-          className="min-w-0 hover:underline"
+          className="flex min-w-0 items-center gap-2 hover:underline"
         >
-          <p className="truncate text-sm font-medium">{pair.home.athlete.name}</p>
-          <Overall value={overallScore(pair.home.merged.avg, pair.positionKey)} />
+          <PlayerAvatar athlete={pair.home.athlete} size="sm" eager />
+          <span className="min-w-0">
+            <p className="truncate text-sm font-medium">{pair.home.athlete.name}</p>
+            <Overall value={overallScore(pair.home.merged.avg, pair.positionKey)} />
+          </span>
         </Link>
         <Link
           href={`/events/${event.slug}/${pair.away.athlete.id}`}
-          className="min-w-0 text-right hover:underline"
+          className="flex min-w-0 flex-row-reverse items-center gap-2 text-right hover:underline"
         >
-          <p className="truncate text-sm font-medium">{pair.away.athlete.name}</p>
-          <Overall value={overallScore(pair.away.merged.avg, pair.positionKey)} />
+          <PlayerAvatar athlete={pair.away.athlete} size="sm" eager />
+          <span className="min-w-0">
+            <p className="truncate text-sm font-medium">{pair.away.athlete.name}</p>
+            <Overall value={overallScore(pair.away.merged.avg, pair.positionKey)} />
+          </span>
         </Link>
       </div>
       <DimensionRadar

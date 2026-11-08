@@ -31,7 +31,8 @@ export function athleteSide(
   return null;
 }
 
-function isStarter(performance: Performance, locale: Locale): boolean {
+/** True when the team sheet lists this player in the starting side, not on the bench. */
+export function isStartingPerformance(performance: Performance, locale: Locale): boolean {
   const sub = performance.result ? tx(performance.result, locale) : "";
   const folded = sub.toLowerCase();
   if (!folded) return true;
@@ -112,8 +113,8 @@ export function compareRosterEntries(
 ): number {
   const heat = (b.performance.heat ?? 0) - (a.performance.heat ?? 0);
   if (heat !== 0) return heat;
-  const starterA = isStarter(a.performance, locale);
-  const starterB = isStarter(b.performance, locale);
+  const starterA = isStartingPerformance(a.performance, locale);
+  const starterB = isStartingPerformance(b.performance, locale);
   const score =
     pickScore(event, b.performance, b.merged, starterB) -
     pickScore(event, a.performance, a.merged, starterA);

@@ -1,5 +1,6 @@
 import {
   athleteSide,
+  isStartingPerformance,
   performancesBySide,
   type RosterEntry,
 } from "@/lib/event-spotlight";
@@ -14,6 +15,14 @@ export type MatchupPair = {
   /** 0-based slot when multiple players share the same position on both sides */
   slot: number;
 };
+
+function startersOnly(entries: RosterEntry[], locale: Locale): RosterEntry[] {
+  return entries.filter(
+    (entry) =>
+      isStartingPerformance(entry.performance, locale) &&
+      !entry.athlete.id.startsWith("curated-"),
+  );
+}
 
 function groupByPosition(entries: RosterEntry[]): Map<PositionKey, RosterEntry[]> {
   const map = new Map<PositionKey, RosterEntry[]>();
@@ -32,8 +41,8 @@ export function buildEventMatchups(
   locale: Locale,
 ): MatchupPair[] {
   const { home, away } = performancesBySide(event, state, locale);
-  const homeByPos = groupByPosition(home);
-  const awayByPos = groupByPosition(away);
+  const homeByPos = groupByPosition(startersOnly(home, locale));
+  const awayByPos = groupByPosition(startersOnly(away, locale));
   const positionKeys = new Set<PositionKey>([
     ...homeByPos.keys(),
     ...awayByPos.keys(),

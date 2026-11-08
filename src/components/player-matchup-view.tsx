@@ -199,10 +199,14 @@ export function PlayerMatchupView({
                     active ? "border-primary/40 bg-primary/5" : ""
                   }`}
                 >
-                  <span className="min-w-0 truncate">
-                    {p.home.athlete.name}{" "}
-                    <span className="text-muted-foreground">{t.matchup.vs}</span>{" "}
-                    {p.away.athlete.name}
+                  <span className="flex min-w-0 items-center gap-2">
+                    <PlayerAvatar athlete={p.home.athlete} size="sm" showJerseyBadge={false} />
+                    <span className="min-w-0 truncate">
+                      {p.home.athlete.name}{" "}
+                      <span className="text-muted-foreground">{t.matchup.vs}</span>{" "}
+                      {p.away.athlete.name}
+                    </span>
+                    <PlayerAvatar athlete={p.away.athlete} size="sm" showJerseyBadge={false} />
                   </span>
                   <div className="flex shrink-0 gap-2 text-xs">
                     <Link href={otherHref(p.home.athlete.id)} className="text-primary hover:underline">
