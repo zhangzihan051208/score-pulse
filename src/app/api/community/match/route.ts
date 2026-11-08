@@ -1,3 +1,5 @@
+import { curatedMatchTakes } from "@/lib/curated/nfo-mci";
+import { crestBadgeFromProfileRow } from "@/lib/profile-crest";
 import { moderateComment } from "@/lib/ai-moderation";
 import { moderationErrorPayload } from "@/lib/comment-moderation";
 import { applyLocalizedBody, localizeCommentBodies } from "@/lib/comment-translate";
@@ -16,17 +18,17 @@ function clampScore(n: number) {
 }
 
 export async function GET(request: Request) {
-  if (!isSupabaseConfigured()) {
-    return NextResponse.json({ takes: [], mine: null });
-  }
   const eventId = new URL(request.url).searchParams.get("eventId")?.trim();
   if (!eventId) {
     return NextResponse.json({ error: "Missing event" }, { status: 400 });
   }
+  if (!isSupabaseConfigured()) {
+    return NextResponse.json({ takes: curatedMatchTakes(eventId), mine: null });
+  }
   const viewerLocale = viewerLocaleFromRequest(request);
   const { supabase, user } = await requestUser(request);
   if (!supabase) {
-    return NextResponse.json({ takes: [], mine: null });
+    return NextResponse.json({ takes: curatedMatchTakes(eventId), mine: null });
   }
   const hidden = await blockedUserIds(supabase, user?.id);
 
@@ -64,7 +66,7 @@ export async function GET(request: Request) {
   );
   const commentByUser = new Map(visibleComments.map((row) => [row.user_id, row]));
 
-  const takes = (ratings ?? [])
+  const accountTakes = (ratings ?? [])
     .filter((row) => !hidden.has(row.user_id))
     .map((row) => {
       const scores = row.scores as { match?: number } | null;
@@ -81,9 +83,34 @@ export async function GET(request: Request) {
         commentId: comment?.id,
         createdAt: comment?.created_at ?? row.updated_at,
         isYou: user?.id === row.user_id,
+        primaryCrestUrl: null as string | null,
+        primaryCrestName: null as string | null,
       };
-    })
-    .sort((a, b) => +new Date(b.createdAt) - +new Date(a.createdAt));
+    });
+
+  const accountIds = [...new Set(accountTakes.map((take) => take.userId))];
+  if (accountIds.length > 0) {
+    const { data: profiles } = await supabase
+      .from("profiles")
+      .select("id, favorite_teams, hide_primary_crest")
+      .in("id", accountIds);
+    const crestMap = new Map<string, { url: string; name: string }>();
+    for (const profile of profiles ?? []) {
+      const crest = crestBadgeFromProfileRow(profile);
+      if (crest) crestMap.set(profile.id, crest);
+    }
+    for (const take of accountTakes) {
+      const crest = crestMap.get(take.userId);
+      take.primaryCrestUrl = crest?.url ?? null;
+      take.primaryCrestName = crest?.name ?? null;
+    }
+  }
+
+  const seen = new Set(accountTakes.map((take) => take.userId));
+  const takes = [
+    ...accountTakes,
+    ...curatedMatchTakes(eventId).filter((take) => !seen.has(take.userId)),
+  ].sort((a, b) => +new Date(b.createdAt) - +new Date(a.createdAt));
 
   return NextResponse.json(
     {

@@ -7,6 +7,7 @@ import {
   localizeCommentBodies,
 } from "@/lib/comment-translate";
 import { viewerLocaleFromRequest } from "@/lib/viewer-locale";
+import { curatedPlayerTakes } from "@/lib/curated/nfo-mci";
 import { crestBadgeFromProfileRow } from "@/lib/profile-crest";
 import { mergeTakes } from "@/lib/community-takes";
 import { weightedAverageScores } from "@/lib/score-aggregate";
@@ -21,38 +22,56 @@ import {
   type PositionKey,
 } from "@/lib/position-ratings";
 import { NextResponse } from "next/server";
+import type { CommunityTake } from "@/lib/community-take-types";
 import type { ScoreMap } from "@/lib/types";
+
+function withCuratedTakes(eventId: string, athleteId: string, takes: CommunityTake[]) {
+  const extra = curatedPlayerTakes(eventId, athleteId);
+  if (extra.length === 0) return takes;
+  const seen = new Set(takes.map((take) => take.userId));
+  return [...takes, ...extra.filter((take) => !seen.has(take.userId))].sort(
+    (a, b) => +new Date(b.updatedAt) - +new Date(a.updatedAt),
+  );
+}
 
 export async function GET(
   request: Request,
   context: { params: Promise<{ eventId: string; athleteId: string }> },
 ) {
-  if (!isSupabaseConfigured()) {
-    return NextResponse.json({
-      takes: [],
-      mine: null,
-      mineComment: "",
-      communityAvg: null,
-      ratingCount: 0,
-    });
-  }
-
   const { eventId, athleteId } = await context.params;
-  const viewerLocale = viewerLocaleFromRequest(request);
   const { searchParams } = new URL(request.url);
   const positionKey = (searchParams.get("positionKey") ??
     "nba.guard") as PositionKey;
   const dimIds =
     POSITION_PROFILES[positionKey]?.dimensions ?? dimensionIds("nba.guard");
 
-  const { supabase, user } = await requestUser(request);
-  if (!supabase) {
+  if (!isSupabaseConfigured()) {
+    const takes = withCuratedTakes(eventId, athleteId, []);
     return NextResponse.json({
-      takes: [],
+      takes,
       mine: null,
       mineComment: "",
-      communityAvg: null,
-      ratingCount: 0,
+      communityAvg: weightedAverageScores(
+        takes.map((take) => ({ scores: take.scores, weight: STANDARD_RATING_WEIGHT })),
+        [...dimIds],
+      ),
+      ratingCount: takes.length,
+    });
+  }
+  const viewerLocale = viewerLocaleFromRequest(request);
+
+  const { supabase, user } = await requestUser(request);
+  if (!supabase) {
+    const takes = withCuratedTakes(eventId, athleteId, []);
+    return NextResponse.json({
+      takes,
+      mine: null,
+      mineComment: "",
+      communityAvg: weightedAverageScores(
+        takes.map((take) => ({ scores: take.scores, weight: STANDARD_RATING_WEIGHT })),
+        [...dimIds],
+      ),
+      ratingCount: takes.length,
     });
   }
 
@@ -165,7 +184,10 @@ export async function GET(
     }
   }
 
-  const takes = attachTranslationToTakes(
+  const takes = withCuratedTakes(
+    eventId,
+    athleteId,
+    attachTranslationToTakes(
     enrichTakesWithSocial(
       baseTakes,
       allComments.map((c) => ({
@@ -182,6 +204,7 @@ export async function GET(
       user?.id,
     ),
     localized,
+    ),
   );
 
   const weightedRows = takes.map((take) => ({

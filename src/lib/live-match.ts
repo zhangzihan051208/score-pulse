@@ -1,4 +1,5 @@
 import { L, S } from "./copy";
+import { curatedExtraPlayers, curatedPositionKey } from "./curated/nfo-mci";
 import { playerHeat } from "./player-heat";
 import { matchTeamHeat } from "./team-heat";
 import { emptyScoresForPosition } from "./position-ratings";
@@ -108,6 +109,50 @@ export function playersToPerformances(
   return { performances, roster };
 }
 
+function applyCuratedSquad(
+  eventId: string,
+  sport: Sport,
+  performances: Performance[],
+  roster: Record<string, Athlete>,
+  sides: {
+    homeTeamId?: string;
+    awayTeamId?: string;
+    homeName: string;
+    awayName: string;
+  },
+) {
+  for (const performance of performances) {
+    const name = roster[performance.athleteId]?.name;
+    const positionKey = name ? curatedPositionKey(eventId, name) : undefined;
+    if (positionKey) {
+      performance.positionKey = positionKey;
+      performance.communityAvg = { ...emptyScoresForPosition(positionKey) };
+    }
+  }
+  for (const extra of curatedExtraPlayers(eventId)) {
+    if (roster[extra.athleteId]) continue;
+    const home = extra.team === sides.homeName;
+    roster[extra.athleteId] = {
+      id: extra.athleteId,
+      name: extra.name,
+      shortName: shortName(extra.name),
+      country: S("—"),
+      team: extra.team.slice(0, 3).toUpperCase(),
+      idTeam: home ? sides.homeTeamId : sides.awayTeamId,
+    };
+    performances.push({
+      athleteId: extra.athleteId,
+      positionKey: extra.positionKey,
+      role: S(extra.positionKey === "soccer.keeper" ? "Goalkeeper" : "Full-back"),
+      highlight: S("Grade this match on the five axes for their role — not the table."),
+      stats: [],
+      communityAvg: { ...emptyScoresForPosition(extra.positionKey) },
+      ratingCount: 0,
+      heat: playerHeat(sport, extra.name, extra.team),
+    });
+  }
+}
+
 export function fixtureToMatchEvent(
   row: LiveFixtureRow,
   opts?: { scoreOnly?: boolean },
@@ -147,6 +192,12 @@ export function fixtureToMatchEvent(
     row.id_away_team ??
     (raw.idAwayTeam as string | undefined) ??
     undefined;
+  applyCuratedSquad(row.id_event, sport, performances, roster, {
+    homeTeamId,
+    awayTeamId,
+    homeName: home,
+    awayName: away,
+  });
 
   const homeScore = row.int_home_score;
   const awayScore = row.int_away_score;

@@ -134,9 +134,14 @@ export function CommunityRatingsPanel({
       )}
 
       <div className="space-y-2">
-        <h3 className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
-          {t.rate.takes}
-        </h3>
+        <div className="flex flex-wrap items-baseline justify-between gap-2">
+          <h3 className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+            {t.rate.takes}
+          </h3>
+          {takes.some((row) => row.editorial) ? (
+            <p className="text-[11px] text-muted-foreground">{t.event.sheetNote}</p>
+          ) : null}
+        </div>
         <ul id="takes-list" className="space-y-3">
           {filtered.length === 0 ? (
             <li className="rounded-lg border border-dashed px-3 py-6 text-center text-sm text-muted-foreground">

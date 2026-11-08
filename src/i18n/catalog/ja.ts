@@ -437,6 +437,7 @@ const ja: Dict = {
       matchYou: "自分",
       matchScoreOnly: "点数のみ。コメントなし。",
       matchCount: "{n} 人",
+      sheetNote: "ファンの一言（AI生成）",
     },
     matchup: {
       tab: "対位比較",
