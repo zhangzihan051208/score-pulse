@@ -430,7 +430,7 @@ const en: Dict = {
         "No players came back to rate. Ended matches ask for the official lineup first, then each club's squad. Set THESPORTSDB_API_KEY to a TheSportsDB premium key (not the free key 123) and reopen this match. If it still fails, this event has no home or away team id in the feed.",
       viewPlayer: "View card",
       matchupsTab: "Position matchups",
-      matchupsLead: "Every paired role on home vs away — open overlay charts from each row.",
+      matchupsLead: "Every paired role, with the overlay chart already open.",
       matchTitle: "Rate the match",
       matchLead: "One score for the night itself, plus a comment. No five axes.",
       matchScore: "Your score",
@@ -452,7 +452,7 @@ const en: Dict = {
       noCounterpart:
         "No paired opponent for this match yet. Grade both sides first.",
       radarTitle: "Five-axis overlay",
-      radarHint: "Blue = home · Orange = away. Ring = average of both players on this chart.",
+      radarHint: "Blue = home · Orange = away. The dashed ring is a 6.",
       vs: "vs",
       vsLabel: "Your matchup: vs {opponent}",
       you: "this card",

@@ -1,8 +1,10 @@
 "use client";
 
 import Link from "next/link";
+import { useMemo } from "react";
 import { CommunityRatingsPanel } from "@/components/community-ratings-panel";
 import { PlayerAvatar } from "@/components/player-avatar";
+import { TeamCrest } from "@/components/team-crest";
 import { PlayerMatchStats } from "@/components/player-match-stats";
 import { PlayerCardTabs } from "@/components/player-card-tabs";
 import {
@@ -14,6 +16,7 @@ import { useCommunity } from "@/hooks/use-community";
 import { usePlayerCommunity } from "@/hooks/use-player-community";
 import { useI18n } from "@/i18n/use-i18n";
 import { tx } from "@/lib/copy";
+import { topEngagementTake } from "@/lib/event-spotlight";
 import { overallScore } from "@/lib/score-display";
 import { playerRoleSubtitle } from "@/lib/player-meta";
 import { playerHubHref } from "@/lib/player-routes";
@@ -40,6 +43,10 @@ export function PlayerDetailCard({
     state,
     locale,
   });
+  const hotTake = useMemo(
+    () => topEngagementTake(panelTakes, positionKey),
+    [panelTakes, positionKey],
+  );
 
   return (
     <div className="mx-auto max-w-2xl px-3 py-6 pb-24">
@@ -86,6 +93,24 @@ export function PlayerDetailCard({
           </div>
         </div>
       </div>
+
+      {hotTake?.body ? (
+        <section className="mt-4 rounded-xl border border-primary/40 bg-primary/10 px-4 py-3.5">
+          <p className="text-xs font-semibold tracking-wide text-primary uppercase">
+            {t.event.hotTake}
+          </p>
+          <p className="mt-2 text-base leading-7">{hotTake.body}</p>
+          <div className="mt-3 flex items-center gap-2">
+            <TeamCrest
+              name={hotTake.primaryCrestName ?? hotTake.author}
+              badgeUrl={hotTake.primaryCrestUrl}
+              size="sm"
+              className="size-7 rounded-md"
+            />
+            <p className="text-sm font-medium">{hotTake.author}</p>
+          </div>
+        </section>
+      ) : null}
 
       <PlayerMatchStats stats={performance.stats} locale={locale} />
 

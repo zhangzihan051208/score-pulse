@@ -423,7 +423,7 @@ const zh: Dict = {
         "没有拉到可评分的球员。已结束的比赛会先请求官方出场名单，没有名单时改用两队大名单。请在部署环境设置 THESPORTSDB_API_KEY（TheSportsDB 高级会员密钥，不要用免费的 123），保存后重新打开这场比赛。若仍失败，说明数据源这场没有主客队 ID。",
       viewPlayer: "查看球员卡",
       matchupsTab: "全位置对位",
-      matchupsLead: "主客同位置自动配对一览，点「看重叠图」进入五维雷达对比。",
+      matchupsLead: "主客同位置的五维重叠图直接列在下面。",
       matchTitle: "给这场打分",
       matchLead: "只给比赛本身一个分数，再写一句评论。不用五维。",
       matchScore: "你的分数",
@@ -445,7 +445,7 @@ const zh: Dict = {
       noCounterpart:
         "这场还没有可以对上的球员。先为双方打分。",
       radarTitle: "五维重叠对比",
-      radarHint: "蓝 = 主队 · 橙 = 客队。虚线环 = 双方该场平均。",
+      radarHint: "蓝 = 主队 · 橙 = 客队。虚线环是 6 分。",
       vs: "对",
       vsLabel: "本场对位：vs {opponent}",
       you: "当前球员",
