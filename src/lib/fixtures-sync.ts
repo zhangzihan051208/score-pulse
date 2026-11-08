@@ -54,6 +54,7 @@ import {
   isVisibleMatchStatus,
   shouldRetainFixtureRow,
 } from "@/lib/fixture-retention";
+import { PERMANENT_RATED_EVENT_IDS } from "@/lib/curated/sheets";
 import { alignEventToNow } from "@/lib/match-clock";
 import { withSoccerTimelineStats } from "@/lib/soccer-timeline";
 import type { MatchEvent } from "./types";
@@ -596,7 +597,7 @@ async function deleteByEventIds(
   return deleted;
 }
 
-/** Drop matches outside the 5-day window, their ratings and comments, and unused player fields. */
+/** Drop matches outside the 5-day window. Fan-rated matches stay, with their ratings and comments. */
 export async function pruneExpiredFixturesFromDb(
   admin: NonNullable<ReturnType<typeof createServiceClient>>,
 ) {
@@ -610,7 +611,11 @@ export async function pruneExpiredFixturesFromDb(
       .order("id_event")
       .range(from, from + 499);
     if (error || !data?.length) break;
-    for (const row of data) expired.push(row.id_event as string);
+    for (const row of data) {
+      const eventId = row.id_event as string;
+      if (PERMANENT_RATED_EVENT_IDS.has(eventId)) continue;
+      expired.push(eventId);
+    }
     if (data.length < 500) break;
   }
 
@@ -915,10 +920,23 @@ async function queryFixtureWindow(): Promise<LiveFixtureRow[]> {
       ),
     ),
   );
-  return chunks.flat().map((row) => hydrateFixtureRow(row));
+  const byId = new Map<string, Record<string, unknown>>();
+  for (const row of chunks.flat()) byId.set(String(row.id_event), row);
+  const missingRated = [...PERMANENT_RATED_EVENT_IDS].filter((id) => !byId.has(id));
+  if (missingRated.length > 0) {
+    const archived = await fetchFixtureRows((select) =>
+      admin
+        .from("sportsdb_fixtures")
+        .select(select)
+        .in("id_event", missingRated)
+        .then((r) => ({ data: r.data, error: r.error })),
+    );
+    for (const row of archived) byId.set(String(row.id_event), row);
+  }
+  return [...byId.values()].map((row) => hydrateFixtureRow(row));
 }
 
-const cachedFixtureWindow = unstable_cache(queryFixtureWindow, ["fixture-window-v2"], {
+const cachedFixtureWindow = unstable_cache(queryFixtureWindow, ["fixture-window-v3"], {
   revalidate: 180,
   tags: ["fixtures"],
 });
@@ -1025,15 +1043,26 @@ function selectVisibleFixtures(
     return (a.date_event ?? "").localeCompare(b.date_event ?? "");
   });
 
-  if (sports.length <= 1) return balanceFixturesByStatus(filtered, limit);
+  if (sports.length <= 1) return capFixturesKeepingRated(filtered, limit);
 
   const share = Math.ceil(limit / sports.length);
-  const picked: FixtureRow[] = [];
+  const picked = new Set<string>();
   for (const sport of sports) {
     const mine = filtered.filter((row) => row.sport === sport);
-    picked.push(...balanceFixturesByStatus(mine, share));
+    for (const row of capFixturesKeepingRated(mine, share)) picked.add(row.id_event);
   }
-  return picked.slice(0, limit);
+  return filtered.filter((row) => picked.has(row.id_event));
+}
+
+/** The list cap applies to ordinary fixtures. Matches that already have ratings stay. */
+function capFixturesKeepingRated(sorted: FixtureRow[], limit: number): FixtureRow[] {
+  const flexible = sorted.filter((row) => !PERMANENT_RATED_EVENT_IDS.has(row.id_event));
+  const keptFlexible = new Set(
+    balanceFixturesByStatus(flexible, limit).map((row) => row.id_event),
+  );
+  return sorted.filter(
+    (row) => PERMANENT_RATED_EVENT_IDS.has(row.id_event) || keptFlexible.has(row.id_event),
+  );
 }
 
 let providerFixtureCache: { at: number; rows: FixtureRow[] } | null = null;
@@ -1128,9 +1157,16 @@ export async function listLiveMatchEvents(
   let events = rows
     .map((r) => fixtureRowToMatchEvent(r))
     .filter((e): e is MatchEvent => Boolean(e))
-    .filter((e) => isVisibleMatchStatus(e.status, e.startAt));
+    .filter((e) => isVisibleMatchStatus(e.status, e.startAt, e.id));
   events.sort(compareMatchesByRank);
-  events = applyKnownCrests(events.slice(0, limit));
+  let flexible = 0;
+  const capped = events.filter((event) => {
+    if (PERMANENT_RATED_EVENT_IDS.has(event.id)) return true;
+    if (flexible >= limit) return false;
+    flexible += 1;
+    return true;
+  });
+  events = applyKnownCrests(capped);
   events = await withTimeout(fillMissingTeamLogos(events), 4_000, events);
   return events.map(presentListEvent);
 }
@@ -1536,7 +1572,7 @@ export async function listFixturesForTeam(
   const events = rows
     .map((r) => fixtureRowToMatchEvent(r))
     .filter((e): e is MatchEvent => Boolean(e))
-    .filter((e) => isVisibleMatchStatus(e.status, e.startAt))
+    .filter((e) => isVisibleMatchStatus(e.status, e.startAt, e.id))
     .sort((a, b) => {
       const sr = statusRank(a.status) - statusRank(b.status);
       if (sr !== 0) return sr;

@@ -85,6 +85,13 @@ const events = new Map<string, EventSheet>([
 
 export const NFO_MCI_EVENT_ID = forest.eventId;
 
+/** Matches that already have fan ratings. Sync must not drop these as they age. */
+export const PERMANENT_RATED_EVENT_IDS: ReadonlySet<string> = new Set(
+  [...events.entries()]
+    .filter(([, sheet]) => sheet.playerTakes.length > 0 || sheet.matchTakes.length > 0)
+    .map(([eventId]) => eventId),
+);
+
 function fold(name: string) {
   return name
     .normalize("NFD")
