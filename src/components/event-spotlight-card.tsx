@@ -75,7 +75,7 @@ export function EventSpotlightCard({
   const dimLabels = dimIds.map((id) => dimLabel(locale, positionKey, id));
 
   return (
-    <article className="rounded-xl border bg-card p-4">
+    <article className="min-w-0 max-w-full overflow-hidden rounded-xl border bg-card p-4">
       <div className="flex items-start gap-3">
         <PlayerAvatar athlete={pick.athlete} size={compact ? "default" : "lg"} />
         <div className="min-w-0 flex-1">
@@ -123,7 +123,7 @@ export function EventSpotlightCard({
         </div>
       </div>
 
-      <div className="mt-3 grid gap-3 sm:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)] sm:items-center">
+      <div className="mt-3 grid min-w-0 gap-3 sm:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)] sm:items-center">
         <DimensionRadar
           dimIds={dimIds}
           dimLabels={dimLabels}
@@ -181,7 +181,7 @@ export function EventSpotlightGrid({
   }
 
   return (
-    <div className="grid gap-3 sm:grid-cols-2">
+    <div className="grid min-w-0 gap-3 sm:grid-cols-2">
       {picks.map((pick) => (
         <EventSpotlightCard
           key={pick.athlete.id}

@@ -4,6 +4,7 @@ import { playerHeat } from "./player-heat";
 import { matchTeamHeat } from "./team-heat";
 import { dimensionIds, emptyScoresForPosition } from "./position-ratings";
 import { averageScores } from "./score-aggregate";
+import { overallScore } from "./score-display";
 import { inferPositionKey } from "./position-infer";
 import { fixtureSlug } from "./slugify";
 import { alignEventToNow } from "./match-clock";
@@ -328,12 +329,25 @@ export function presentListEvent(event: MatchEvent): MatchEvent {
   }
   const blank = L("", "", "", "");
   const kept: Performance[] = [];
+  const finished = event.status === "ended";
   for (const list of groups.values()) {
-    list.sort(
-      (a, b) => (b.heat ?? 0) - (a.heat ?? 0) || a.athleteId.localeCompare(b.athleteId),
-    );
+    const pool = finished ? list.filter((performance) => performance.ratingCount > 0) : list;
+    if (!finished) {
+      pool.sort(
+        (a, b) => (b.heat ?? 0) - (a.heat ?? 0) || a.athleteId.localeCompare(b.athleteId),
+      );
+    } else {
+      pool.sort(
+        (a, b) =>
+          overallScore(b.communityAvg, b.positionKey) -
+            overallScore(a.communityAvg, a.positionKey) ||
+          b.ratingCount - a.ratingCount ||
+          a.athleteId.localeCompare(b.athleteId),
+      );
+    }
+    const chosen = finished ? pool : pool.slice(0, 4);
     kept.push(
-      ...list.slice(0, 4).map((performance) => ({
+      ...chosen.map((performance) => ({
         ...performance,
         highlight: blank,
         stats: [],
