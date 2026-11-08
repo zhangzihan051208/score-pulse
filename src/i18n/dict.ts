@@ -302,6 +302,17 @@ export type Dict = {
     failed: string;
     notConfigured: string;
     signInToPost: string;
+    signInToComment: string;
+    alreadyRegistered: string;
+    forgotPassword: string;
+    sendReset: string;
+    resetSent: string;
+    resetTitle: string;
+    resetLead: string;
+    newPassword: string;
+    resetSubmit: string;
+    resetDone: string;
+    resetMissing: string;
   };
   language: string;
   sports: Record<Sport, string>;

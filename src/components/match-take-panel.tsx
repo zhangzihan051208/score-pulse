@@ -1,5 +1,7 @@
 "use client";
 
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
 import { CommentBody } from "@/components/comment-body";
 import { GradeSlider } from "@/components/grade-slider";
@@ -50,7 +52,9 @@ type RemoteTake = {
 
 export function MatchTakePanel({ event }: { event: MatchEvent }) {
   const { locale, t } = useI18n();
+  const pathname = usePathname();
   const { user, enabled } = useAuth();
+  const loginHref = `/login?next=${encodeURIComponent(pathname || "/")}`;
   const { state, postMatchTake } = useCommunity();
   const mine = state.matchTakes[event.id];
   const [remote, setRemote] = useState<RemoteTake[] | null>(null);
@@ -130,6 +134,11 @@ export function MatchTakePanel({ event }: { event: MatchEvent }) {
   async function submit(e: FormEvent) {
     e.preventDefault();
     const trimmed = body.trim();
+    if (trimmed && enabled && !user) {
+      setSaved(false);
+      setError(t.auth.signInToComment);
+      return;
+    }
     const verdict = scanCommentBody(trimmed);
     if (!verdict.pass) {
       setSaved(false);
@@ -260,12 +269,21 @@ export function MatchTakePanel({ event }: { event: MatchEvent }) {
             id="match-comment"
             value={body}
             maxLength={500}
-            placeholder={t.event.matchCommentHint}
+            disabled={enabled && !user}
+            placeholder={enabled && !user ? t.auth.signInToComment : t.event.matchCommentHint}
             onChange={(e) => {
               setBody(e.target.value);
               setSaved(false);
             }}
           />
+          {enabled && !user ? (
+            <p className="text-sm text-muted-foreground">
+              {t.auth.signInToComment}{" "}
+              <Link href={loginHref} className="font-medium text-primary hover:underline">
+                {t.auth.signIn}
+              </Link>
+            </p>
+          ) : null}
         </div>
         <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
           <div className="min-w-0 flex-1 space-y-1">

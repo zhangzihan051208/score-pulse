@@ -9,6 +9,12 @@ import { useI18n } from "@/i18n/use-i18n";
 import { createClient } from "@/lib/supabase/client";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 
+function isAlreadyRegistered(message: string) {
+  return /already registered|already exists|already been registered|user_already_exists/i.test(
+    message,
+  );
+}
+
 export function LoginInner() {
   const { t } = useI18n();
   const router = useRouter();
@@ -17,7 +23,7 @@ export function LoginInner() {
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [mode, setMode] = useState<"signIn" | "signUp">("signIn");
+  const [mode, setMode] = useState<"signIn" | "signUp" | "forgot">("signIn");
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -42,15 +48,31 @@ export function LoginInner() {
     const supabase = createClient();
 
     try {
-      if (mode === "signUp") {
-        const { error: signUpError } = await supabase.auth.signUp({
+      if (mode === "forgot") {
+        const { error: resetError } = await supabase.auth.resetPasswordForEmail(email, {
+          redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent("/login/reset")}`,
+        });
+        if (resetError) throw resetError;
+        setMessage(t.auth.resetSent);
+      } else if (mode === "signUp") {
+        const { data, error: signUpError } = await supabase.auth.signUp({
           email,
           password,
           options: {
             emailRedirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}`,
           },
         });
-        if (signUpError) throw signUpError;
+        if (signUpError) {
+          if (isAlreadyRegistered(signUpError.message)) {
+            setError(t.auth.alreadyRegistered);
+            return;
+          }
+          throw signUpError;
+        }
+        if (data.user && (data.user.identities?.length ?? 0) === 0) {
+          setError(t.auth.alreadyRegistered);
+          return;
+        }
         setMessage(t.auth.checkEmail);
       } else {
         const { error: signInError } = await supabase.auth.signInWithPassword({
@@ -73,7 +95,9 @@ export function LoginInner() {
       <Link href="/" className="text-xs text-muted-foreground hover:underline">
         ← {t.nav.home}
       </Link>
-      <h1 className="mt-4 text-2xl font-bold">{t.auth.signIn}</h1>
+      <h1 className="mt-4 text-2xl font-bold">
+        {mode === "forgot" ? t.auth.forgotPassword : t.auth.signIn}
+      </h1>
       <p className="mt-2 text-sm text-muted-foreground">{t.auth.lead}</p>
 
       <form className="mt-6 space-y-4" onSubmit={submit}>
@@ -90,34 +114,54 @@ export function LoginInner() {
             onChange={(e) => setEmail(e.target.value)}
           />
         </div>
-        <div className="space-y-1">
-          <label className="text-sm font-medium" htmlFor="password">
-            {t.auth.password}
-          </label>
-          <Input
-            id="password"
-            type="password"
-            autoComplete={mode === "signUp" ? "new-password" : "current-password"}
-            required
-            minLength={6}
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
-        </div>
+        {mode === "forgot" ? null : (
+          <div className="space-y-1">
+            <label className="text-sm font-medium" htmlFor="password">
+              {t.auth.password}
+            </label>
+            <Input
+              id="password"
+              type="password"
+              autoComplete={mode === "signUp" ? "new-password" : "current-password"}
+              required
+              minLength={6}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            />
+          </div>
+        )}
 
         {error && <p className="text-sm text-destructive">{error}</p>}
         {message && <p className="text-sm text-primary">{message}</p>}
 
         <Button type="submit" className="w-full" disabled={busy}>
-          {mode === "signUp" ? t.auth.createAccount : t.auth.signIn}
+          {mode === "signUp"
+            ? t.auth.createAccount
+            : mode === "forgot"
+              ? t.auth.sendReset
+              : t.auth.signIn}
         </Button>
       </form>
 
+      {mode === "signIn" ? (
+        <button
+          type="button"
+          className="mt-4 w-full text-center text-sm text-muted-foreground hover:text-foreground"
+          onClick={() => {
+            setMode("forgot");
+            setError(null);
+            setMessage(null);
+          }}
+        >
+          {t.auth.forgotPassword}
+        </button>
+      ) : null}
+
       <button
         type="button"
-        className="mt-4 w-full text-center text-sm text-muted-foreground hover:text-foreground"
+        className="mt-3 w-full text-center text-sm text-muted-foreground hover:text-foreground"
         onClick={() => {
-          setMode(mode === "signIn" ? "signUp" : "signIn");
+          setMode(mode === "signUp" ? "signIn" : mode === "forgot" ? "signIn" : "signUp");
           setError(null);
           setMessage(null);
         }}
