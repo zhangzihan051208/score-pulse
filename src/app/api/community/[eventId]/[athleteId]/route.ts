@@ -5,6 +5,7 @@ import { enrichTakesWithSocial } from "@/lib/comment-enrich";
 import {
   attachTranslationToTakes,
   localizeCommentBodies,
+  localizePlainBodies,
 } from "@/lib/comment-translate";
 import { viewerLocaleFromRequest } from "@/lib/viewer-locale";
 import { curatedPlayerTakes } from "@/lib/curated/nfo-mci";
@@ -23,13 +24,21 @@ import {
 } from "@/lib/position-ratings";
 import { NextResponse } from "next/server";
 import type { CommunityTake } from "@/lib/community-take-types";
-import type { ScoreMap } from "@/lib/types";
+import type { Locale, ScoreMap } from "@/lib/types";
 
-function withCuratedTakes(eventId: string, athleteId: string, takes: CommunityTake[]) {
-  const extra = curatedPlayerTakes(eventId, athleteId);
-  if (extra.length === 0) return takes;
+async function withCuratedTakes(
+  eventId: string,
+  athleteId: string,
+  takes: CommunityTake[],
+  locale: Locale,
+) {
   const seen = new Set(takes.map((take) => take.userId));
-  return [...takes, ...extra.filter((take) => !seen.has(take.userId))].sort(
+  const extra = await localizePlainBodies(
+    curatedPlayerTakes(eventId, athleteId).filter((take) => !seen.has(take.userId)),
+    locale,
+  );
+  if (extra.length === 0) return takes;
+  return [...takes, ...extra].sort(
     (a, b) => +new Date(b.updatedAt) - +new Date(a.updatedAt),
   );
 }
@@ -44,9 +53,10 @@ export async function GET(
     "nba.guard") as PositionKey;
   const dimIds =
     POSITION_PROFILES[positionKey]?.dimensions ?? dimensionIds("nba.guard");
+  const viewerLocale = viewerLocaleFromRequest(request);
 
   if (!isSupabaseConfigured()) {
-    const takes = withCuratedTakes(eventId, athleteId, []);
+    const takes = await withCuratedTakes(eventId, athleteId, [], viewerLocale);
     return NextResponse.json({
       takes,
       mine: null,
@@ -58,11 +68,9 @@ export async function GET(
       ratingCount: takes.length,
     });
   }
-  const viewerLocale = viewerLocaleFromRequest(request);
-
   const { supabase, user } = await requestUser(request);
   if (!supabase) {
-    const takes = withCuratedTakes(eventId, athleteId, []);
+    const takes = await withCuratedTakes(eventId, athleteId, [], viewerLocale);
     return NextResponse.json({
       takes,
       mine: null,
@@ -184,7 +192,7 @@ export async function GET(
     }
   }
 
-  const takes = withCuratedTakes(
+  const takes = await withCuratedTakes(
     eventId,
     athleteId,
     attachTranslationToTakes(
@@ -205,6 +213,7 @@ export async function GET(
     ),
     localized,
     ),
+    viewerLocale,
   );
 
   const weightedRows = takes.map((take) => ({

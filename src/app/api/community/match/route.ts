@@ -2,7 +2,11 @@ import { curatedMatchTakes } from "@/lib/curated/nfo-mci";
 import { crestBadgeFromProfileRow } from "@/lib/profile-crest";
 import { moderateComment } from "@/lib/ai-moderation";
 import { moderationErrorPayload } from "@/lib/comment-moderation";
-import { applyLocalizedBody, localizeCommentBodies } from "@/lib/comment-translate";
+import {
+  applyLocalizedBody,
+  localizeCommentBodies,
+  localizePlainBodies,
+} from "@/lib/comment-translate";
 import { viewerLocaleFromRequest } from "@/lib/viewer-locale";
 import { blockedUserIds } from "@/lib/safety-server";
 import { requestUser, upsertRating, writeClient } from "@/lib/supabase/request-user";
@@ -22,13 +26,19 @@ export async function GET(request: Request) {
   if (!eventId) {
     return NextResponse.json({ error: "Missing event" }, { status: 400 });
   }
-  if (!isSupabaseConfigured()) {
-    return NextResponse.json({ takes: curatedMatchTakes(eventId), mine: null });
-  }
   const viewerLocale = viewerLocaleFromRequest(request);
+  if (!isSupabaseConfigured()) {
+    return NextResponse.json({
+      takes: await localizePlainBodies(curatedMatchTakes(eventId), viewerLocale),
+      mine: null,
+    });
+  }
   const { supabase, user } = await requestUser(request);
   if (!supabase) {
-    return NextResponse.json({ takes: curatedMatchTakes(eventId), mine: null });
+    return NextResponse.json({
+      takes: await localizePlainBodies(curatedMatchTakes(eventId), viewerLocale),
+      mine: null,
+    });
   }
   const hidden = await blockedUserIds(supabase, user?.id);
 
@@ -107,10 +117,13 @@ export async function GET(request: Request) {
   }
 
   const seen = new Set(accountTakes.map((take) => take.userId));
-  const takes = [
-    ...accountTakes,
-    ...curatedMatchTakes(eventId).filter((take) => !seen.has(take.userId)),
-  ].sort((a, b) => +new Date(b.createdAt) - +new Date(a.createdAt));
+  const curated = await localizePlainBodies(
+    curatedMatchTakes(eventId).filter((take) => !seen.has(take.userId)),
+    viewerLocale,
+  );
+  const takes = [...accountTakes, ...curated].sort(
+    (a, b) => +new Date(b.createdAt) - +new Date(a.createdAt),
+  );
 
   return NextResponse.json(
     {

@@ -2,12 +2,14 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { TranslatedText } from "@/components/comment-body";
 import { PlayerAvatar } from "@/components/player-avatar";
 import { Overall } from "@/components/score-rows";
 import { useEventTakesSummary } from "@/hooks/use-event-takes-summary";
 import { localTakesForAthlete, topEngagementTake } from "@/lib/event-spotlight";
 import { useI18n } from "@/i18n/use-i18n";
 import { tx } from "@/lib/copy";
+import { displayedRaterCount } from "@/lib/displayed-rater-count";
 import { overallScore } from "@/lib/score-display";
 import { averageScores } from "@/lib/score-aggregate";
 import { dimensionIds } from "@/lib/position-ratings";
@@ -38,7 +40,10 @@ function RosterPlayerCard({
         )
       : null;
   const overall = overallScore(liveAvg ?? merged.avg, merged.positionKey);
-  const ratingCount = liveAvg ? remoteTakes!.length : merged.count;
+  const ratingCount = displayedRaterCount(
+    `${event.id}:${athlete.id}`,
+    liveAvg ? remoteTakes!.length : merged.count,
+  );
   const local = localTakesForAthlete(event, athlete.id, state, locale);
   const takes = remoteTakes && remoteTakes.length > 0 ? remoteTakes : local;
   const topTake = topEngagementTake(takes, merged.positionKey);
@@ -78,7 +83,10 @@ function RosterPlayerCard({
                 {t.event.hotTake}
               </p>
               {topTake?.body ? (
-                <p className="mt-1 line-clamp-2 text-xs leading-relaxed">{topTake.body}</p>
+                <TranslatedText
+                  text={topTake.body}
+                  className="mt-1 line-clamp-2 text-xs leading-relaxed"
+                />
               ) : (
                 <p className="mt-1 text-xs text-muted-foreground">{t.event.noHotTake}</p>
               )}

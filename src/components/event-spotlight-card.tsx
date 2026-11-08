@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useCallback, useMemo, useState } from "react";
 import type { CommunityTake } from "@/components/community-ratings-panel";
+import { TranslatedText } from "@/components/comment-body";
 import { DimensionRadar } from "@/components/dimension-radar";
 import { PlayerAvatar } from "@/components/player-avatar";
 import { Overall } from "@/components/score-rows";
@@ -11,6 +12,7 @@ import { useLivePoll } from "@/hooks/use-live-poll";
 import { dimLabel } from "@/i18n/position-dims";
 import { useI18n } from "@/i18n/use-i18n";
 import { tx } from "@/lib/copy";
+import { displayedRaterCount } from "@/lib/displayed-rater-count";
 import { overallScore } from "@/lib/score-display";
 import { playerRoleSubtitle } from "@/lib/player-meta";
 import {
@@ -116,7 +118,10 @@ export function EventSpotlightCard({
             <div className="text-right">
               <Overall value={overallScore(avgForRadar, positionKey)} />
               <p className="text-[11px] text-muted-foreground">
-                {(useLive ? remoteTakes.length : pick.merged.count).toLocaleString()} {t.event.ratings}
+                {displayedRaterCount(
+                  `${event.id}:${pick.athlete.id}`,
+                  useLive ? remoteTakes.length : pick.merged.count,
+                ).toLocaleString()} {t.event.ratings}
               </p>
             </div>
           </div>
@@ -143,7 +148,10 @@ export function EventSpotlightCard({
           </p>
           {topTake?.body ? (
             <>
-              <p className="mt-1.5 line-clamp-4 text-sm leading-relaxed">{topTake.body}</p>
+              <TranslatedText
+                text={topTake.body}
+                className="mt-1.5 line-clamp-4 text-sm leading-relaxed"
+              />
               <p className="mt-2 text-xs text-muted-foreground">— {topTake.author}</p>
             </>
           ) : (

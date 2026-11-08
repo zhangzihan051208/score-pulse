@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
+import { CommentBody } from "@/components/comment-body";
 import { GradeSlider } from "@/components/grade-slider";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -26,6 +27,7 @@ type Payload = {
     id: string;
     author: string;
     body: string;
+    bodyOriginal?: string;
     createdAt: string;
     pending?: boolean;
     isYou?: boolean;
@@ -39,7 +41,7 @@ export function ZoneItemPageInner({
   slug: string;
   itemId: string;
 }) {
-  const { t } = useI18n();
+  const { locale, t } = useI18n();
   const { user } = useAuth();
   const [data, setData] = useState<Payload | null>(null);
   const [scores, setScores] = useState<ScoreMap>({});
@@ -47,7 +49,9 @@ export function ZoneItemPageInner({
   const [error, setError] = useState<string | null>(null);
 
   const load = useCallback(() => {
-    fetch(`/api/zones/${encodeURIComponent(slug)}/items/${encodeURIComponent(itemId)}`)
+    fetch(
+      `/api/zones/${encodeURIComponent(slug)}/items/${encodeURIComponent(itemId)}?locale=${encodeURIComponent(locale)}`,
+    )
       .then((r) => (r.ok ? r.json() : null))
       .then((d: Payload | null) => {
         setData(d);
@@ -58,7 +62,7 @@ export function ZoneItemPageInner({
           setScores(init);
         }
       });
-  }, [itemId, slug]);
+  }, [itemId, locale, slug]);
 
   useEffect(() => {
     load();
@@ -200,7 +204,7 @@ export function ZoneItemPageInner({
                     <span className="ml-2 text-xs text-amber-600">{t.zones.pending}</span>
                   ) : null}
                 </p>
-                <p className="mt-1 leading-relaxed">{c.body}</p>
+                <CommentBody body={c.body} bodyOriginal={c.bodyOriginal} className="mt-1 text-sm" />
               </li>
             ))
           )}

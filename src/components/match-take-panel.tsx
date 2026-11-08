@@ -14,6 +14,7 @@ import { useCommunity } from "@/hooks/use-community";
 import { useLivePoll } from "@/hooks/use-live-poll";
 import { useI18n } from "@/i18n/use-i18n";
 import { scanCommentBody } from "@/lib/comment-moderation";
+import { displayedRaterCount } from "@/lib/displayed-rater-count";
 import { moderationI18nKey } from "@/lib/content-moderation";
 import { moderationMessage } from "@/lib/moderation-message";
 import { clampScore } from "@/lib/store";
@@ -188,7 +189,10 @@ export function MatchTakePanel({ event }: { event: MatchEvent }) {
             {average == null ? "—" : average.toFixed(1)}
           </p>
           <p className="text-xs text-muted-foreground">
-            {t.event.matchCount.replace("{n}", String(rows.length))}
+            {t.event.matchCount.replace(
+              "{n}",
+              displayedRaterCount(`${event.id}:match`, rows.length).toLocaleString(),
+            )}
           </p>
         </div>
       </div>
