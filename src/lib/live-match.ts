@@ -110,6 +110,26 @@ export function playersToPerformances(
   return { performances, roster };
 }
 
+function curatedRoleLabel(positionKey: string) {
+  switch (positionKey) {
+    case "soccer.keeper":
+      return "Goalkeeper";
+    case "soccer.centerback":
+      return "Centre-back";
+    case "soccer.fullback":
+      return "Full-back";
+    case "soccer.midfielder":
+    case "soccer.attackingmid":
+      return "Midfielder";
+    case "soccer.winger":
+      return "Winger";
+    case "soccer.striker":
+      return "Centre-forward";
+    default:
+      return "Player";
+  }
+}
+
 function applyCuratedSquad(
   eventId: string,
   sport: Sport,
@@ -144,7 +164,7 @@ function applyCuratedSquad(
     performances.push({
       athleteId: extra.athleteId,
       positionKey: extra.positionKey,
-      role: S(extra.positionKey === "soccer.keeper" ? "Goalkeeper" : "Full-back"),
+      role: S(curatedRoleLabel(extra.positionKey)),
       highlight: S("Grade this match on the five axes for their role — not the table."),
       stats: [],
       communityAvg: { ...emptyScoresForPosition(extra.positionKey) },
