@@ -1,0 +1,120 @@
+batch,rateNow,status,eventId,league,home,away,score,scoreMissing,kickoffBerlin,kickoffUtc,lineupCount,slug
+ucl,true,ended,2594635,UEFA Champions League,Shakhtar Donetsk,Sporting CP,0-1,false,2026-11-03T18:45:00+01:00,2026-11-03T17:45:00Z,91,shakhtar-donetsk-vs-sporting-cp-2026-11-03
+ucl,true,ended,2594656,UEFA Champions League,Galatasaray,Stuttgart,2-0,false,2026-11-03T18:45:00+01:00,2026-11-03T17:45:00Z,67,galatasaray-vs-stuttgart-2026-11-03
+ucl,true,ended,2594624,UEFA Champions League,Villarreal,Paris Saint-Germain,0-6,false,2026-11-03T21:00:00+01:00,2026-11-03T20:00:00Z,53,villarreal-vs-paris-saint-germain-2026-11-03
+ucl,true,ended,2594620,UEFA Champions League,Atlético Madrid,Bayern Munich,0-2,false,2026-11-03T21:00:00+01:00,2026-11-03T20:00:00Z,49,atletico-madrid-vs-bayern-munich-2026-11-03
+ucl,true,ended,2594674,UEFA Champions League,LASK,Slovan Bratislava,4-0,false,2026-11-03T21:00:00+01:00,2026-11-03T20:00:00Z,52,lask-vs-slovan-bratislava-2026-11-03
+ucl,true,ended,2594616,UEFA Champions League,Barcelona,Aston Villa,3-0,false,2026-11-03T21:00:00+01:00,2026-11-03T20:00:00Z,56,barcelona-vs-aston-villa-2026-11-03
+ucl,true,ended,2594589,UEFA Champions League,Feyenoord,Inter Milan,0-3,false,2026-11-03T21:00:00+01:00,2026-11-03T20:00:00Z,60,feyenoord-vs-inter-milan-2026-11-03
+ucl,true,ended,2594537,UEFA Champions League,Manchester United,Roma,3-2,false,2026-11-03T21:00:00+01:00,2026-11-03T20:00:00Z,55,manchester-united-vs-roma-2026-11-03
+ucl,true,ended,2594599,UEFA Champions League,Bodø/Glimt,Lille,0-0,false,2026-11-03T21:00:00+01:00,2026-11-03T20:00:00Z,60,bod-glimt-vs-lille-2026-11-03
+ucl,true,ended,2594651,UEFA Champions League,Fenerbahçe,Liverpool,3-2,false,2026-11-04T18:45:00+01:00,2026-11-04T17:45:00Z,58,fenerbahce-vs-liverpool-2026-11-04
+ucl,true,ended,2594648,UEFA Champions League,AEK Athens,Real Madrid,2-3,false,2026-11-04T18:45:00+01:00,2026-11-04T17:45:00Z,57,aek-athens-vs-real-madrid-2026-11-04
+ucl,true,ended,2594579,UEFA Champions League,RB Leipzig,Manchester City,2-3,false,2026-11-04T21:00:00+01:00,2026-11-04T20:00:00Z,57,rb-leipzig-vs-manchester-city-2026-11-04
+ucl,true,ended,2594566,UEFA Champions League,Lens,Como,1-9,false,2026-11-04T21:00:00+01:00,2026-11-04T20:00:00Z,55,lens-vs-como-2026-11-04
+ucl,true,ended,2594639,UEFA Champions League,Slavia Prague,Arsenal,1-2,false,2026-11-04T21:00:00+01:00,2026-11-04T20:00:00Z,71,slavia-prague-vs-arsenal-2026-11-04
+ucl,true,ended,2594593,UEFA Champions League,Porto,Napoli,4-1,false,2026-11-04T21:00:00+01:00,2026-11-04T20:00:00Z,59,porto-vs-napoli-2026-11-04
+ucl,true,ended,2594573,UEFA Champions League,Borussia Dortmund,Real Betis,2-1,false,2026-11-04T21:00:00+01:00,2026-11-04T20:00:00Z,54,borussia-dortmund-vs-real-betis-2026-11-04
+ucl,true,ended,2594666,UEFA Champions League,Viking,Sabah Baku,4-1,false,2026-11-04T21:00:00+01:00,2026-11-04T20:00:00Z,77,viking-vs-sabah-baku-2026-11-04
+ucl,true,ended,2594586,UEFA Champions League,PSV Eindhoven,Club Brugge,1-2,false,2026-11-04T21:00:00+01:00,2026-11-04T20:00:00Z,54,psv-eindhoven-vs-club-brugge-2026-11-04
+nba,true,ended,2601773,NBA,Washington Wizards,Atlanta Hawks,105-120,false,2026-11-05T01:00:00+01:00,2026-11-05T00:00:00Z,37,washington-wizards-vs-atlanta-hawks-2026-11-05
+nba,true,ended,2625668,NBA,Houston Rockets,Philadelphia 76ers,,true,2026-11-05T01:00:00+01:00,2026-11-05T00:00:00Z,36,houston-rockets-vs-philadelphia-76ers-2026-11-05
+nba,true,ended,2601772,NBA,Detroit Pistons,Philadelphia 76ers,106-112,false,2026-11-05T01:00:00+01:00,2026-11-05T00:00:00Z,37,detroit-pistons-vs-philadelphia-76ers-2026-11-05
+nba,true,ended,2601775,NBA,Brooklyn Nets,Charlotte Hornets,114-104,false,2026-11-05T01:30:00+01:00,2026-11-05T00:30:00Z,37,brooklyn-nets-vs-charlotte-hornets-2026-11-05
+nba,true,ended,2601776,NBA,New York Knicks,Chicago Bulls,135-105,false,2026-11-05T01:30:00+01:00,2026-11-05T00:30:00Z,43,new-york-knicks-vs-chicago-bulls-2026-11-05
+nba,true,ended,2601774,NBA,Boston Celtics,Milwaukee Bucks,109-102,false,2026-11-05T01:30:00+01:00,2026-11-05T00:30:00Z,18,boston-celtics-vs-milwaukee-bucks-2026-11-05
+nba,true,ended,2601777,NBA,Oklahoma City Thunder,Cleveland Cavaliers,124-116,false,2026-11-05T02:00:00+01:00,2026-11-05T01:00:00Z,37,oklahoma-city-thunder-vs-cleveland-cavaliers-2026-11-05
+nba,true,ended,2601779,NBA,Memphis Grizzlies,Indiana Pacers,103-107,false,2026-11-05T02:00:00+01:00,2026-11-05T01:00:00Z,35,memphis-grizzlies-vs-indiana-pacers-2026-11-05
+nba,true,ended,2601778,NBA,New Orleans Pelicans,Utah Jazz,120-113,false,2026-11-05T02:00:00+01:00,2026-11-05T01:00:00Z,42,new-orleans-pelicans-vs-utah-jazz-2026-11-05
+nba,true,ended,2601780,NBA,Houston Rockets,Minnesota Timberwolves,107-117,false,2026-11-05T02:30:00+01:00,2026-11-05T01:30:00Z,34,houston-rockets-vs-minnesota-timberwolves-2026-11-05
+nba,true,ended,2601782,NBA,Phoenix Suns,Portland Trail Blazers,119-132,false,2026-11-05T03:00:00+01:00,2026-11-05T02:00:00Z,36,phoenix-suns-vs-portland-trail-blazers-2026-11-05
+nba,true,ended,2601781,NBA,Denver Nuggets,Toronto Raptors,128-109,false,2026-11-05T03:00:00+01:00,2026-11-05T02:00:00Z,39,denver-nuggets-vs-toronto-raptors-2026-11-05
+nba,true,ended,2601783,NBA,San Antonio Spurs,Dallas Mavericks,112-111,false,2026-11-05T03:30:00+01:00,2026-11-05T02:30:00Z,40,san-antonio-spurs-vs-dallas-mavericks-2026-11-05
+nba,true,ended,2601784,NBA,Sacramento Kings,Los Angeles Lakers,103-116,false,2026-11-05T04:00:00+01:00,2026-11-05T03:00:00Z,20,sacramento-kings-vs-los-angeles-lakers-2026-11-05
+nba,true,ended,2601785,NBA,Los Angeles Clippers,Miami Heat,116-117,false,2026-11-05T04:30:00+01:00,2026-11-05T03:30:00Z,32,los-angeles-clippers-vs-miami-heat-2026-11-05
+nba,true,ended,2601786,NBA,Phoenix Suns,Orlando Magic,117-104,false,2026-11-06T03:00:00+01:00,2026-11-06T02:00:00Z,38,phoenix-suns-vs-orlando-magic-2026-11-06
+nba,true,ended,2601787,NBA,Golden State Warriors,Miami Heat,120-100,false,2026-11-06T04:00:00+01:00,2026-11-06T03:00:00Z,35,golden-state-warriors-vs-miami-heat-2026-11-06
+top5,true,ended,2508411,Bundesliga,Hamburg,Borussia Mönchengladbach,3-1,false,2026-11-06T20:30:00+01:00,2026-11-06T19:30:00Z,51,hamburg-vs-borussia-monchengladbach-2026-11-06
+top5,true,ended,2482245,Serie A,Venezia,Udinese,2-1,false,2026-11-06T20:45:00+01:00,2026-11-06T19:45:00Z,68,venezia-vs-udinese-2026-11-06
+top5,true,ended,2489546,Ligue 1,Toulouse,Strasbourg,3-1,false,2026-11-06T20:45:00+01:00,2026-11-06T19:45:00Z,55,toulouse-vs-strasbourg-2026-11-06
+top5,true,ended,2494093,Premier League,Everton,Coventry City,3-1,false,2026-11-06T21:00:00+01:00,2026-11-06T20:00:00Z,45,everton-vs-coventry-city-2026-11-06
+top5,true,ended,2506283,La Liga,Sevilla,Deportivo Alavés,0-0,false,2026-11-06T21:00:00+01:00,2026-11-06T20:00:00Z,58,sevilla-vs-deportivo-alaves-2026-11-06
+nba,true,ended,2601789,NBA,Atlanta Hawks,Washington Wizards,139-132,false,2026-11-07T01:00:00+01:00,2026-11-07T00:00:00Z,37,atlanta-hawks-vs-washington-wizards-2026-11-07
+nba,true,ended,2601788,NBA,Charlotte Hornets,Boston Celtics,80-119,false,2026-11-07T01:00:00+01:00,2026-11-07T00:00:00Z,36,charlotte-hornets-vs-boston-celtics-2026-11-07
+nba,true,ended,2601790,NBA,Cleveland Cavaliers,Philadelphia 76ers,119-95,false,2026-11-07T01:30:00+01:00,2026-11-07T00:30:00Z,36,cleveland-cavaliers-vs-philadelphia-76ers-2026-11-07
+nba,true,ended,2601791,NBA,Dallas Mavericks,Utah Jazz,112-100,false,2026-11-07T02:00:00+01:00,2026-11-07T01:00:00Z,42,dallas-mavericks-vs-utah-jazz-2026-11-07
+nba,true,ended,2601793,NBA,Milwaukee Bucks,Toronto Raptors,107-121,false,2026-11-07T02:00:00+01:00,2026-11-07T01:00:00Z,36,milwaukee-bucks-vs-toronto-raptors-2026-11-07
+nba,true,ended,2601794,NBA,New Orleans Pelicans,Minnesota Timberwolves,109-115,false,2026-11-07T02:00:00+01:00,2026-11-07T01:00:00Z,37,new-orleans-pelicans-vs-minnesota-timberwolves-2026-11-07
+nba,true,ended,2601792,NBA,Memphis Grizzlies,Oklahoma City Thunder,97-128,false,2026-11-07T02:00:00+01:00,2026-11-07T01:00:00Z,20,memphis-grizzlies-vs-oklahoma-city-thunder-2026-11-07
+nba,true,ended,2601795,NBA,Los Angeles Lakers,Portland Trail Blazers,124-118,false,2026-11-07T04:00:00+01:00,2026-11-07T03:00:00Z,37,los-angeles-lakers-vs-portland-trail-blazers-2026-11-07
+nba,true,ended,2601796,NBA,Sacramento Kings,San Antonio Spurs,109-124,false,2026-11-07T04:00:00+01:00,2026-11-07T03:00:00Z,40,sacramento-kings-vs-san-antonio-spurs-2026-11-07
+top5,true,ended,2494097,Premier League,Leeds United,Tottenham Hotspur,1-0,false,2026-11-07T13:30:00+01:00,2026-11-07T12:30:00Z,46,leeds-united-vs-tottenham-hotspur-2026-11-07
+top5,true,ended,2506282,La Liga,Málaga,Racing de Santander,1-2,false,2026-11-07T14:00:00+01:00,2026-11-07T13:00:00Z,60,malaga-vs-racing-de-santander-2026-11-07
+top5,true,ended,2482243,Serie A,Torino,Lecce,1-1,false,2026-11-07T15:00:00+01:00,2026-11-07T14:00:00Z,65,torino-vs-lecce-2026-11-07
+top5,true,ended,2482238,Serie A,Cagliari,Frosinone,1-0,false,2026-11-07T15:00:00+01:00,2026-11-07T14:00:00Z,80,cagliari-vs-frosinone-2026-11-07
+top5,true,ended,2508407,Bundesliga,Borussia Dortmund,Elversberg,2-1,false,2026-11-07T15:30:00+01:00,2026-11-07T14:30:00Z,57,borussia-dortmund-vs-elversberg-2026-11-07
+top5,true,ended,2508410,Bundesliga,RB Leipzig,Augsburg,5-2,false,2026-11-07T15:30:00+01:00,2026-11-07T14:30:00Z,48,rb-leipzig-vs-augsburg-2026-11-07
+top5,true,ended,2508412,Bundesliga,Paderborn,Eintracht Frankfurt,2-2,false,2026-11-07T15:30:00+01:00,2026-11-07T14:30:00Z,51,paderborn-vs-eintracht-frankfurt-2026-11-07
+top5,true,ended,2508406,Bundesliga,Mainz,Bayern Munich,1-2,false,2026-11-07T15:30:00+01:00,2026-11-07T14:30:00Z,52,mainz-vs-bayern-munich-2026-11-07
+top5,true,ended,2494092,Premier League,Arsenal,Hull City,1-0,false,2026-11-07T16:00:00+01:00,2026-11-07T15:00:00Z,59,arsenal-vs-hull-city-2026-11-07
+top5,true,ended,2494091,Premier League,Fulham,Newcastle United,1-1,false,2026-11-07T16:00:00+01:00,2026-11-07T15:00:00Z,54,fulham-vs-newcastle-united-2026-11-07
+top5,true,ended,2506285,La Liga,Espanyol,Deportivo de A Coruña,0-0,false,2026-11-07T16:15:00+01:00,2026-11-07T15:15:00Z,63,espanyol-vs-deportivo-de-a-coruna-2026-11-07
+top5,true,ended,2482246,Serie A,Parma,Bologna,1-2,false,2026-11-07T18:00:00+01:00,2026-11-07T17:00:00Z,61,parma-vs-bologna-2026-11-07
+top5,true,ended,2494098,Premier League,Nottingham Forest,Manchester City,3-1,false,2026-11-07T18:30:00+01:00,2026-11-07T17:30:00Z,52,nottingham-forest-vs-manchester-city-2026-11-07
+top5,true,ended,2508409,Bundesliga,Stuttgart,Werder Bremen,1-0,false,2026-11-07T18:30:00+01:00,2026-11-07T17:30:00Z,57,stuttgart-vs-werder-bremen-2026-11-07
+top5,true,ended,2506287,La Liga,Osasuna,Athletic Bilbao,1-1,false,2026-11-07T18:30:00+01:00,2026-11-07T17:30:00Z,56,osasuna-vs-athletic-bilbao-2026-11-07
+top5,true,ended,2489548,Ligue 1,Auxerre,Paris FC,0-1,false,2026-11-07T19:00:00+01:00,2026-11-07T18:00:00Z,56,auxerre-vs-paris-fc-2026-11-07
+top5,true,ended,2482241,Serie A,Roma,Sassuolo,3-0,false,2026-11-07T20:45:00+01:00,2026-11-07T19:45:00Z,63,roma-vs-sassuolo-2026-11-07
+top5,true,ended,2506280,La Liga,Valencia,Real Madrid,0-3,false,2026-11-07T21:00:00+01:00,2026-11-07T20:00:00Z,58,valencia-vs-real-madrid-2026-11-07
+top5,true,ended,2489544,Ligue 1,Paris Saint-Germain,Troyes,1-0,false,2026-11-07T21:05:00+01:00,2026-11-07T20:05:00Z,48,paris-saint-germain-vs-troyes-2026-11-07
+nba,true,ended,2601797,NBA,Indiana Pacers,Denver Nuggets,102-114,false,2026-11-07T23:00:00+01:00,2026-11-07T22:00:00Z,38,indiana-pacers-vs-denver-nuggets-2026-11-07
+nba,true,ended,2601798,NBA,Atlanta Hawks,Brooklyn Nets,124-121,false,2026-11-08T01:30:00+01:00,2026-11-08T00:30:00Z,36,atlanta-hawks-vs-brooklyn-nets-2026-11-08
+nba,true,ended,2601799,NBA,Cleveland Cavaliers,New York Knicks,97-109,false,2026-11-08T02:00:00+01:00,2026-11-08T01:00:00Z,37,cleveland-cavaliers-vs-new-york-knicks-2026-11-08
+nba,true,ended,2601800,NBA,Oklahoma City Thunder,Washington Wizards,114-75,false,2026-11-08T02:00:00+01:00,2026-11-08T01:00:00Z,39,oklahoma-city-thunder-vs-washington-wizards-2026-11-08
+nba,true,ended,2601801,NBA,Golden State Warriors,Orlando Magic,126-119,false,2026-11-08T02:30:00+01:00,2026-11-08T01:30:00Z,38,golden-state-warriors-vs-orlando-magic-2026-11-08
+nba,true,ended,2601802,NBA,Phoenix Suns,Houston Rockets,102-99,false,2026-11-08T03:00:00+01:00,2026-11-08T02:00:00Z,35,phoenix-suns-vs-houston-rockets-2026-11-08
+nba,true,ended,2601803,NBA,Portland Trail Blazers,San Antonio Spurs,103-125,false,2026-11-08T04:00:00+01:00,2026-11-08T03:00:00Z,38,portland-trail-blazers-vs-san-antonio-spurs-2026-11-08
+top5,true,ended,2482239,Serie A,Napoli,Lazio,1-1,false,2026-11-08T12:30:00+01:00,2026-11-08T11:30:00Z,56,napoli-vs-lazio-2026-11-08
+top5,false,live,2506288,La Liga,Elche,Real Betis,0-0,false,2026-11-08T14:00:00+01:00,2026-11-08T13:00:00Z,56,elche-vs-real-betis-2026-11-08
+top5,false,live,2494094,Premier League,Brighton and Hove Albion,Brentford,1-0,false,2026-11-08T15:00:00+01:00,2026-11-08T14:00:00Z,56,brighton-and-hove-albion-vs-brentford-2026-11-08
+top5,false,live,2482240,Serie A,Genoa,AC Milan,0-2,false,2026-11-08T15:00:00+01:00,2026-11-08T14:00:00Z,55,genoa-vs-ac-milan-2026-11-08
+top5,false,live,2489545,Ligue 1,Rennes,Lille,0-1,false,2026-11-08T15:00:00+01:00,2026-11-08T14:00:00Z,46,rennes-vs-lille-2026-11-08
+top5,false,live,2494099,Premier League,Sunderland,Chelsea,0-0,false,2026-11-08T15:00:00+01:00,2026-11-08T14:00:00Z,51,sunderland-vs-chelsea-2026-11-08
+top5,false,live,2494095,Premier League,Crystal Palace,Liverpool,0-0,false,2026-11-08T15:00:00+01:00,2026-11-08T14:00:00Z,60,crystal-palace-vs-liverpool-2026-11-08
+top5,false,live,2482247,Serie A,Monza,Atalanta,0-0,false,2026-11-08T15:00:00+01:00,2026-11-08T14:00:00Z,67,monza-vs-atalanta-2026-11-08
+top5,false,live,2494096,Premier League,Ipswich Town,Bournemouth,0-1,false,2026-11-08T15:00:00+01:00,2026-11-08T14:00:00Z,52,ipswich-town-vs-bournemouth-2026-11-08
+skip,false,upcoming,2508413,Bundesliga,Köln,Bayer Leverkusen,,true,2026-11-08T15:30:00+01:00,2026-11-08T14:30:00Z,60,koln-vs-bayer-leverkusen-2026-11-08
+skip,false,upcoming,2506286,La Liga,Real Sociedad,Rayo Vallecano,,true,2026-11-08T16:15:00+01:00,2026-11-08T15:15:00Z,54,real-sociedad-vs-rayo-vallecano-2026-11-08
+skip,false,upcoming,2489543,Ligue 1,Angers,Nice,,true,2026-11-08T17:15:00+01:00,2026-11-08T16:15:00Z,56,angers-vs-nice-2026-11-08
+skip,false,upcoming,2489550,Ligue 1,Le Mans,Monaco,,true,2026-11-08T17:15:00+01:00,2026-11-08T16:15:00Z,67,le-mans-vs-monaco-2026-11-08
+skip,false,upcoming,2489549,Ligue 1,Le Havre,Lorient,,true,2026-11-08T17:15:00+01:00,2026-11-08T16:15:00Z,62,le-havre-vs-lorient-2026-11-08
+skip,false,upcoming,2489547,Ligue 1,Brest,Lyon,,true,2026-11-08T17:15:00+01:00,2026-11-08T16:15:00Z,61,brest-vs-lyon-2026-11-08
+skip,false,upcoming,2494090,Premier League,Manchester United,Aston Villa,,true,2026-11-08T17:30:00+01:00,2026-11-08T16:30:00Z,55,manchester-united-vs-aston-villa-2026-11-08
+skip,false,upcoming,2508405,Bundesliga,Freiburg,Union Berlin,,true,2026-11-08T17:30:00+01:00,2026-11-08T16:30:00Z,55,freiburg-vs-union-berlin-2026-11-08
+skip,false,upcoming,2482244,Serie A,Inter Milan,Como,,true,2026-11-08T18:00:00+01:00,2026-11-08T17:00:00Z,53,inter-milan-vs-como-2026-11-08
+skip,false,upcoming,2506284,La Liga,Celta Vigo,Levante,,true,2026-11-08T18:30:00+01:00,2026-11-08T17:30:00Z,56,celta-vigo-vs-levante-2026-11-08
+skip,false,upcoming,2506281,La Liga,Villarreal,Getafe,,true,2026-11-08T18:30:00+01:00,2026-11-08T17:30:00Z,55,villarreal-vs-getafe-2026-11-08
+skip,false,upcoming,2508408,Bundesliga,Hoffenheim,Schalke 04,,true,2026-11-08T19:30:00+01:00,2026-11-08T18:30:00Z,57,hoffenheim-vs-schalke-04-2026-11-08
+skip,false,upcoming,2489551,Ligue 1,Lens,Marseille,,true,2026-11-08T20:45:00+01:00,2026-11-08T19:45:00Z,50,lens-vs-marseille-2026-11-08
+skip,false,upcoming,2482242,Serie A,Fiorentina,Juventus,,true,2026-11-08T20:45:00+01:00,2026-11-08T19:45:00Z,59,fiorentina-vs-juventus-2026-11-08
+skip,false,upcoming,2506279,La Liga,Atlético Madrid,Barcelona,,true,2026-11-08T21:00:00+01:00,2026-11-08T20:00:00Z,24,atletico-madrid-vs-barcelona-2026-11-08
+skip,false,upcoming,2601804,NBA,Chicago Bulls,Philadelphia 76ers,,true,2026-11-08T21:30:00+01:00,2026-11-08T20:30:00Z,42,chicago-bulls-vs-philadelphia-76ers-2026-11-08
+skip,false,upcoming,2601805,NBA,Detroit Pistons,Los Angeles Lakers,,true,2026-11-09T00:00:00+01:00,2026-11-08T23:00:00Z,37,detroit-pistons-vs-los-angeles-lakers-2026-11-08
+skip,false,upcoming,2601806,NBA,Minnesota Timberwolves,Utah Jazz,,true,2026-11-09T01:00:00+01:00,2026-11-09T00:00:00Z,39,minnesota-timberwolves-vs-utah-jazz-2026-11-09
+skip,false,upcoming,2601807,NBA,Dallas Mavericks,Brooklyn Nets,,true,2026-11-09T01:30:00+01:00,2026-11-09T00:30:00Z,38,dallas-mavericks-vs-brooklyn-nets-2026-11-09
+skip,false,upcoming,2601808,NBA,Milwaukee Bucks,Boston Celtics,,true,2026-11-09T02:00:00+01:00,2026-11-09T01:00:00Z,35,milwaukee-bucks-vs-boston-celtics-2026-11-09
+skip,false,upcoming,2601810,NBA,Sacramento Kings,Miami Heat,,true,2026-11-09T03:00:00+01:00,2026-11-09T02:00:00Z,37,sacramento-kings-vs-miami-heat-2026-11-09
+skip,false,upcoming,2601809,NBA,Los Angeles Clippers,New Orleans Pelicans,,true,2026-11-09T03:00:00+01:00,2026-11-09T02:00:00Z,35,los-angeles-clippers-vs-new-orleans-pelicans-2026-11-09
+skip,false,upcoming,2601811,NBA,Atlanta Hawks,Los Angeles Lakers,,true,2026-11-10T01:00:00+01:00,2026-11-10T00:00:00Z,36,atlanta-hawks-vs-los-angeles-lakers-2026-11-10
+skip,false,upcoming,2601812,NBA,Charlotte Hornets,Cleveland Cavaliers,,true,2026-11-10T01:00:00+01:00,2026-11-10T00:00:00Z,36,charlotte-hornets-vs-cleveland-cavaliers-2026-11-10
+skip,false,upcoming,2601813,NBA,Detroit Pistons,Washington Wizards,,true,2026-11-10T01:00:00+01:00,2026-11-10T00:00:00Z,37,detroit-pistons-vs-washington-wizards-2026-11-10
+skip,false,upcoming,2601814,NBA,Toronto Raptors,Memphis Grizzlies,,true,2026-11-10T01:30:00+01:00,2026-11-10T00:30:00Z,36,toronto-raptors-vs-memphis-grizzlies-2026-11-10
+skip,false,upcoming,2601815,NBA,Dallas Mavericks,Indiana Pacers,,true,2026-11-10T02:00:00+01:00,2026-11-10T01:00:00Z,37,dallas-mavericks-vs-indiana-pacers-2026-11-10
+skip,false,upcoming,2601816,NBA,Houston Rockets,Denver Nuggets,,true,2026-11-10T02:30:00+01:00,2026-11-10T01:30:00Z,38,houston-rockets-vs-denver-nuggets-2026-11-10
+skip,false,upcoming,2601817,NBA,Phoenix Suns,San Antonio Spurs,,true,2026-11-10T03:00:00+01:00,2026-11-10T02:00:00Z,38,phoenix-suns-vs-san-antonio-spurs-2026-11-10
+skip,false,upcoming,2601818,NBA,Golden State Warriors,New Orleans Pelicans,,true,2026-11-10T04:00:00+01:00,2026-11-10T03:00:00Z,38,golden-state-warriors-vs-new-orleans-pelicans-2026-11-10
+skip,false,upcoming,2601819,NBA,New York Knicks,Milwaukee Bucks,,true,2026-11-11T01:30:00+01:00,2026-11-11T00:30:00Z,38,new-york-knicks-vs-milwaukee-bucks-2026-11-11
+skip,false,upcoming,2601820,NBA,Philadelphia 76ers,Boston Celtics,,true,2026-11-11T02:00:00+01:00,2026-11-11T01:00:00Z,36,philadelphia-76ers-vs-boston-celtics-2026-11-11
+skip,false,upcoming,2601822,NBA,Utah Jazz,Miami Heat,,true,2026-11-11T03:00:00+01:00,2026-11-11T02:00:00Z,39,utah-jazz-vs-miami-heat-2026-11-11
+skip,false,upcoming,2601821,NBA,Phoenix Suns,Los Angeles Clippers,,true,2026-11-11T03:00:00+01:00,2026-11-11T02:00:00Z,33,phoenix-suns-vs-los-angeles-clippers-2026-11-11
+skip,false,upcoming,2601823,NBA,Sacramento Kings,Orlando Magic,,true,2026-11-11T04:00:00+01:00,2026-11-11T03:00:00Z,20,sacramento-kings-vs-orlando-magic-2026-11-11
