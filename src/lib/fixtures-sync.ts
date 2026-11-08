@@ -119,6 +119,11 @@ async function enrichRowsLineups(
           idAwayTeam: row.id_away_team ?? ev.idAwayTeam,
         },
         sport,
+        {
+          homeName: row.str_home_team,
+          awayName: row.str_away_team,
+          existing: row.lineup ?? [],
+        },
       );
       if (lineup.length === 0) return;
       const updated: LiveFixtureRow = {
@@ -130,7 +135,7 @@ async function enrichRowsLineups(
         },
       };
       byId.set(row.id_event, updated);
-      void applyLineupEnrichToRow(admin, updated);
+      void applyLineupEnrichToRow(admin, updated, lineup);
     } catch {
       /* try next fixture */
     }
@@ -153,19 +158,86 @@ function parseTsdbScore(value: string | undefined | null): number | null {
   return Number.isFinite(n) ? n : null;
 }
 
+type LineupSides = {
+  homeId?: string | null;
+  awayId?: string | null;
+  homeName?: string | null;
+  awayName?: string | null;
+};
+
+function foldTeamName(value?: string | null): string {
+  return (value ?? "")
+    .normalize("NFD")
+    .replace(/\p{M}/gu, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "");
+}
+
+/** How many stored players belong to each side of the fixture. */
+export function lineupSideCounts(
+  players: StoredLineupPlayer[],
+  sides: LineupSides,
+): { home: number; away: number } {
+  const homeName = foldTeamName(sides.homeName);
+  const awayName = foldTeamName(sides.awayName);
+  let home = 0;
+  let away = 0;
+  for (const p of players) {
+    if (p.idTeam && sides.homeId && p.idTeam === sides.homeId) home += 1;
+    else if (p.idTeam && sides.awayId && p.idTeam === sides.awayId) away += 1;
+    else if (p.strHome === "Yes") home += 1;
+    else if (p.strHome === "No") away += 1;
+    else {
+      const team = foldTeamName(p.strTeam);
+      if (team && homeName && team === homeName) home += 1;
+      else if (team && awayName && team === awayName) away += 1;
+    }
+  }
+  return { home, away };
+}
+
+/** A lineup that lists only one club is not finished: the other roster call failed. */
+export function lineupCoversBothSides(
+  players: StoredLineupPlayer[],
+  sides: LineupSides,
+): boolean {
+  if (players.length === 0) return false;
+  const { home, away } = lineupSideCounts(players, sides);
+  return home > 0 && away > 0;
+}
+
 /** Badges and a roster count. The player rows live only in the lineup column. */
 function slimFixtureRaw(
   ev: Pick<TsdbEvent, "idHomeTeam" | "idAwayTeam" | "strHomeTeamBadge" | "strAwayTeamBadge">,
-  extras: { slug: string; lineup?: StoredLineupPlayer[] },
+  extras: {
+    slug: string;
+    lineup?: StoredLineupPlayer[];
+    homeName?: string | null;
+    awayName?: string | null;
+  },
 ): Record<string, unknown> {
-  return {
+  const lineup = extras.lineup ?? [];
+  const raw: Record<string, unknown> = {
     sideline_slug: extras.slug,
     idHomeTeam: ev.idHomeTeam,
     idAwayTeam: ev.idAwayTeam,
     strHomeTeamBadge: ev.strHomeTeamBadge,
     strAwayTeamBadge: ev.strAwayTeamBadge,
-    lineup_count: extras.lineup?.length ?? 0,
+    lineup_count: lineup.length,
   };
+  if (
+    lineup.length > 0 &&
+    !lineupCoversBothSides(lineup, {
+      homeId: ev.idHomeTeam,
+      awayId: ev.idAwayTeam,
+      homeName: extras.homeName,
+      awayName: extras.awayName,
+    })
+  ) {
+    raw.lineup_partial = true;
+    raw.lineup_checked_at = new Date().toISOString();
+  }
+  return raw;
 }
 
 function rowFromEvent(sport: "nba" | "soccer", leagueId: string, ev: TsdbEvent) {
@@ -202,8 +274,35 @@ function lineupCountOf(row: LiveFixtureRow): number {
   return 0;
 }
 
+/** A one-sided lineup is retried, but not more often than this. */
+const PARTIAL_LINEUP_RETRY_MS = 10 * 60 * 1000;
+
+function rowSides(row: LiveFixtureRow): LineupSides {
+  return {
+    homeId: row.id_home_team,
+    awayId: row.id_away_team,
+    homeName: row.str_home_team,
+    awayName: row.str_away_team,
+  };
+}
+
+/** True when the row lists players for one club only. */
+function rowLineupIsPartial(row: LiveFixtureRow): boolean {
+  if (lineupCountOf(row) === 0) return false;
+  if (row.lineup && row.lineup.length > 0) {
+    return !lineupCoversBothSides(row.lineup, rowSides(row));
+  }
+  const raw = row.raw as Record<string, unknown> | null | undefined;
+  return raw?.lineup_partial === true;
+}
+
+/** Whether the stored lineup is good enough to skip another roster fetch. */
 function rowHasLineup(row: LiveFixtureRow): boolean {
-  return lineupCountOf(row) > 0;
+  if (lineupCountOf(row) === 0) return false;
+  if (!rowLineupIsPartial(row)) return true;
+  const raw = row.raw as Record<string, unknown> | null | undefined;
+  const checked = Date.parse(String(raw?.lineup_checked_at ?? ""));
+  return Number.isFinite(checked) && Date.now() - checked < PARTIAL_LINEUP_RETRY_MS;
 }
 
 function isLiveLeagueRow(row: {
@@ -418,28 +517,66 @@ function mergeLeagueBucketsIntoRows(
   return [...byId.values()];
 }
 
+/** Squad players carry the id of the club we asked for, so they land on the right side. */
+function tagRoster(
+  roster: TsdbLineupPlayer[],
+  idTeam: string,
+  teamName?: string | null,
+): TsdbLineupPlayer[] {
+  return roster.map((p) => ({
+    ...p,
+    idTeam,
+    strTeam: p.strTeam?.trim() ? p.strTeam : teamName ?? undefined,
+  }));
+}
+
 async function resolvePlayersForEvent(
   ev: TsdbEvent,
   sport: "nba" | "soccer",
+  opts?: {
+    homeName?: string | null;
+    awayName?: string | null;
+    /** Players already stored for this fixture. Kept so a retry never loses a side. */
+    existing?: StoredLineupPlayer[];
+  },
 ): Promise<StoredLineupPlayer[]> {
   const lineupOpts = { lineupBudget: true as const };
-  let lineup = await fetchLineup(ev.idEvent, lineupOpts);
-  if (lineup.length >= 11) return lineup.map(slimStoredPlayer);
-
   let homeId = ev.idHomeTeam;
   let awayId = ev.idAwayTeam;
+  const sides = (): LineupSides => ({
+    homeId,
+    awayId,
+    homeName: opts?.homeName ?? ev.strHomeTeam,
+    awayName: opts?.awayName ?? ev.strAwayTeam,
+  });
+
+  let lineup = await fetchLineup(ev.idEvent, lineupOpts);
+  // A posted team sheet is only trusted when it names players for both clubs.
+  if (lineup.length >= 11 && lineupCoversBothSides(lineup, sides())) {
+    return lineup.map(slimStoredPlayer);
+  }
+
   if (!homeId || !awayId) {
     const detail = await fetchEventById(ev.idEvent, lineupOpts);
     homeId = detail?.idHomeTeam ?? homeId;
     awayId = detail?.idAwayTeam ?? awayId;
   }
 
+  const existing = opts?.existing ?? [];
   if (homeId && awayId) {
+    const have = lineupSideCounts([...lineup, ...existing], sides());
+    // Only ask for the squads that are still missing.
     const [homeRoster, awayRoster] = await Promise.all([
-      fetchTeamRoster(homeId, lineupOpts),
-      fetchTeamRoster(awayId, lineupOpts),
+      have.home > 0 ? Promise.resolve([]) : fetchTeamRoster(homeId, lineupOpts),
+      have.away > 0 ? Promise.resolve([]) : fetchTeamRoster(awayId, lineupOpts),
     ]);
-    lineup = mergePlayers(lineup, [homeRoster, awayRoster]);
+    lineup = mergePlayers(lineup, [
+      existing,
+      tagRoster(homeRoster, homeId, sides().homeName),
+      tagRoster(awayRoster, awayId, sides().awayName),
+    ]);
+  } else if (existing.length > 0) {
+    lineup = mergePlayers(lineup, [existing]);
   }
   return lineup.map(slimStoredPlayer);
 }
@@ -449,24 +586,49 @@ let lastEnrichFinished = 0;
 async function applyLineupEnrichToRow(
   admin: NonNullable<ReturnType<typeof createServiceClient>>,
   row: LiveFixtureRow,
+  resolved?: StoredLineupPlayer[],
 ): Promise<boolean> {
   const ev = row.raw as unknown as TsdbEvent;
   const sport = row.sport as "nba" | "soccer";
   try {
-    const lineup = await resolvePlayersForEvent(
-      { ...ev, idEvent: row.id_event },
-      sport,
-    );
+    // List queries skip the lineup column. Load it so a retry keeps the side we already have.
+    if (!resolved && (row.lineup?.length ?? 0) === 0 && lineupCountOf(row) > 0) {
+      const { data } = await admin
+        .from("sportsdb_fixtures")
+        .select("lineup")
+        .eq("id_event", row.id_event)
+        .maybeSingle();
+      const stored = (data as { lineup?: StoredLineupPlayer[] | null } | null)?.lineup;
+      if (stored?.length) row = { ...row, lineup: stored };
+    }
+    const lineup =
+      resolved ??
+      (await resolvePlayersForEvent(
+        {
+          ...ev,
+          idEvent: row.id_event,
+          idHomeTeam: row.id_home_team ?? ev.idHomeTeam,
+          idAwayTeam: row.id_away_team ?? ev.idAwayTeam,
+        },
+        sport,
+        {
+          homeName: row.str_home_team,
+          awayName: row.str_away_team,
+          existing: row.lineup ?? [],
+        },
+      ));
     if (lineup.length === 0) return false;
     const prevRaw = (row.raw as Record<string, unknown> | undefined) ?? {};
     const enrichedRaw = slimFixtureRaw(
       {
-        idHomeTeam: (ev.idHomeTeam ?? prevRaw.idHomeTeam) as string | undefined,
-        idAwayTeam: (ev.idAwayTeam ?? prevRaw.idAwayTeam) as string | undefined,
+        idHomeTeam: (row.id_home_team ?? ev.idHomeTeam ?? prevRaw.idHomeTeam) as string | undefined,
+        idAwayTeam: (row.id_away_team ?? ev.idAwayTeam ?? prevRaw.idAwayTeam) as string | undefined,
         strHomeTeamBadge: prevRaw.strHomeTeamBadge as string | undefined,
         strAwayTeamBadge: prevRaw.strAwayTeamBadge as string | undefined,
       },
       {
+        homeName: row.str_home_team,
+        awayName: row.str_away_team,
         slug:
           (prevRaw.sideline_slug as string | undefined) ??
           fixtureSlug(
@@ -482,8 +644,8 @@ async function applyLineupEnrichToRow(
       synced_at: new Date().toISOString(),
       lineup,
       slug: enrichedRaw.sideline_slug as string,
-      id_home_team: ev.idHomeTeam ?? null,
-      id_away_team: ev.idAwayTeam ?? null,
+      id_home_team: row.id_home_team ?? ev.idHomeTeam ?? null,
+      id_away_team: row.id_away_team ?? ev.idAwayTeam ?? null,
     };
     let { error: upErr } = await admin
       .from("sportsdb_fixtures")
@@ -758,7 +920,12 @@ async function stripEmbeddedLineups(
               strHomeTeamBadge: raw.strHomeTeamBadge as string | undefined,
               strAwayTeamBadge: raw.strAwayTeamBadge as string | undefined,
             },
-            { slug, lineup },
+            {
+              slug,
+              lineup,
+              homeName: row.str_home_team as string | null,
+              awayName: row.str_away_team as string | null,
+            },
           ),
         })
         .eq("id_event", row.id_event as string);
@@ -1222,6 +1389,11 @@ export async function getLiveMatchBySlug(slug: string) {
             idAwayTeam: row.id_away_team ?? ev.idAwayTeam,
           },
           sport,
+          {
+            homeName: row.str_home_team,
+            awayName: row.str_away_team,
+            existing: row.lineup ?? [],
+          },
         ),
         6_000,
         [] as StoredLineupPlayer[],
@@ -1236,7 +1408,7 @@ export async function getLiveMatchBySlug(slug: string) {
           },
         };
         if (admin && !getDegradedMode().cacheOnly) {
-          void applyLineupEnrichToRow(admin, row);
+          void applyLineupEnrichToRow(admin, row, lineup);
         }
       } else if (admin && !getDegradedMode().cacheOnly) {
         await applyLineupEnrichToRow(admin, row);
