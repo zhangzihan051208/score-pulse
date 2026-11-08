@@ -125,6 +125,16 @@ function curatedRoleLabel(positionKey: string) {
       return "Winger";
     case "soccer.striker":
       return "Centre-forward";
+    case "nba.guard":
+    case "nba.pointguard":
+    case "nba.shootingguard":
+      return "Guard";
+    case "nba.forward":
+    case "nba.smallforward":
+    case "nba.powerforward":
+      return "Forward";
+    case "nba.center":
+      return "Center";
     default:
       return "Player";
   }
