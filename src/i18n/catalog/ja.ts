@@ -448,6 +448,7 @@ const ja: Dict = {
       noCounterpart: "先発同士の対位がまだありません。両チームのスタメンが出ると並びます。",
       radarTitle: "五軸オーバーレイ",
       radarHint: "青 = ホーム · 橙 = アウェイ。破線は 6 点。",
+      radarWiden: "レーダーは差を少し広げて表示",
       vs: "vs",
       vsLabel: "対位: vs {opponent}",
       you: "このカード",
@@ -478,7 +479,7 @@ const ja: Dict = {
       filterMine: "自分",
       filterOthers: "他人",
       radarLegend:
-        "五軸平均からの偏差を強調（破線 = 平均）。橙 = コミュニティ · 青 = あなた",
+        "目盛りは 3・6・9。破線は 6 点。橙 = コミュニティ · 青 = あなた",
       allRatings: "すべての採点",
       noCommunityYet: "クラウド採点はまだありません。",
       noCommentsInFilter: "このフィルターにコメントはありません。",

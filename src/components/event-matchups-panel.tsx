@@ -113,8 +113,10 @@ function MatchupOverlayCard({
         dimLabels={dimLabels}
         series={series}
         size={240}
+        variant="matchup"
       />
       <p className="text-center text-[11px] text-muted-foreground">{t.matchup.radarHint}</p>
+      <p className="text-center text-[11px] text-muted-foreground">{t.matchup.radarWiden}</p>
     </li>
   );
 }
