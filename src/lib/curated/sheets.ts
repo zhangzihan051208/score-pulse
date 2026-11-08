@@ -1,5 +1,5 @@
 import forestPack from "@/lib/curated/nfo-mci-20261107.json";
-import premierLeaguePack from "@/lib/curated/premier-league-20261106.json";
+import top5Pack from "@/lib/curated/top5-20261106.json";
 import type { CommunityTake } from "@/lib/community-take-types";
 import type { PositionKey } from "@/lib/position-ratings";
 import type { ScoreMap } from "@/lib/types";
@@ -45,12 +45,12 @@ const forest = forestPack as unknown as {
   matchTakes: MatchTake[];
 };
 
-const premierLeague = premierLeaguePack as unknown as {
+const top5 = top5Pack as unknown as {
   crests: Record<string, string>;
   events: Record<string, EventSheet>;
 };
 
-const crests: Record<string, string> = { ...forest.crests, ...premierLeague.crests };
+const crests: Record<string, string> = { ...forest.crests, ...top5.crests };
 
 const events = new Map<string, EventSheet>([
   [
@@ -61,7 +61,7 @@ const events = new Map<string, EventSheet>([
       matchTakes: forest.matchTakes,
     },
   ],
-  ...Object.entries(premierLeague.events),
+  ...Object.entries(top5.events),
 ]);
 
 export const NFO_MCI_EVENT_ID = forest.eventId;
