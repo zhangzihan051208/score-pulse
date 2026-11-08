@@ -436,6 +436,7 @@ const zh: Dict = {
       matchYou: "我",
       matchScoreOnly: "只打了分，没有写评论。",
       matchCount: "{n} 人评",
+      sheetNote: "球迷短评（AI 生成）",
     },
     matchup: {
       tab: "对位对比",

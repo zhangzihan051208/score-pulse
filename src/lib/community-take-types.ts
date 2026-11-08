@@ -26,4 +26,5 @@ export type CommunityTake = {
   replies?: CommentReply[];
   primaryCrestUrl?: string | null;
   primaryCrestName?: string | null;
+  editorial?: boolean;
 };

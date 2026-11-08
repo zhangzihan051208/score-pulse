@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react
 import { CommentBody } from "@/components/comment-body";
 import { GradeSlider } from "@/components/grade-slider";
 import { SafetyActions } from "@/components/safety-actions";
+import { TeamCrest } from "@/components/team-crest";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/hooks/use-auth";
@@ -16,6 +17,13 @@ import { moderationMessage } from "@/lib/moderation-message";
 import { clampScore } from "@/lib/store";
 import type { MatchEvent } from "@/lib/types";
 
+function isAccountId(id?: string) {
+  return Boolean(
+    id &&
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id),
+  );
+}
+
 type RemoteTake = {
   userId: string;
   author: string;
@@ -25,6 +33,9 @@ type RemoteTake = {
   commentId?: string;
   createdAt: string;
   isYou: boolean;
+  primaryCrestUrl?: string | null;
+  primaryCrestName?: string | null;
+  editorial?: boolean;
 };
 
 export function MatchTakePanel({ event }: { event: MatchEvent }) {
@@ -70,6 +81,9 @@ export function MatchTakePanel({ event }: { event: MatchEvent }) {
       isYou: take.isYou,
       userId: take.userId,
       commentId: take.commentId,
+      primaryCrestUrl: take.primaryCrestUrl,
+      primaryCrestName: take.primaryCrestName,
+      editorial: take.editorial,
     }));
     const cloudHasYou = cloudRows.some((take) => take.isYou);
     const yours =
@@ -85,6 +99,9 @@ export function MatchTakePanel({ event }: { event: MatchEvent }) {
               isYou: true,
               userId: undefined as string | undefined,
               commentId: undefined as string | undefined,
+              primaryCrestUrl: null,
+              primaryCrestName: null,
+              editorial: false,
             },
           ]
         : [];
@@ -200,7 +217,12 @@ export function MatchTakePanel({ event }: { event: MatchEvent }) {
       </form>
 
       <div className="mt-5">
-        <h3 className="text-sm font-medium">{t.event.matchComment}</h3>
+        <div className="flex flex-wrap items-baseline justify-between gap-2">
+          <h3 className="text-sm font-medium">{t.event.matchComment}</h3>
+          {rows.some((row) => row.editorial) ? (
+            <p className="text-[11px] text-muted-foreground">{t.event.sheetNote}</p>
+          ) : null}
+        </div>
         {rows.length === 0 ? (
           <p className="mt-2 text-sm text-muted-foreground">{t.event.matchEmpty}</p>
         ) : (
@@ -211,16 +233,26 @@ export function MatchTakePanel({ event }: { event: MatchEvent }) {
                   {row.score.toFixed(1)}
                 </span>
                 <div className="min-w-0 flex-1">
-                  <p className="text-xs text-muted-foreground">
-                    {row.isYou ? `${t.event.matchYou} · ${row.author}` : row.author}
-                    {" · "}
-                    {new Date(row.createdAt).toLocaleString(locale === "zh" ? "zh-CN" : locale, {
-                      month: "short",
-                      day: "numeric",
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    })}
-                  </p>
+                  <div className="flex items-start justify-between gap-2">
+                    <p className="text-xs text-muted-foreground">
+                      {row.isYou ? `${t.event.matchYou} · ${row.author}` : row.author}
+                      {" · "}
+                      {new Date(row.createdAt).toLocaleString(locale === "zh" ? "zh-CN" : locale, {
+                        month: "short",
+                        day: "numeric",
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}
+                    </p>
+                    {row.primaryCrestUrl ? (
+                      <TeamCrest
+                        name={row.primaryCrestName ?? row.author}
+                        badgeUrl={row.primaryCrestUrl}
+                        size="sm"
+                        className="rounded-sm"
+                      />
+                    ) : null}
+                  </div>
                   {row.body?.trim() ? (
                     <CommentBody
                       body={row.body}
@@ -230,9 +262,9 @@ export function MatchTakePanel({ event }: { event: MatchEvent }) {
                   ) : (
                     <p className="mt-1 text-sm text-muted-foreground">{t.event.matchScoreOnly}</p>
                   )}
-                  {!row.isYou && (row.userId || row.commentId) ? (
+                  {!row.isYou && (isAccountId(row.userId) || row.commentId) ? (
                     <SafetyActions
-                      targetUserId={row.userId}
+                      targetUserId={isAccountId(row.userId) ? row.userId : undefined}
                       commentId={row.commentId}
                       eventId={event.id}
                       excerpt={row.body}
