@@ -1,3 +1,4 @@
+import { PERMANENT_RATED_EVENT_IDS } from "@/lib/curated/sheets";
 import { alignEventToNow } from "@/lib/match-clock";
 import { mapTsdbStatus } from "@/lib/thesportsdb";
 import type { EventStatus, Sport } from "@/lib/types";
@@ -81,10 +82,19 @@ function endedWithinDays(
   return now - kick <= days * DAY_MS;
 }
 
-/** Show on home/board lists: live, upcoming (5d ahead), and recently ended (5d). */
-export function isVisibleFixtureRow(
-  row: Pick<LiveFixtureRow, "str_status" | "date_event" | "str_time" | "sport">,
-): boolean {
+type RetainableRow = Pick<
+  LiveFixtureRow,
+  "id_event" | "str_status" | "date_event" | "str_time" | "sport"
+>;
+
+/** Fan-rated matches stay on the boards and in the database after the 5-day window. */
+export function isPermanentlyRatedFixture(eventId: string | null | undefined): boolean {
+  return Boolean(eventId && PERMANENT_RATED_EVENT_IDS.has(eventId));
+}
+
+/** Show on home/board lists: live, upcoming (5d ahead), recently ended (5d), and every rated match. */
+export function isVisibleFixtureRow(row: RetainableRow): boolean {
+  if (isPermanentlyRatedFixture(row.id_event)) return true;
   const status = effectiveFixtureStatus(row);
   if (status === "live") return true;
   if (status === "upcoming") {
@@ -95,9 +105,8 @@ export function isVisibleFixtureRow(
 }
 
 /** Whether a synced TSDB row should be stored (sync + slug pages). */
-export function shouldRetainFixtureRow(
-  row: Pick<LiveFixtureRow, "str_status" | "date_event" | "str_time" | "sport">,
-): boolean {
+export function shouldRetainFixtureRow(row: RetainableRow): boolean {
+  if (isPermanentlyRatedFixture(row.id_event)) return true;
   const status = effectiveFixtureStatus(row);
   if (status === "live") return true;
   if (status === "upcoming") {
@@ -107,9 +116,7 @@ export function shouldRetainFixtureRow(
   return endedWithinDays(row, ENDED_DB_RETAIN_DAYS);
 }
 
-export function shouldPruneFixtureRow(
-  row: Pick<LiveFixtureRow, "str_status" | "date_event" | "str_time" | "sport">,
-): boolean {
+export function shouldPruneFixtureRow(row: RetainableRow): boolean {
   return !shouldRetainFixtureRow(row);
 }
 
@@ -156,7 +163,12 @@ export function balanceFixturesByStatus<T extends LiveFixtureRow>(
   return out;
 }
 
-export function isVisibleMatchStatus(status: EventStatus, startAt?: string): boolean {
+export function isVisibleMatchStatus(
+  status: EventStatus,
+  startAt?: string,
+  eventId?: string,
+): boolean {
+  if (isPermanentlyRatedFixture(eventId)) return true;
   if (status === "live") return true;
   if (status === "upcoming") return isUpcomingInWindow(undefined, startAt);
   if (status !== "ended" || !startAt) return false;
