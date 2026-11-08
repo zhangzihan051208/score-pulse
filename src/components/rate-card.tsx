@@ -290,7 +290,7 @@ export function RateCard({
         onSubmit={async (e) => {
           e.preventDefault();
           if (mustSignIn) {
-            setError(t.auth.signInToPost);
+            setError(body.trim() ? t.auth.signInToComment : t.auth.signInToPost);
             return;
           }
           if (body.trim() && body.trim().length < 8) {
@@ -437,7 +437,8 @@ export function RateCard({
           <Textarea
             value={body}
             maxLength={500}
-            placeholder={t.rate.commentHint}
+            disabled={mustSignIn}
+            placeholder={mustSignIn ? t.auth.signInToComment : t.rate.commentHint}
             onChange={(e) => {
               setBody(e.target.value);
               setSaved(false);
@@ -471,7 +472,7 @@ export function RateCard({
 
         {mustSignIn && (
           <p className="text-sm text-muted-foreground">
-            {t.auth.signInToPost}{" "}
+            {t.auth.signInToComment}{" "}
             <Link href="/login" className="font-medium text-primary hover:underline">
               {t.auth.signIn}
             </Link>
