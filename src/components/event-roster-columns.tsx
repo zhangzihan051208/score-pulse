@@ -9,6 +9,7 @@ import { useEventTakesSummary } from "@/hooks/use-event-takes-summary";
 import { localTakesForAthlete, topEngagementTake } from "@/lib/event-spotlight";
 import { useI18n } from "@/i18n/use-i18n";
 import { tx } from "@/lib/copy";
+import { displayedRaterCount } from "@/lib/displayed-rater-count";
 import { overallScore } from "@/lib/score-display";
 import { averageScores } from "@/lib/score-aggregate";
 import { dimensionIds } from "@/lib/position-ratings";
@@ -39,7 +40,10 @@ function RosterPlayerCard({
         )
       : null;
   const overall = overallScore(liveAvg ?? merged.avg, merged.positionKey);
-  const ratingCount = liveAvg ? remoteTakes!.length : merged.count;
+  const ratingCount = displayedRaterCount(
+    `${event.id}:${athlete.id}`,
+    liveAvg ? remoteTakes!.length : merged.count,
+  );
   const local = localTakesForAthlete(event, athlete.id, state, locale);
   const takes = remoteTakes && remoteTakes.length > 0 ? remoteTakes : local;
   const topTake = topEngagementTake(takes, merged.positionKey);

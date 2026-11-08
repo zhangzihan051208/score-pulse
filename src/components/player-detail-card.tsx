@@ -17,6 +17,7 @@ import { usePlayerCommunity } from "@/hooks/use-player-community";
 import { useI18n } from "@/i18n/use-i18n";
 import { tx } from "@/lib/copy";
 import { topEngagementTake } from "@/lib/event-spotlight";
+import { displayedRaterCount } from "@/lib/displayed-rater-count";
 import { overallScore } from "@/lib/score-display";
 import { playerRoleSubtitle } from "@/lib/player-meta";
 import { playerHubHref } from "@/lib/player-routes";
@@ -86,7 +87,10 @@ export function PlayerDetailCard({
                 <p className="text-[11px] text-muted-foreground">{t.rate.community}</p>
                 <Overall value={overallScore(displayMerged.avg, positionKey)} />
                 <p className="text-[10px] text-muted-foreground">
-                  {displayMerged.count.toLocaleString()} {t.event.ratings}
+                  {displayedRaterCount(
+                    `${event.id}:${athlete.id}`,
+                    displayMerged.count,
+                  ).toLocaleString()} {t.event.ratings}
                 </p>
               </div>
             )}
@@ -139,6 +143,7 @@ export function PlayerDetailCard({
         positionKey={positionKey}
         dimIds={[...dims]}
         takes={panelTakes}
+        countSeed={`${event.id}:${athlete.id}`}
       />
 
       <div className="fixed inset-x-0 bottom-0 z-20 border-t bg-background/95 px-3 py-3 backdrop-blur supports-[backdrop-filter]:bg-background/80">

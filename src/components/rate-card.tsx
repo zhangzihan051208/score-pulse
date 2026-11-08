@@ -489,6 +489,7 @@ export function RateCard({
         positionKey={positionKey}
         dimIds={[...dims]}
         takes={panelTakes}
+        countSeed={`${event.id}:${athlete.id}`}
         onRefresh={() => void loadRemote()}
       />
     </div>

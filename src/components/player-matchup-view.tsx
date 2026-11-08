@@ -10,6 +10,7 @@ import { useCommunity } from "@/hooks/use-community";
 import { dimLabel, positionRoleLabel } from "@/i18n/position-dims";
 import { useI18n } from "@/i18n/use-i18n";
 import { tx } from "@/lib/copy";
+import { displayedRaterCount } from "@/lib/displayed-rater-count";
 import { overallScore } from "@/lib/score-display";
 import {
   buildEventMatchups,
@@ -123,7 +124,10 @@ export function PlayerMatchupView({
                         value={overallScore(entry.merged.avg, positionKey)}
                       />
                       <p className="text-[10px] text-muted-foreground">
-                        {entry.merged.count} {t.event.ratings}
+                        {displayedRaterCount(
+                          `${event.id}:${entry.athlete.id}`,
+                          entry.merged.count,
+                        )} {t.event.ratings}
                       </p>
                     </div>
                   </div>

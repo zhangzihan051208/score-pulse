@@ -12,6 +12,7 @@ import { useLivePoll } from "@/hooks/use-live-poll";
 import { dimLabel } from "@/i18n/position-dims";
 import { useI18n } from "@/i18n/use-i18n";
 import { tx } from "@/lib/copy";
+import { displayedRaterCount } from "@/lib/displayed-rater-count";
 import { overallScore } from "@/lib/score-display";
 import { playerRoleSubtitle } from "@/lib/player-meta";
 import {
@@ -117,7 +118,10 @@ export function EventSpotlightCard({
             <div className="text-right">
               <Overall value={overallScore(avgForRadar, positionKey)} />
               <p className="text-[11px] text-muted-foreground">
-                {(useLive ? remoteTakes.length : pick.merged.count).toLocaleString()} {t.event.ratings}
+                {displayedRaterCount(
+                  `${event.id}:${pick.athlete.id}`,
+                  useLive ? remoteTakes.length : pick.merged.count,
+                ).toLocaleString()} {t.event.ratings}
               </p>
             </div>
           </div>

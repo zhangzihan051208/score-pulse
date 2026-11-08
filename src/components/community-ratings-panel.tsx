@@ -5,6 +5,7 @@ import { DimensionRadar } from "@/components/dimension-radar";
 import { Overall } from "@/components/score-rows";
 import { dimLabel } from "@/i18n/position-dims";
 import { useI18n } from "@/i18n/use-i18n";
+import { displayedRaterCount } from "@/lib/displayed-rater-count";
 import { formatWhen, overallScore } from "@/lib/score-display";
 import { overallFromScores } from "@/lib/store";
 import { averageScores } from "@/lib/score-aggregate";
@@ -22,11 +23,14 @@ export function CommunityRatingsPanel({
   positionKey,
   dimIds,
   takes,
+  countSeed,
   onRefresh,
 }: {
   positionKey: PositionKey;
   dimIds: string[];
   takes: CommunityTake[];
+  /** Same seed as the player card so the crowd count matches. */
+  countSeed?: string;
   onRefresh?: () => void;
 }) {
   const { locale, t } = useI18n();
@@ -117,7 +121,13 @@ export function CommunityRatingsPanel({
                 <span className="font-semibold tabular-nums">
                   {overallScore(communityAvg, positionKey).toFixed(1)}
                 </span>
-                <span className="text-muted-foreground">({takes.length})</span>
+                <span className="text-muted-foreground">
+                  (
+                  {countSeed
+                    ? displayedRaterCount(countSeed, takes.length).toLocaleString()
+                    : takes.length}
+                  )
+                </span>
               </span>
             )}
             {mineTake && (
