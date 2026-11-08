@@ -128,6 +128,17 @@ alter table public.profiles enable row level security;
 alter table public.ratings enable row level security;
 alter table public.comments enable row level security;
 alter table public.comment_likes enable row level security;
+
+create table if not exists public.translation_cache (
+  locale text not null,
+  body_hash text not null,
+  source text not null,
+  translated text not null,
+  created_at timestamptz not null default now(),
+  primary key (locale, body_hash)
+);
+
+alter table public.translation_cache enable row level security;
 alter table public.sportsdb_fixtures enable row level security;
 
 drop policy if exists "profiles are viewable by everyone" on public.profiles;
