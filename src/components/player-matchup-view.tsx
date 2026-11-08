@@ -19,7 +19,6 @@ import {
 } from "@/lib/matchup-pairs";
 import { playerHubHref } from "@/lib/player-routes";
 import { dimensionIds } from "@/lib/position-ratings";
-import { meanDimensionScore } from "@/lib/radar-scale";
 import type { Athlete, MatchEvent, Performance } from "@/lib/types";
 
 export function PlayerMatchupView({
@@ -50,14 +49,6 @@ export function PlayerMatchupView({
   const subjectSide = pair ? sideInMatchup(pair, athlete.id) : null;
   const homeEntry = pair?.home;
   const awayEntry = pair?.away;
-
-  const baselineMean = useMemo(() => {
-    if (!homeEntry || !awayEntry) return 7;
-    const ids = [...dimIds];
-    const h = meanDimensionScore(homeEntry.merged.avg, ids);
-    const a = meanDimensionScore(awayEntry.merged.avg, ids);
-    return (h + a) / 2;
-  }, [homeEntry, awayEntry, dimIds]);
 
   const radarSeries = useMemo(() => {
     if (!homeEntry || !awayEntry) return [];
@@ -149,7 +140,6 @@ export function PlayerMatchupView({
                 dimIds={[...dimIds]}
                 dimLabels={dimLabels}
                 series={radarSeries}
-                baselineMean={baselineMean}
                 size={280}
               />
             </div>

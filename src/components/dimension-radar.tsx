@@ -2,8 +2,8 @@
 
 import {
   RADAR_GRID_LEVELS,
+  RADAR_REFERENCE_UNIT,
   radarDisplayValues,
-  resolveRadarBaseline,
 } from "@/lib/radar-scale";
 import type { ScoreMap } from "@/lib/types";
 
@@ -19,15 +19,12 @@ export function DimensionRadar({
   dimLabels,
   series,
   size = 240,
-  baselineMean,
   showLabels = true,
 }: {
   dimIds: string[];
   dimLabels: string[];
   series: Series[];
   size?: number;
-  /** Raw-score mean used as the center ring; defaults to first series average. */
-  baselineMean?: number;
   /** Vertex captions. Turn off when a full score list sits beside a small chart. */
   showLabels?: boolean;
 }) {
@@ -35,7 +32,6 @@ export function DimensionRadar({
   const cy = size / 2;
   const maxR = size * 0.36;
   const n = dimIds.length;
-  const baseline = resolveRadarBaseline(dimIds, series, baselineMean);
 
   function point(i: number, unit: number) {
     const angle = (Math.PI * 2 * i) / n - Math.PI / 2;
@@ -68,9 +64,9 @@ export function DimensionRadar({
           points={polygon(dimIds.map(() => lv))}
           fill="none"
           stroke="currentColor"
-          strokeOpacity={lv === 5.5 ? 0.28 : 0.1}
-          strokeWidth={lv === 5.5 ? 1.5 : 1}
-          strokeDasharray={lv === 5.5 ? "4 3" : undefined}
+          strokeOpacity={Math.abs(lv - RADAR_REFERENCE_UNIT) < 0.05 ? 0.28 : 0.1}
+          strokeWidth={Math.abs(lv - RADAR_REFERENCE_UNIT) < 0.05 ? 1.5 : 1}
+          strokeDasharray={Math.abs(lv - RADAR_REFERENCE_UNIT) < 0.05 ? "4 3" : undefined}
         />
       ))}
       {dimIds.map((_, i) => {
@@ -89,7 +85,7 @@ export function DimensionRadar({
         );
       })}
       {series.map((s) => {
-        const units = radarDisplayValues(s.scores, dimIds, baseline);
+        const units = radarDisplayValues(s.scores, dimIds);
         return (
           <polygon
             key={s.label}
