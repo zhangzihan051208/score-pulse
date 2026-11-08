@@ -418,6 +418,7 @@ export const deOverrides = {
     noCounterpart: "Noch kein Startelf-Paar. Die Paarung kommt, sobald beide Aufstellungen da sind.",
     radarTitle: "Radar-Overlay",
     radarHint: "Blau = Heim · Orange = Auswärts. Der gestrichelte Ring ist eine 6.",
+    radarWiden: "Das Radar zieht den Abstand etwas auseinander",
     vs: "vs",
     vsLabel: "Dein Duel: vs {opponent}",
     you: "diese Karte",
@@ -448,7 +449,7 @@ export const deOverrides = {
     filterMine: "Meine",
     filterOthers: "Andere",
     radarLegend:
-      "Spitzen vs Achsen-Mittel (Strich = Schnitt). Orange = Community · Blau = du",
+      "Ringe bei 3, 6 und 9. Gestrichelt ist die 6. Orange = Community · Blau = du",
     allRatings: "Alle Bewertungen",
     noCommunityYet: "Noch keine Cloud-Bewertungen. Anmelden und erste Karte posten.",
     noCommentsInFilter: "Keine Kommentare in diesem Filter.",

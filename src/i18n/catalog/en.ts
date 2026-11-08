@@ -455,6 +455,7 @@ const en: Dict = {
         "No starting pair for this match yet. Pairings show once both teamsheets are in.",
       radarTitle: "Five-axis overlay",
       radarHint: "Blue = home · Orange = away. The dashed ring is a 6.",
+      radarWiden: "Radar slightly widens the gap",
       vs: "vs",
       vsLabel: "Your matchup: vs {opponent}",
       you: "this card",
@@ -485,7 +486,7 @@ const en: Dict = {
       filterMine: "Mine",
       filterOthers: "Others",
       radarLegend:
-        "Spikes vs dimension average (dashed ring = avg). Orange = community · Blue = you",
+        "Rings at 3, 6 and 9. The dashed ring is a 6. Orange = community · Blue = you",
       allRatings: "Every rating",
       noCommunityYet: "No cloud ratings yet. Sign in and post the first card.",
       noCommentsInFilter: "No comments in this filter.",

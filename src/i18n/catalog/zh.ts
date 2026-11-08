@@ -448,6 +448,7 @@ const zh: Dict = {
         "这场还没有双方首发可以对上。出场名单出来后会按位置配对。",
       radarTitle: "五维重叠对比",
       radarHint: "蓝 = 主队 · 橙 = 客队。虚线环是 6 分。",
+      radarWiden: "雷达图略微放大了双方分差",
       vs: "对",
       vsLabel: "本场对位：vs {opponent}",
       you: "当前球员",
@@ -478,7 +479,7 @@ const zh: Dict = {
       filterMine: "我的",
       filterOthers: "他人",
       radarLegend:
-        "相对五维均分放大（虚线环 = 均分基准）。橙 = 社区 · 蓝 = 你的评分",
+        "刻度环在 3、6、9 分。虚线是 6 分。橙 = 社区 · 蓝 = 你的评分",
       allRatings: "全部评分卡",
       noCommunityYet: "还没有云端评分，登录后发布第一条。",
       noCommentsInFilter: "该筛选下暂无评论。",

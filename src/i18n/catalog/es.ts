@@ -454,6 +454,7 @@ const es: Dict = {
       noCounterpart: "Aún no hay pareja de titulares. Aparece cuando están las dos alineaciones.",
       radarTitle: "Radar superpuesto",
       radarHint: "Azul = local · Naranja = visitante. El anillo punteado es un 6.",
+      radarWiden: "El radar amplía un poco la diferencia",
       vs: "vs",
       vsLabel: "Tu duelo: vs {opponent}",
       you: "esta ficha",
@@ -484,7 +485,7 @@ const es: Dict = {
       filterMine: "Mías",
       filterOthers: "Otros",
       radarLegend:
-        "Picos vs media por eje (anillo = media). Naranja = comunidad · Azul = tú",
+        "Anillos en 3, 6 y 9. El punteado es un 6. Naranja = comunidad · Azul = tú",
       allRatings: "Cada nota",
       noCommunityYet: "Aún no hay notas en la nube.",
       noCommentsInFilter: "Sin comentarios en este filtro.",

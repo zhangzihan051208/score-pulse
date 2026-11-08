@@ -1,9 +1,12 @@
 "use client";
 
 import {
-  RADAR_GRID_LEVELS,
-  RADAR_REFERENCE_UNIT,
+  RADAR_DASHED_SCORE,
+  RADAR_GRID_SCORES,
+  gridRingUnit,
+  matchupRadarValues,
   radarDisplayValues,
+  scoreToRadarUnit,
 } from "@/lib/radar-scale";
 import type { ScoreMap } from "@/lib/types";
 
@@ -20,6 +23,7 @@ export function DimensionRadar({
   series,
   size = 240,
   showLabels = true,
+  variant = "single",
 }: {
   dimIds: string[];
   dimLabels: string[];
@@ -27,18 +31,27 @@ export function DimensionRadar({
   size?: number;
   /** Vertex captions. Turn off when a full score list sits beside a small chart. */
   showLabels?: boolean;
+  /** Matchup widens each axis gap before the radius curve. Labels stay on the raw scores. */
+  variant?: "single" | "matchup";
 }) {
   const cx = size / 2;
   const cy = size / 2;
   const maxR = size * 0.36;
   const n = dimIds.length;
+  const frame = scoreToRadarUnit(10);
+  const rings = RADAR_GRID_SCORES.map((score) => ({
+    score,
+    unit: gridRingUnit(score),
+    dashed: score === RADAR_DASHED_SCORE,
+  }));
+  const radii = radiiForSeries(series, dimIds, variant);
 
   function point(i: number, unit: number) {
     const angle = (Math.PI * 2 * i) / n - Math.PI / 2;
     const r = (unit / 10) * maxR;
     return {
-      x: cx + r * Math.cos(angle),
-      y: cy + r * Math.sin(angle),
+      x: round2(cx + r * Math.cos(angle)),
+      y: round2(cy + r * Math.sin(angle)),
     };
   }
 
@@ -58,19 +71,26 @@ export function DimensionRadar({
       role="img"
       aria-hidden
     >
-      {RADAR_GRID_LEVELS.map((lv) => (
+      <polygon
+        points={polygon(dimIds.map(() => frame))}
+        fill="none"
+        stroke="currentColor"
+        strokeOpacity={0.06}
+        strokeWidth={1}
+      />
+      {rings.map((ring) => (
         <polygon
-          key={lv}
-          points={polygon(dimIds.map(() => lv))}
+          key={ring.score}
+          points={polygon(dimIds.map(() => ring.unit))}
           fill="none"
           stroke="currentColor"
-          strokeOpacity={Math.abs(lv - RADAR_REFERENCE_UNIT) < 0.05 ? 0.28 : 0.1}
-          strokeWidth={Math.abs(lv - RADAR_REFERENCE_UNIT) < 0.05 ? 1.5 : 1}
-          strokeDasharray={Math.abs(lv - RADAR_REFERENCE_UNIT) < 0.05 ? "4 3" : undefined}
+          strokeOpacity={ring.dashed ? 0.28 : 0.1}
+          strokeWidth={ring.dashed ? 1.5 : 1}
+          strokeDasharray={ring.dashed ? "4 3" : undefined}
         />
       ))}
       {dimIds.map((_, i) => {
-        const p = point(i, 10);
+        const p = point(i, frame);
         return (
           <line
             key={i}
@@ -84,43 +104,67 @@ export function DimensionRadar({
           />
         );
       })}
-      {series.map((s) => {
-        const units = radarDisplayValues(s.scores, dimIds);
-        return (
-          <polygon
-            key={s.label}
-            points={polygon(units)}
-            fill={s.fill}
-            stroke={s.stroke}
-            strokeWidth={2.5}
-            strokeLinejoin="round"
-          />
-        );
-      })}
+      {series.map((s, index) => (
+        <polygon
+          key={s.label}
+          points={polygon(radii[index] ?? [])}
+          fill={s.fill}
+          stroke={s.stroke}
+          strokeWidth={2.5}
+          strokeLinejoin="round"
+        />
+      ))}
       {showLabels
         ? dimLabels.map((label, i) => {
-        const raw = series[0]?.scores[dimIds[i]!];
-        const p = point(i, 11.4);
-        return (
-          <text
-            key={`${label}-${i}`}
-            x={p.x}
-            y={p.y}
-            textAnchor="middle"
-            dominantBaseline="middle"
-            className="fill-muted-foreground text-[9px] font-medium"
-          >
-            {label.length > 8 ? `${label.slice(0, 7)}…` : label}
-            {raw != null ? (
-              <tspan className="fill-foreground/80 font-semibold">
-                {" "}
-                {raw.toFixed(1)}
-              </tspan>
-            ) : null}
-          </text>
-        );
-      })
+            const p = point(i, 11.4);
+            const homeRaw = series[0]?.scores[dimIds[i]!];
+            const awayRaw = variant === "matchup" ? series[1]?.scores[dimIds[i]!] : undefined;
+            return (
+              <text
+                key={`${label}-${i}`}
+                x={p.x}
+                y={p.y}
+                textAnchor="middle"
+                dominantBaseline="middle"
+                className="fill-muted-foreground text-[9px] font-medium"
+              >
+                {label.length > 8 ? `${label.slice(0, 7)}…` : label}
+                {homeRaw != null ? (
+                  <tspan className="fill-foreground/80 font-semibold">
+                    {" "}
+                    {homeRaw.toFixed(1)}
+                  </tspan>
+                ) : null}
+                {awayRaw != null ? (
+                  <tspan className="fill-foreground/80 font-semibold">
+                    {" / "}
+                    {awayRaw.toFixed(1)}
+                  </tspan>
+                ) : null}
+              </text>
+            );
+          })
         : null}
     </svg>
   );
+}
+
+function round2(n: number) {
+  return Math.round(n * 100) / 100;
+}
+
+function radiiForSeries(
+  series: Series[],
+  dimIds: string[],
+  variant: "single" | "matchup",
+): number[][] {
+  if (variant === "matchup" && series.length >= 2) {
+    const paired = matchupRadarValues(series[0]!.scores, series[1]!.scores, dimIds);
+    return series.map((s, index) => {
+      if (index === 0) return paired.home;
+      if (index === 1) return paired.away;
+      return radarDisplayValues(s.scores, dimIds);
+    });
+  }
+  return series.map((s) => radarDisplayValues(s.scores, dimIds));
 }

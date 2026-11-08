@@ -141,6 +141,7 @@ export function PlayerMatchupView({
                 dimLabels={dimLabels}
                 series={radarSeries}
                 size={280}
+                variant="matchup"
               />
             </div>
             <ul className="mt-3 flex flex-wrap justify-center gap-x-4 gap-y-1 text-xs">
@@ -160,7 +161,7 @@ export function PlayerMatchupView({
               </li>
             </ul>
             <p className="mt-3 text-center text-[11px] text-muted-foreground">
-              {t.rate.radarLegend}
+              {t.matchup.radarWiden}
             </p>
           </section>
 

@@ -412,6 +412,7 @@ export type Dict = {
     noCounterpart: string;
     radarTitle: string;
     radarHint: string;
+    radarWiden: string;
     vs: string;
     vsLabel: string;
     you: string;
