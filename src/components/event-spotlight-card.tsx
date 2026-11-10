@@ -182,6 +182,8 @@ export function EventSpotlightGrid({
   const { locale, t } = useI18n();
   const picks = pickEventSpotlights(event, state, locale);
 
+  if (event.status === "upcoming") return null;
+
   if (picks.length === 0) {
     return (
       <p className="text-sm text-muted-foreground">{t.event.spotlightEmpty}</p>
