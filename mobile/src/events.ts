@@ -104,6 +104,7 @@ export function eventsForTeam(name: string) {
 
 export function hotPlayers(limit = 8) {
   return matchEvents
+    .filter((event) => event.status !== "upcoming")
     .flatMap((event) =>
       event.players.map((player) => ({
         event,

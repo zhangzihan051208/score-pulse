@@ -295,9 +295,11 @@ function BoardEventCard({
               : `${listedRosterCount(event)} ${t.home.players}`}
         </p>
       </div>
-      <div className="border-t px-3 py-3">
-        <EventSpotlightGrid event={event} state={state} compact />
-      </div>
+      {event.status === "upcoming" ? null : (
+        <div className="border-t px-3 py-3">
+          <EventSpotlightGrid event={event} state={state} compact />
+        </div>
+      )}
     </article>
   );
 }

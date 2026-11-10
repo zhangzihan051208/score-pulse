@@ -177,6 +177,8 @@ export function pickEventSpotlights(
   state: CommunityState,
   locale: Locale,
 ): SpotlightPick[] {
+  if (event.status === "upcoming") return [];
+
   const buckets: { home: SpotlightPick[]; away: SpotlightPick[] } = {
     home: [],
     away: [],
